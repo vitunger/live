@@ -502,52 +502,60 @@ export function supOpenZohoDetail(zohoId) {
 }
 
 // -- Tab: Kontakte (HQ-Team) --
-// Abteilungs-Zuordnung anhand E-Mail / bekannter User-IDs
-var HQ_ABTEILUNG_MAP = {
-    '96122da8-7c0a-44d5-ae4a-05420c3d24d0': { abt: 'Geschäftsführung', color: 'bg-purple-600' },
-    '06dd6d7a-e372-4768-9828-e7f402050d65': { abt: 'Geschäftsführung', color: 'bg-purple-600' },
-    '22eb9f8a-ea2d-4ec0-a509-35e5f49ac9ee': { abt: 'Geschäftsführung', color: 'bg-purple-600' },
-    'cf7ecbf3-e123-4c22-834e-cfa23c692ff3': { abt: 'Einkauf', color: 'bg-blue-500' },
-    'f8a79907-96c0-4388-bf88-625fce754b4a': { abt: 'Einkauf', color: 'bg-blue-500' },
-    'f22dfaa1-c92e-47f1-bef6-9a43f08c0243': { abt: 'Marketing', color: 'bg-orange-500' },
-    'be2076ba-41b5-4840-aaf0-a5d75721e510': { abt: 'Marketing', color: 'bg-orange-500' },
-    '749828e6-c7a7-476f-b8b2-53353495ce96': { abt: 'IT & Systeme', color: 'bg-gray-600' },
-    'ec2279a3-b00c-4e12-93a3-5dfccddab5bf': { abt: 'IT & Systeme', color: 'bg-gray-600' },
-    '5dfdc987-04e1-485b-99d5-c9a2b7e4dab6': { abt: 'Akademie', color: 'bg-green-600' },
-    '66120dfc-dfc2-487e-93fb-abc86796da51': { abt: 'Support', color: 'bg-teal-500' },
-    '41a5e115-f0ff-4422-bb04-bf6fe9f249a8': { abt: 'Support', color: 'bg-teal-500' },
-    '498fdde8-7563-47d5-9250-5e33a4f4d7f8': { abt: 'HR', color: 'bg-pink-500' },
-    '5521d4fd-b9a3-4501-8fb9-175a50192633': { abt: 'Vertrieb', color: 'bg-indigo-500' },
-    '86fd0b4d-67e9-433f-84fe-52012b5531b2': { abt: 'Vertrieb', color: 'bg-indigo-500' },
-    '8e061cf0-c797-402b-b166-19db86d49b83': { abt: 'Vertrieb', color: 'bg-indigo-500' },
-    '7339bb04-3a43-48f0-b295-c223a40dceb5': { abt: 'Vertrieb', color: 'bg-indigo-500' },
-    'f75e2d25-4275-4059-a3d6-c76795c8c6cd': { abt: 'HR', color: 'bg-pink-500' }
+var HQ_ROLLE_CONFIG = {
+    'hq_gf':       { label: 'Geschäftsführung', color: 'bg-purple-600', order: 1 },
+    'hq_einkauf':  { label: 'Einkauf',           color: 'bg-blue-500',   order: 2 },
+    'hq_marketing':{ label: 'Marketing',          color: 'bg-orange-500', order: 3 },
+    'hq_it':       { label: 'IT & Systeme',       color: 'bg-gray-600',   order: 4 },
+    'hq_akademie': { label: 'Akademie',           color: 'bg-green-600',  order: 5 },
+    'hq_support':  { label: 'Support',            color: 'bg-teal-500',   order: 6 },
+    'hq_sales':    { label: 'Vertrieb',           color: 'bg-indigo-500', order: 7 },
+    'hq_hr':       { label: 'HR',                 color: 'bg-pink-500',   order: 8 }
 };
-var HQ_ABT_ORDER = ['Geschäftsführung','Einkauf','Marketing','IT & Systeme','Akademie','Support','Vertrieb','HR'];
 
 async function renderKontakteTab() {
-    var h = '';
-    var users = [];
+    var users = [], rollenDef = [], userRollen = [];
     try {
-        var resp = await _sb().from('users').select('id,vorname,nachname,email').eq('is_hq', true).eq('status', 'aktiv').order('vorname');
-        users = resp.data || [];
+        var [uResp, rResp, urResp] = await Promise.all([
+            _sb().from('users').select('id,vorname,nachname').eq('is_hq', true).eq('status', 'aktiv').order('vorname'),
+            _sb().from('rollen').select('id,name').eq('ebene', 'hq'),
+            _sb().from('user_rollen').select('user_id,rolle_id')
+        ]);
+        users = uResp.data || [];
+        rollenDef = rResp.data || [];
+        userRollen = urResp.data || [];
     } catch(e) { /* ignore */ }
 
-    if (!users.length) {
-        return '<div class="text-center py-12 text-gray-400">Team-Daten nicht verfügbar</div>';
-    }
+    if (!users.length) return '<div class="text-center py-12 text-gray-400">Team-Daten nicht verfügbar</div>';
 
-    // Gruppieren nach Abteilung
-    var byAbt = {};
-    users.forEach(function(u) {
-        var info = HQ_ABTEILUNG_MAP[u.id] || { abt: 'HQ', color: 'bg-gray-500' };
-        if (!byAbt[info.abt]) byAbt[info.abt] = { color: info.color, members: [] };
-        byAbt[info.abt].members.push({ u: u, info: info });
+    // rolle_id → rolle_name Map
+    var rolleIdToName = {};
+    rollenDef.forEach(function(r) { rolleIdToName[r.id] = r.name; });
+
+    // user_id → primäre HQ-Abteilungsrolle (höchste Prio = niedrigste order)
+    var userAbt = {};
+    userRollen.forEach(function(ur) {
+        var rName = rolleIdToName[ur.rolle_id];
+        var cfg = HQ_ROLLE_CONFIG[rName];
+        if (!cfg) return;
+        var prev = userAbt[ur.user_id];
+        if (!prev || cfg.order < prev.order) {
+            userAbt[ur.user_id] = { label: cfg.label, color: cfg.color, order: cfg.order };
+        }
     });
 
-    h += '<div class="space-y-6">';
-    HQ_ABT_ORDER.forEach(function(abtName) {
-        if (!byAbt[abtName]) return;
+    // Gruppieren
+    var byAbt = {};
+    users.forEach(function(u) {
+        var abt = userAbt[u.id] || { label: 'HQ', color: 'bg-gray-400', order: 99 };
+        if (!byAbt[abt.label]) byAbt[abt.label] = { color: abt.color, order: abt.order, members: [] };
+        byAbt[abt.label].members.push(u);
+    });
+
+    var sortedAbt = Object.keys(byAbt).sort(function(a,b){ return byAbt[a].order - byAbt[b].order; });
+
+    var h = '<div class="space-y-6">';
+    sortedAbt.forEach(function(abtName) {
         var grp = byAbt[abtName];
         h += '<div>';
         h += '<div class="flex items-center gap-2 mb-3">';
@@ -555,31 +563,14 @@ async function renderKontakteTab() {
         h += '<h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">' + abtName + '</h3>';
         h += '</div>';
         h += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">';
-        grp.members.forEach(function(m) {
-            var u = m.u;
-            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.email;
+        grp.members.forEach(function(u) {
+            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim();
             var initials = name.split(' ').filter(Boolean).map(function(w){ return w[0].toUpperCase(); }).slice(0,2).join('');
             h += '<div class="vit-card p-3 flex items-center gap-3">';
             h += '<div class="w-9 h-9 ' + grp.color + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + initials + '</div>';
-            h += '<div class="min-w-0">';
-            h += '<p class="font-semibold text-gray-800 text-sm truncate">' + _escH(name) + '</p>';
-            h += '<p class="text-xs text-gray-400 truncate">' + abtName + '</p>';
+            h += '<div class="min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">' + _escH(name) + '</p>';
+            h += '<p class="text-xs text-gray-400">' + abtName + '</p></div>';
             h += '</div>';
-            h += '</div>';
-        });
-        h += '</div></div>';
-    });
-    // Unbekannte Abteilungen
-    Object.keys(byAbt).forEach(function(abtName) {
-        if (HQ_ABT_ORDER.indexOf(abtName) !== -1) return;
-        var grp = byAbt[abtName];
-        h += '<div>';
-        h += '<div class="flex items-center gap-2 mb-3"><div class="w-2 h-5 rounded-sm ' + grp.color + '"></div><h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">' + abtName + '</h3></div>';
-        h += '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">';
-        grp.members.forEach(function(m) {
-            var u = m.u; var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim() || u.email;
-            var initials = name.split(' ').filter(Boolean).map(function(w){ return w[0].toUpperCase(); }).slice(0,2).join('');
-            h += '<div class="vit-card p-3 flex items-center gap-3"><div class="w-9 h-9 ' + grp.color + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + initials + '</div><div class="min-w-0"><p class="font-semibold text-gray-800 text-sm truncate">' + _escH(name) + '</p><p class="text-xs text-gray-400">' + abtName + '</p></div></div>';
         });
         h += '</div></div>';
     });
