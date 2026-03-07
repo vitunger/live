@@ -175,12 +175,7 @@ export async function renderKomm() {
     // Gruppen
     h += kommSidebarGruppen();
 
-    // Settings (nur GF/HQ)
-    if (kommIsGF()) {
-        h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
-        h += '<div onclick="kommGoView(\'admin\',\'admin\',\'Einstellungen\')" class="mx-2 my-1 px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 ' + (KOMM.view === 'admin' ? 'bg-orange-50' : 'hover:bg-gray-50') + '">';
-        h += '<span class="text-sm">⚙️</span><span class="text-xs text-gray-400">Einstellungen</span></div>';
-    }
+    // Einstellungen → Kommunikation jetzt unter HQ-Einstellungen Tab
 
     h += '</div>'; // end sidebar
 
@@ -290,8 +285,6 @@ function kommRenderHeader() {
         h += '<span class="text-xl">📌</span><div class="flex-1"><div class="text-[15px] font-bold">Pinnwand</div><div class="text-[11px] text-gray-400">Social Feed — Erfolge, Fragen & Fotos</div></div>';
     } else if (KOMM.view === 'team') {
         h += '<span class="text-xl">👥</span><div class="flex-1"><div class="text-[15px] font-bold">Team-Verzeichnis</div><div class="text-[11px] text-gray-400">' + KOMM.allUsers.length + ' Mitarbeiter</div></div>';
-    } else if (KOMM.view === 'admin') {
-        h += '<span class="text-xl">⚙️</span><div class="flex-1"><div class="text-[15px] font-bold">Einstellungen</div><div class="text-[11px] text-gray-400">HQ-Administration → Kommunikation</div></div>';
     } else if (KOMM.view === 'dm') {
         var initials = kommInitials(KOMM.activeName);
         h += '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
@@ -350,8 +343,6 @@ async function kommLoadContent() {
         await kommLoadPinnwand(el);
     } else if (KOMM.view === 'team') {
         kommLoadTeam(el);
-    } else if (KOMM.view === 'admin') {
-        kommLoadAdmin(el);
     }
 }
 
