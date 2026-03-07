@@ -14,7 +14,7 @@ function _escH(s)        { return typeof window.escH === 'function' ? window.esc
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 
 var KOMM = {
-    view: 'channel',       // 'channel','dm','group','news','pinnwand','team','admin'
+    view: 'channel',       // 'channel','dm','group','news','pinnwand','team'
     activeId: null,
     activeName: '',
     kanaele: [],
@@ -23,6 +23,7 @@ var KOMM = {
     messages: [],
     allUsers: [],
     newsItems: [],
+    _userCache: null, // for @mention autocomplete
     pinnwandPosts: [],
     cannedReactions: ['👍','❤️','🔥','😂','🎉'],
     realtimeSub: null,
@@ -320,8 +321,11 @@ function kommRenderInputBar() {
     h += '<button onclick="kommStopRecording()" class="ml-auto px-3 py-1 rounded-lg bg-red-500 text-white text-[11px] font-bold">⏹ Senden</button>';
     h += '</div>';
 
-    // Text input
-    h += '<textarea id="kommMsgInput" class="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-[13px] resize-none outline-none focus:border-[#EF7D00]" rows="1" placeholder="Nachricht schreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendMessage()}"></textarea>';
+    // Text input with @mention support
+    h += '<div class="flex-1 relative">';
+    h += '<textarea id="kommMsgInput" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-[13px] resize-none outline-none focus:border-[#EF7D00]" rows="1" placeholder="Nachricht schreiben... @Name für Erwähnung" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendMessage()}" oninput="kommCheckMention(this)"></textarea>';
+    h += '<div id="kommMentionDropdown" class="hidden absolute bottom-full left-0 w-64 max-h-48 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 mb-1 z-50"></div>';
+    h += '</div>';
 
     // Voice button (DMs + Groups only)
     if (isDm) {
@@ -791,13 +795,35 @@ export async function kommSendMessage() {
     var text = input.value.trim();
     input.value = '';
 
+    // @Mentions extrahieren: @Name → UUID lookup
+    var mentionIds = [];
+    var mentionRegex = /@([A-Za-zÄÖÜäöüß\s]+?)(?=\s|$|[,.])/g;
+    var match;
+    while ((match = mentionRegex.exec(text)) !== null) {
+        var mName = match[1].trim().toLowerCase();
+        if (KOMM._userCache) {
+            var found = KOMM._userCache.find(function(u) {
+                var fullName = ((u.vorname || '') + ' ' + (u.nachname || '')).trim().toLowerCase();
+                var displayName = (u.name || '').toLowerCase();
+                return fullName === mName || displayName === mName || 
+                       (u.nachname || '').toLowerCase() === mName ||
+                       (u.vorname || '').toLowerCase() === mName;
+            });
+            if (found) mentionIds.push(found.id);
+        }
+    }
+
     try {
         var user = _sbUser();
-        var resp = await _sb().from('chat_nachrichten').insert({
+        var insertData = {
             kanal_id: KOMM.activeId,
             user_id: user ? user.id : null,
             nachricht: text
-        }).select('*, users:user_id(id, name, vorname, nachname, is_hq, rolle)').single();
+        };
+        if (mentionIds.length > 0) insertData.mentions = mentionIds;
+
+        var resp = await _sb().from('chat_nachrichten').insert(insertData)
+            .select('*, users:user_id(id, name, vorname, nachname, is_hq, rolle)').single();
 
         if (resp.error) throw resp.error;
 
@@ -1344,6 +1370,79 @@ window.kommSaveStandortChannel = async function() {
     }
 };
 
+// ========== @Mention Autocomplete ==========
+async function kommLoadUserCache() {
+    if (KOMM._userCache) return;
+    try {
+        var resp = await _sb().from('users').select('id, name, vorname, nachname, rolle, is_hq').eq('is_active', true);
+        KOMM._userCache = (!resp.error && resp.data) ? resp.data : [];
+    } catch(e) { KOMM._userCache = []; }
+}
+
+window.kommCheckMention = function(textarea) {
+    var val = textarea.value;
+    var pos = textarea.selectionStart;
+    var dd = document.getElementById('kommMentionDropdown');
+    if (!dd) return;
+
+    // Find @ before cursor
+    var before = val.substring(0, pos);
+    var atMatch = before.match(/@([A-Za-zÄÖÜäöüß]*)$/);
+
+    if (!atMatch) { dd.classList.add('hidden'); return; }
+
+    var query = atMatch[1].toLowerCase();
+
+    // Load cache if needed
+    if (!KOMM._userCache) {
+        kommLoadUserCache().then(function() { kommCheckMention(textarea); });
+        return;
+    }
+
+    // Filter users
+    var matches = KOMM._userCache.filter(function(u) {
+        if (!query) return true; // show all on bare @
+        var full = ((u.vorname || '') + ' ' + (u.nachname || '') + ' ' + (u.name || '')).toLowerCase();
+        return full.indexOf(query) >= 0;
+    }).slice(0, 8);
+
+    if (matches.length === 0) { dd.classList.add('hidden'); return; }
+
+    var h = '';
+    matches.forEach(function(u) {
+        var displayName = u.vorname && u.nachname ? u.vorname + ' ' + u.nachname : (u.name || 'Unbekannt');
+        var initials = ((u.vorname || 'X')[0] + (u.nachname || 'X')[0]).toUpperCase();
+        var roleBadge = u.is_hq ? '<span class="text-[9px] bg-orange-50 text-[#EF7D00] px-1 rounded">HQ</span>' : '';
+        h += '<div onclick="kommInsertMention(\'' + u.id + '\',\'' + _escH(displayName).replace(/'/g, "\\'") + '\')" class="px-3 py-2 flex items-center gap-2 hover:bg-orange-50 cursor-pointer text-xs">';
+        h += '<div class="w-6 h-6 rounded-md bg-gray-300 flex items-center justify-center text-white text-[10px] font-bold">' + initials + '</div>';
+        h += '<span class="font-semibold text-gray-800">' + _escH(displayName) + '</span>';
+        h += '<span class="text-gray-400 text-[10px]">' + _escH(u.rolle || '') + '</span>';
+        h += roleBadge;
+        h += '</div>';
+    });
+    dd.innerHTML = h;
+    dd.classList.remove('hidden');
+};
+
+window.kommInsertMention = function(userId, displayName) {
+    var textarea = document.getElementById('kommMsgInput');
+    if (!textarea) return;
+
+    var val = textarea.value;
+    var pos = textarea.selectionStart;
+    var before = val.substring(0, pos);
+    var after = val.substring(pos);
+
+    // Replace @partial with @FullName
+    var newBefore = before.replace(/@[A-Za-zÄÖÜäöüß]*$/, '@' + displayName + ' ');
+    textarea.value = newBefore + after;
+    textarea.selectionStart = textarea.selectionEnd = newBefore.length;
+    textarea.focus();
+
+    var dd = document.getElementById('kommMentionDropdown');
+    if (dd) dd.classList.add('hidden');
+};
+
 // ========== Strangler Fig: window.* registration ==========
 const _exports = {
     renderKomm, showKommTab, loadKommSidebar, openKommConv, kommSendMessage,
@@ -1353,7 +1452,7 @@ const _exports = {
     kommNewNews, kommSubmitNews, kommMarkNewsRead, kommLikeNews, kommShowPflichtDetails,
     kommPostPinnwand, kommLikePinnwand, kommDeletePinnwand, kommShowPinnwandComments, kommPinnwandAttach,
     kommNewDM, kommStartDMWith, kommNewGroup, kommNewChannel, kommEditChannel, kommDeleteChannel,
-    kommSummarize, kommStartNewChat, kommInputKeydown, kommAutoResize,
+    kommSummarize, kommStartNewChat, kommInputKeydown, kommAutoResize, kommCheckMention, kommInsertMention,
     filterCommunity, showForumDetail, submitForumPost, submitForumComment, showBrettDetail, submitBrettPost
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
