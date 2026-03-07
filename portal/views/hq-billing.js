@@ -158,9 +158,9 @@ async function loadCronStatus() {
 
 window.startBillingRun = async function() {
     var now = new Date();
-    var month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
-    var monthLabel = now.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-    if (!confirm('Abrechnungslauf f\u00fcr ' + monthLabel + ' starten?\n\nEs werden Rechnungsentw\u00fcrfe f\u00fcr alle Standorte mit gesperrter Jahresstrategie erstellt.')) return;
+    if (!confirm('Abrechnungslauf manuell starten?\n\nEs werden Rechnungsentw\u00fcrfe f\u00fcr alle f\u00e4lligen Abrechnungen erstellt.')) return;
+    var now2 = new Date();
+    var month = now2.getFullYear() + '-' + String(now2.getMonth() + 1).padStart(2, '0') + '-01';
     var btn = document.querySelector('[onclick="startBillingRun()"]');
     if (btn) { btn.disabled = true; btn.textContent = '\u23f3 Generiere...'; }
     var result = await billingApi('generate-monthly-drafts', { month: month });
@@ -460,7 +460,7 @@ export async function loadBillingProducts() {
     if (!container) return;
     container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
     
-    var { data: products } = await _sb().from('billing_products').select('*, schedule:billing_schedules(id, name, is_prepayment, is_immediate, billing_day, payment_term_days)').order('product_type, key');
+    var { data: products } = await _sb().from('billing_products').select('*, schedule:billing_schedules(id, name, is_prepayment, is_immediate, billing_day, payment_term_days)').is('deleted_at', null).order('product_type, key');
     var { data: schedules } = await _sb().from('billing_schedules').select('id, name').eq('active', true).order('sort_order');
     
     var h = '<div class="mb-4 flex items-center justify-between">';
