@@ -718,6 +718,12 @@
                             <span class="sidebar-label" data-i18n="nav_communication">Kommunikation</span>
                         </button>
 
+                        <!-- HQ-Termine buchen -->
+                        <button onclick="showView('hqBuchungen')" data-module="hqBuchungen" data-tooltip="HQ-Termine" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span class="sidebar-label">HQ-Termine</span>
+                        </button>
+
                         <hr class="border-gray-600 my-3">
                         </div>
 
@@ -954,6 +960,13 @@
                             <button onclick="showView('spiritus')" data-hq-module="spiritus" data-tooltip="Spiritus – Call Intelligence" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
                                 <span class="sidebar-label">Spiritus</span>
+                            </button>
+
+                            <button onclick="showView('hqBuchungen')" data-hq-module="hqBuchungen" data-tooltip="Buchungssystem" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="sidebar-label">Buchungssystem</span>
                             </button>
 
                             <button onclick="showView('hqBilling')" data-hq-module="hqBilling" data-tooltip="Abrechnung" class="sidebar-item flex items-center space-x-3 p-3 rounded w-full text-left">
@@ -4505,6 +4518,9 @@
                 </div>
 
                 <!-- ===== STANDORT BILLING VIEW ===== -->
+                <div id="hqBuchungenView" class="view" style="display: none;">
+                </div>
+
                 <div id="standortBillingView" class="view" style="display: none;">
                     <div class="flex items-center justify-between mb-6">
                         <div>

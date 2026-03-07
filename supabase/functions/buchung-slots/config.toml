@@ -1,0 +1,2 @@
+[functions.buchung-slots]
+verify_jwt = false

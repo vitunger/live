@@ -1,0 +1,2 @@
+[functions.ms365-token-refresh]
+verify_jwt = false

@@ -1,0 +1,2 @@
+[functions.buchung-erstellen]
+verify_jwt = false

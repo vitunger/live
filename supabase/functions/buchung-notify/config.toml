@@ -1,0 +1,2 @@
+[functions.buchung-notify]
+verify_jwt = false
