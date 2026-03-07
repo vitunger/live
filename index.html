@@ -3060,7 +3060,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <h1 class="h1-headline text-gray-800">📚 WISSENSDATENBANK</h1>
-                            <p class="text-sm text-gray-500">Alle Schulungen, Handbuecher, Best Practices und FAQs an einem Ort.</p>
+                            <p class="text-sm text-gray-500">Alle Wissensartikel, Anleitungen und Dokumentationen an einem Ort.</p>
                         </div>
                         <div class="flex items-center space-x-2">
                             <input type="text" id="wissenSearch" placeholder="Suchen..." oninput="filterWissenGlobal()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm w-48">
@@ -3070,30 +3070,9 @@
                     <!-- KPIs -->
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="wissenKpis"></div>
 
-                    <!-- Bereich-Filter -->
-                    <div class="flex flex-wrap gap-2 mb-6">
+                    <!-- Bereich-Filter (dynamisch aus DB) -->
+                    <div class="flex flex-wrap gap-2 mb-6" id="wissenBereichFilter">
                         <button onclick="filterWissenBereich('all')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-wbf="all">📚 Alle Bereiche</button>
-                        <button onclick="filterWissenBereich('allgemein')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="allgemein">🏢 Allgemein</button>
-                        <button onclick="filterWissenBereich('verkauf')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="verkauf">💰 Verkauf</button>
-                        <button onclick="filterWissenBereich('einkauf')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="einkauf">🛒 Einkauf</button>
-                        <button onclick="filterWissenBereich('marketing')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="marketing">📣 Marketing</button>
-                        <button onclick="filterWissenBereich('controlling')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="controlling">📊 Controlling</button>
-                        <button onclick="filterWissenBereich('werkstatt')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="werkstatt">🔧 Werkstatt</button>
-                        <button onclick="filterWissenBereich('portal')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="portal">📱 Portal</button>
-                    </div>
-
-                    <!-- Typ-Tabs -->
-                    <div class="mb-6 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-6">
-                            <button onclick="switchWissenTyp('akademie')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange" data-wtt="akademie">🎓 Akademie</button>
-                            <button onclick="switchWissenTyp('portal')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="portal">📱 Portal-Guide</button>
-                            <button onclick="switchWissenTyp('kurse')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="kurse">🎬 Kurse & Videos</button>
-                            <button onclick="switchWissenTyp('handbuecher')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="handbuecher">📖 Handbücher</button>
-                            <button onclick="switchWissenTyp('bestpractices')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="bestpractices">💡 Best Practices</button>
-                            <button onclick="switchWissenTyp('faq')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="faq">❓ FAQ</button>
-                            <button onclick="switchWissenTyp('onboarding')" class="wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-wtt="onboarding">🚀 Onboarding</button>
-
-                        </nav>
                     </div>
 
                     <!-- Content -->
@@ -4628,50 +4607,59 @@
                 <!-- ===== HQ WISSEN-VERWALTUNG ===== -->
                 <div id="hqWissenView" class="view" style="display: none;">
                     <h1 class="h1-headline text-gray-800 mb-2">📚 WISSEN – VERWALTUNG</h1>
-                    <p class="text-sm text-gray-500 mb-6">Wissensinhalte fuer alle Partner bereitstellen und verwalten.</p>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange">24</div><div class="text-xs text-gray-500">Akademie-Kurse</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">18</div><div class="text-xs text-gray-500">Handbuecher</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">12</div><div class="text-xs text-gray-500">Best Practices</div></div>
-                        <div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-600">45</div><div class="text-xs text-gray-500">FAQ-Eintraege</div></div>
-                    </div>
-                    <!-- Neuen Inhalt anlegen -->
-                    <div class="vit-card p-6 mb-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">➕ Neuen Wissensinhalt erstellen</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <p class="text-sm text-gray-500 mb-6">Wissensartikel fuer alle Partner erstellen, bearbeiten und verwalten.</p>
+
+                    <!-- KPIs (dynamisch) -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="hqWissenKpis"></div>
+
+                    <!-- Editor-Card -->
+                    <div class="vit-card p-6 mb-6" id="hqWissenEditorCard">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">➕ Wissensartikel erstellen</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Titel</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Titel *</label>
                                 <input type="text" id="hqWissenTitel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. Leitfaden E-Bike Beratung">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
-                                <select id="hqWissenKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                    <option value="akademie">🎓 Akademie-Kurs</option>
-                                    <option value="handbuch">📖 Handbuch</option>
-                                    <option value="bestpractice">⭐ Best Practice</option>
-                                    <option value="faq">❓ FAQ</option>
-                                </select>
+                                <select id="hqWissenKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tags (kommagetrennt)</label>
+                                <input type="text" id="hqWissenTags" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="z.B. e-bike, beratung, leitfaden">
                             </div>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Bereich</label>
-                            <select id="hqWissenBereich" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <option value="verkauf">Verkauf</option>
-                                <option value="werkstatt">Werkstatt</option>
-                                <option value="marketing">Marketing</option>
-                                <option value="betrieb">Betrieb &amp; Organisation</option>
-                                <option value="personal">Personal</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Inhalt *</label>
+                            <div id="hqWissenEditor" style="min-height: 250px; background: white;"></div>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Inhalt / Beschreibung</label>
-                            <textarea id="hqWissenInhalt" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Inhalt des Wissensartikels..."></textarea>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="addHqWissen()" id="hqWissenSaveBtn" class="px-5 py-2.5 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📚 Veröffentlichen</button>
+                            <button onclick="cancelEditWissen()" id="hqWissenCancelBtn" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-200" style="display:none;">Abbrechen</button>
                         </div>
-                        <button onclick="addHqWissen()" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600">📚 Veroeffentlichen</button>
                     </div>
-                    <!-- Bestehende Inhalte -->
+
+                    <!-- Filter & Liste -->
                     <div class="vit-card p-6">
-                        <h2 class="text-lg font-semibold text-gray-800 mb-4">📋 Bestehende Inhalte</h2>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-800">📋 Alle Artikel</h2>
+                            <div class="flex items-center space-x-3">
+                                <input type="text" id="hqWissenSearch" placeholder="Suchen..." oninput="filterHqWissen()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm w-40">
+                                <select id="hqWissenFilterKat" onchange="filterHqWissen()" class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                                    <option value="all">Alle Kategorien</option>
+                                    <option value="system">🖥️ System & WaWi</option>
+                                    <option value="onboarding">🚀 Onboarding</option>
+                                    <option value="verkauf">💰 Verkauf</option>
+                                    <option value="werkstatt">🔧 Werkstatt</option>
+                                    <option value="mitarbeiter">👥 Mitarbeiter</option>
+                                    <option value="kommunikation">✉️ Kommunikation</option>
+                                    <option value="marketing">📣 Marketing</option>
+                                    <option value="allgemein">🏢 Allgemein</option>
+                                    <option value="controlling">📊 Controlling</option>
+                                    <option value="einkauf">🛒 Einkauf</option>
+                                </select>
+                            </div>
+                        </div>
                         <div id="hqWissenList" class="space-y-2"></div>
                     </div>
                 </div>
