@@ -39,7 +39,9 @@ var _supState = {
     statsData: null,
     // Realtime
     realtimeSub: null,
-    activeTicketId: null
+    activeTicketId: null,
+    // HQ Rollen des eingeloggten Users
+    hqUserRollen: []
 };
 
 var STATUS_LABELS = {offen:'Offen',in_bearbeitung:'In Bearbeitung',wartend_auf_partner:'Wartend',geloest:'Geloest',geschlossen:'Geschlossen'};
@@ -157,23 +159,31 @@ async function loadZohoHistory() {
 async function loadHqTickets() {
     if (_supState.hqLoaded) return;
     try {
+        var profile = window.sbProfile || {};
+        var userRollenResp = await _sb().from('user_rollen').select('rolle_id, rollen:rolle_id(name)').eq('user_id', profile.id || '');
+        var hqRollen = (userRollenResp.data || []).map(function(r) { return r.rollen ? r.rollen.name : ''; }).filter(Boolean);
+        _supState.hqUserRollen = hqRollen;
+
+        // GF / Owner / legacy hq sehen alles
+        var isAdmin = hqRollen.indexOf('hq_gf') !== -1 || hqRollen.indexOf('hq') !== -1 || hqRollen.indexOf('owner') !== -1;
+
+        var query = _sb().from('support_tickets')
+            .select('*, users:erstellt_von(name, vorname, nachname), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
+            .eq('zoho_fallback', false)
+            .order('created_at', {ascending: false})
+            .limit(500);
+
+        // Abteilungs-Filter: nur eigene Abteilung(en) wenn nicht Admin
+        if (!isAdmin && hqRollen.length > 0) {
+            var abteilungen = hqRollen.map(function(r) { return r.replace('hq_', ''); });
+            query = query.in('abteilung', abteilungen);
+        }
+
         var [tResp, uResp] = await Promise.all([
-            _sb().from('support_tickets')
-                .select('*, users:erstellt_von(name, vorname, nachname), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
-                .order('created_at', {ascending: false})
-                .limit(500),
-            _sb().from('users').select('id, name, vorname, nachname').eq('is_hq', true).eq('status', 'aktiv')
+            query,
+            _sb().from('users').select('id, email, name, vorname, nachname').eq('is_hq', true).eq('status', 'aktiv')
         ]);
-        var FLORIAN_FALLBACK_ID = 'cf7ecbf3-e123-4c22-834e-cfa23c692ff3';
-        _supState.hqTickets = (tResp.data || []).filter(function(t) {
-            // Zoho-Fallback-Tickets ausblenden: erstellt_von = Florian-Fallback
-            // UND Beschreibung startet mit [Absender: = echter Absender unbekannt im System
-            if (t.erstellt_von === FLORIAN_FALLBACK_ID &&
-                t.beschreibung && t.beschreibung.startsWith('[Absender:')) {
-                return false;
-            }
-            return true;
-        });
+        _supState.hqTickets = tResp.data || [];
         _supState.hqUsers = uResp.data || [];
         _supState.hqLoaded = true;
     } catch(e) {
@@ -979,6 +989,29 @@ export async function supHqOpenTicket(ticketId) {
         html += '<button onclick="supHqSaveAssignee(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Zuweisen</button>';
         html += '</div>';
 
+        // Abteilung
+        html += '<div class="flex items-center gap-1">';
+        html += '<label class="text-xs text-gray-500">Abt.:</label>';
+        html += '<select id="supHqDetailAbteilung" class="text-xs border border-gray-300 rounded px-2 py-1">';
+        html += '<option value="gf"' + (t.abteilung === "gf" ? ' selected' : '') + '>Geschäftsführung</option>';html += '<option value="sales"' + (t.abteilung === "sales" ? ' selected' : '') + '>Sales</option>';html += '<option value="marketing"' + (t.abteilung === "marketing" ? ' selected' : '') + '>Marketing</option>';html += '<option value="einkauf"' + (t.abteilung === "einkauf" ? ' selected' : '') + '>Einkauf</option>';html += '<option value="support"' + (t.abteilung === "support" ? ' selected' : '') + '>Support</option>';html += '<option value="akademie"' + (t.abteilung === "akademie" ? ' selected' : '') + '>Akademie</option>';html += '<option value="hr"' + (t.abteilung === "hr" ? ' selected' : '') + '>HR</option>';html += '<option value="it"' + (t.abteilung === "it" ? ' selected' : '') + '>IT</option>';
+        html += '</select>';
+        html += '<button onclick="supHqSaveAbteilung(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
+        html += '</div>';
+
+        // Absender ändern
+        html += '<div class="flex items-center gap-1">';
+        html += '<label class="text-xs text-gray-500">Absender:</label>';
+        html += '<select id="supHqDetailAbsender" class="text-xs border border-gray-300 rounded px-2 py-1 max-w-[180px]">';
+        html += '<option value="">Unbekannt</option>';
+        _supState.hqUsers.forEach(function(u) {
+            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.name || '';
+            var isCurrent = t.erstellt_von === u.id;
+            html += '<option value="' + u.id + '"' + (isCurrent ? ' selected' : '') + '>' + _escH(name) + '</option>';
+        });
+        html += '</select>';
+        html += '<button onclick="supHqSaveAbsender(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">OK</button>';
+        html += '</div>';
+
         // KI-Antwort
         html += '<button onclick="supHqKiAntwort(\'' + ticketId + '\')" class="text-xs px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 ml-auto">KI-Antwort</button>';
         html += '</div>';
@@ -1049,7 +1082,7 @@ export async function supHqOpenTicket(ticketId) {
             var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
             out += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
             // Reply-Button nur für HQ-Agents
-            out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + _escH(kName) + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
+            var safeKName = kName.replace(/'/g, '').replace(/"/g, ''); out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + safeKName + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
             out += '</div></div>';
             return out;
         }
@@ -1191,6 +1224,43 @@ export async function supHqSaveAssignee(ticketId) {
     } catch(err) {
         _showToast('Fehler: ' + (err.message || err), 'error');
     }
+}
+
+// ========== HQ: Abteilung ändern ==========
+export async function supHqSaveAbteilung(ticketId) {
+    var val = (document.getElementById('supHqDetailAbteilung') || {}).value;
+    if (!val) return;
+    try {
+        var user = _sbUser();
+        var ticket = _supState.hqTickets.find(function(t) { return t.id === ticketId; });
+        await _sb().from('support_tickets').update({ abteilung: val }).eq('id', ticketId);
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'abteilung_geaendert', alt_wert: ticket ? ticket.abteilung : '', neu_wert: val });
+        _showToast('Abteilung: ' + val, 'success');
+        var ov = document.getElementById('supHqDetailOverlay');
+        if (ov) ov.remove();
+        _supState.hqLoaded = false;
+        await loadHqTickets();
+        renderTickets();
+    } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
+}
+
+// ========== HQ: Absender ändern ==========
+export async function supHqSaveAbsender(ticketId) {
+    var val = (document.getElementById('supHqDetailAbsender') || {}).value || null;
+    if (!val) return;
+    try {
+        var user = _sbUser();
+        await _sb().from('support_tickets').update({ erstellt_von: val, zoho_fallback: false }).eq('id', ticketId);
+        var u = _supState.hqUsers.find(function(u) { return u.id === val; });
+        var name = u ? ((u.vorname||'') + ' ' + (u.nachname||'')).trim() : val;
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'absender_geaendert', neu_wert: name });
+        _showToast('Absender: ' + name, 'success');
+        var ov = document.getElementById('supHqDetailOverlay');
+        if (ov) ov.remove();
+        _supState.hqLoaded = false;
+        await loadHqTickets();
+        renderTickets();
+    } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
 }
 
 // ========== HQ: KI-Antwortvorschlag ==========
@@ -1365,7 +1435,7 @@ function _supRenderKommentarHtml(k, isReply) {
     out += '</div>';
     var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
     out += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
-    out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + _escH(kName) + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
+    var safeKName2 = kName.replace(/'/g, '').replace(/"/g, ''); out += '<button onclick="supHqStartReply(\'' + k.id + '\',\'' + safeKName2 + '\')" class="mt-1 text-[10px] text-gray-400 hover:text-blue-500 transition-colors">↩ Antworten</button>';
     out += '</div></div>';
     return out;
 }
@@ -1846,6 +1916,8 @@ var _exports = {
     supHqKiAntwort: supHqKiAntwort,
     supHqKiInAntwort: supHqKiInAntwort,
     supHqSendKommentar: supHqSendKommentar,
+    supHqSaveAbteilung: supHqSaveAbteilung,
+    supHqSaveAbsender: supHqSaveAbsender,
     supHqStartReply: supHqStartReply,
     supHqCancelReply: supHqCancelReply,
     supHqMentionInput: supHqMentionInput,
