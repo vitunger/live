@@ -456,6 +456,7 @@ export async function lockStrategy(stratId) {
 }
 
 export async function loadBillingProducts() {
+    console.log('[billing] loadBillingProducts v2 called');
     var container = document.getElementById('billingProductsList');
     if (!container) return;
     container.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></div>';
