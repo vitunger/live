@@ -1,5 +1,7 @@
 /**
- * views/wissen.js - Wissen Module (Akademie, Handbücher, Best Practices, FAQ)
+ * views/wissen.js - Wissen Module (DB-basiert)
+ * Partner: Wissensdatenbank lesen, filtern, suchen, als gelesen markieren
+ * HQ: CMS mit Quill WYSIWYG-Editor – Artikel erstellen, bearbeiten, löschen
  * @module views/wissen
  */
 function _sb()           { return window.sb; }
@@ -8,400 +10,70 @@ function _sbProfile()    { return window.sbProfile; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
 function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
-function _fmtN(n)        { return typeof window.fmtN === 'function' ? window.fmtN(n) : String(n); }
-function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 
-// === WISSEN MODULE ===
-export function showWissenTab(tabName) {
-    document.querySelectorAll('.wissen-tab-content').forEach(function(c){ c.style.display='none'; });
-    document.querySelectorAll('.wissen-tab-btn').forEach(function(b){
-        b.className='wissen-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
-    });
-    var tabMap = {akademie:'Akademie',handbuecher:'Handbuecher',bestpractices:'Bestpractices',faq:'Faq'};
-    var el = document.getElementById('wissenTab' + (tabMap[tabName]||''));
-    if(el) el.style.display='block';
-    var btn = document.querySelector('.wissen-tab-btn[data-tab="'+tabName+'"]');
-    if(btn) btn.className='wissen-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-}
-
-// --- AKADEMIE DATA ---
-var akademieKurse = [];
-var akdFilterCat = 'all';
-export function filterAkademie(cat) {
-    akdFilterCat = cat;
-    document.querySelectorAll('.akd-filter-btn').forEach(function(b){ b.className='akd-filter-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-600'; });
-    var ab = document.querySelector('.akd-filter-btn[data-cat="'+cat+'"]');
-    if(ab) ab.className='akd-filter-btn px-4 py-2 rounded-full text-xs font-semibold bg-vit-orange text-white';
-    renderAkademie();
-}
-export function renderAkademie() {
-    var g = document.getElementById('akademieGrid'); if(!g) return;
-    var filtered = akademieKurse.filter(function(k){ return akdFilterCat==='all' || k.cat===akdFilterCat; });
-    var catColors = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',marketing:'bg-orange-100 text-orange-700',einkauf:'bg-cyan-100 text-cyan-700',controlling:'bg-green-100 text-green-700'};
-    var catLabels = {allgemein:'Allgemein',verkauf:'Verkauf',marketing:'Marketing',einkauf:'Einkauf',controlling:'Controlling'};
-    var h = '';
-    filtered.forEach(function(k){
-        var pColor = k.progress>=100?'bg-green-500':k.progress>=50?'bg-vit-orange':'bg-gray-300';
-        var statusText = k.progress>=100?'<span class="text-green-600 text-xs font-bold">✓ Abgeschlossen</span>':k.progress>0?'<span class="text-vit-orange text-xs font-bold">In Bearbeitung</span>':'<span class="text-gray-400 text-xs">Nicht gestartet</span>';
-        h += '<div class="vit-card p-5">' +
-            '<div class="flex items-start justify-between mb-2">' +
-                '<div class="flex items-center space-x-2">' +
-                    '<span class="px-2 py-0.5 rounded text-xs font-semibold '+catColors[k.cat]+'">'+catLabels[k.cat]+'</span>' +
-                    (k.pflicht?'<span class="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">Pflicht</span>':'') +
-                    '<span class="text-xs text-gray-400">'+k.format+'</span>' +
-                '</div>' +
-                (k.zertifikat?'<span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-semibold">🏆 Zertifikat</span>':'') +
-            '</div>' +
-            '<h4 class="font-semibold text-gray-800 mb-1">'+k.title+'</h4>' +
-            '<p class="text-xs text-gray-500 mb-3">'+k.desc+'</p>' +
-            '<div class="flex items-center justify-between">' +
-                '<div class="flex-1 mr-4"><div class="w-full bg-gray-200 rounded-full h-2"><div class="'+pColor+' h-2 rounded-full" style="width:'+k.progress+'%"></div></div></div>' +
-                '<span class="text-xs text-gray-500 mr-3">'+k.progress+'%</span>' +
-                '<span class="text-xs text-gray-400">'+k.dauer+'</span>' +
-            '</div>' +
-            '<div class="mt-2">'+statusText+'</div>' +
-        '</div>';
-    });
-    g.innerHTML = h || '<p class="text-gray-400 text-sm py-8 text-center">Keine Kurse in dieser Kategorie.</p>';
-}
-renderAkademie();
-
-// --- HANDBUECHER DATA ---
-var handbuecher = [];
-var hbFilterCat = 'all';
-export function filterHbCat(cat) {
-    hbFilterCat = cat;
-    document.querySelectorAll('.hb-cat-btn').forEach(function(b){ b.className='hb-cat-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-600'; });
-    var ab = document.querySelector('.hb-cat-btn[data-cat="'+cat+'"]');
-    if(ab) ab.className='hb-cat-btn px-4 py-2 rounded-full text-xs font-semibold bg-vit-orange text-white';
-    renderHandbuecher();
-}
-export function filterHandbuecher() { renderHandbuecher(); }
-export function renderHandbuecher() {
-    var g = document.getElementById('handbuchGrid'); if(!g) return;
-    var q = (document.getElementById('hbSearch')||{}).value||'';
-    q = q.toLowerCase();
-    var catColors = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',marketing:'bg-orange-100 text-orange-700',einkauf:'bg-cyan-100 text-cyan-700',controlling:'bg-green-100 text-green-700'};
-    var catLabels = {allgemein:'Allgemein',verkauf:'Verkauf',marketing:'Marketing',einkauf:'Einkauf',controlling:'Controlling'};
-    var typIcons = {PDF:'📄',Katalog:'📕',Excel:'📊'};
-    var filtered = handbuecher.filter(function(h){
-        var catOk = hbFilterCat==='all' || h.cat===hbFilterCat;
-        var searchOk = !q || h.title.toLowerCase().indexOf(q)>-1 || h.marke.toLowerCase().indexOf(q)>-1 || h.cat.indexOf(q)>-1;
-        return catOk && searchOk;
-    });
-    var html = '';
-    filtered.forEach(function(h){
-        html += '<div class="vit-card p-4 flex items-center justify-between">' +
-            '<div class="flex items-center space-x-4">' +
-                '<span class="text-2xl">'+(typIcons[h.typ]||'📄')+'</span>' +
-                '<div>' +
-                    '<p class="font-semibold text-sm text-gray-800">'+h.title+'</p>' +
-                    '<div class="flex items-center space-x-2 mt-1">' +
-                        '<span class="px-2 py-0.5 rounded text-xs font-semibold '+catColors[h.cat]+'">'+catLabels[h.cat]+'</span>' +
-                        '<span class="text-xs text-gray-400">'+h.marke+'</span>' +
-                        '<span class="text-xs text-gray-400">·</span>' +
-                        '<span class="text-xs text-gray-400">'+h.seiten+' Seiten</span>' +
-                        '<span class="text-xs text-gray-400">·</span>' +
-                        '<span class="text-xs text-gray-400">Aktualisiert: '+h.aktualisiert+'</span>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-            '<button class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-xs font-semibold hover:bg-orange-600">Oeffnen</button>' +
-        '</div>';
-    });
-    g.innerHTML = html || '<p class="text-gray-400 text-sm py-8 text-center">Keine Handbuecher gefunden.</p>';
-}
-renderHandbuecher();
-
-// --- BEST PRACTICES DATA ---
-var bestPractices = [];
-var bpFilterCat = 'all';
-export function filterBP(cat) {
-    bpFilterCat = cat;
-    document.querySelectorAll('.bp-cat-btn').forEach(function(b){ b.className='bp-cat-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-600'; });
-    var ab = document.querySelector('.bp-cat-btn[data-cat="'+cat+'"]');
-    if(ab) ab.className='bp-cat-btn px-4 py-2 rounded-full text-xs font-semibold bg-vit-orange text-white';
-    renderBP();
-}
-export function renderBP() {
-    var g = document.getElementById('bpGrid'); if(!g) return;
-    var catColors = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',marketing:'bg-orange-100 text-orange-700',einkauf:'bg-cyan-100 text-cyan-700',controlling:'bg-green-100 text-green-700'};
-    var catLabels = {allgemein:'Allgemein',verkauf:'Verkauf',marketing:'Marketing',einkauf:'Einkauf',controlling:'Controlling'};
-    var filtered = bestPractices.filter(function(b){ return bpFilterCat==='all' || b.cat===bpFilterCat; });
-    var html = '';
-    filtered.forEach(function(b){
-        html += '<div class="vit-card p-5">' +
-            '<div class="flex items-center justify-between mb-2">' +
-                '<div class="flex items-center space-x-2">' +
-                    '<span class="px-2 py-0.5 rounded text-xs font-semibold '+catColors[b.cat]+'">'+catLabels[b.cat]+'</span>' +
-                    '<span class="text-xs text-gray-400">'+b.typ+'</span>' +
-                '</div>' +
-                '<span class="text-xs text-gray-400">'+b.standort+' · '+b.datum+'</span>' +
-            '</div>' +
-            '<h4 class="font-semibold text-gray-800 mb-2">'+b.title+'</h4>' +
-            '<p class="text-sm text-gray-600 mb-3">'+b.desc+'</p>' +
-            '<div class="flex items-center justify-between">' +
-                '<span class="text-xs text-gray-400">👍 '+b.likes+' Partner fanden das hilfreich</span>' +
-                '<button class="text-xs text-vit-orange font-semibold hover:text-orange-600">Hilfreich 👍</button>' +
-            '</div>' +
-        '</div>';
-    });
-    g.innerHTML = html || '<p class="text-gray-400 text-sm py-8 text-center">Keine Best Practices in dieser Kategorie.</p>';
-}
-renderBP();
-
-// --- FAQ DATA ---
-var faqItems = [];
-var faqFilterCat = 'all';
-export function filterFaqCat(cat) {
-    faqFilterCat = cat;
-    document.querySelectorAll('.faq-cat-btn').forEach(function(b){ b.className='faq-cat-btn px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-600'; });
-    var ab = document.querySelector('.faq-cat-btn[data-cat="'+cat+'"]');
-    if(ab) ab.className='faq-cat-btn px-4 py-2 rounded-full text-xs font-semibold bg-vit-orange text-white';
-    renderFAQ();
-}
-export function filterFAQ() { renderFAQ(); }
-export function renderFAQ() {
-    var g = document.getElementById('faqGrid'); if(!g) return;
-    var q = (document.getElementById('faqSearch')||{}).value||'';
-    q = q.toLowerCase();
-    var catColors = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',marketing:'bg-orange-100 text-orange-700',einkauf:'bg-cyan-100 text-cyan-700',controlling:'bg-green-100 text-green-700'};
-    var catLabels = {allgemein:'Allgemein',verkauf:'Verkauf',marketing:'Marketing',einkauf:'Einkauf',controlling:'Controlling'};
-    var filtered = faqItems.filter(function(f){
-        var catOk = faqFilterCat==='all' || f.cat===faqFilterCat;
-        var searchOk = !q || f.q.toLowerCase().indexOf(q)>-1 || f.a.toLowerCase().indexOf(q)>-1;
-        return catOk && searchOk;
-    });
-    var html = '';
-    filtered.forEach(function(f, idx){
-        var faqId = 'faq_'+faqFilterCat+'_'+idx;
-        html += '<div class="vit-card overflow-hidden">' +
-            '<button onclick="toggleFaq(\''+faqId+'\')" class="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50">' +
-                '<div class="flex items-center space-x-3">' +
-                    '<span class="px-2 py-0.5 rounded text-xs font-semibold '+catColors[f.cat]+'">'+catLabels[f.cat]+'</span>' +
-                    '<span class="font-semibold text-sm text-gray-800">'+f.q+'</span>' +
-                '</div>' +
-                '<svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>' +
-            '</button>' +
-            '<div id="'+faqId+'" style="display:none" class="px-4 pb-4 border-t border-gray-100">' +
-                '<p class="text-sm text-gray-600 pt-3">'+f.a+'</p>' +
-            '</div>' +
-        '</div>';
-    });
-    g.innerHTML = html || '<p class="text-gray-400 text-sm py-8 text-center">Keine FAQ-Eintraege gefunden.</p>';
-}
-export function toggleFaq(id) {
-    var el = document.getElementById(id);
-    if(el) el.style.display = el.style.display==='none'?'block':'none';
-}
-renderFAQ();
-
-// === Dashboards Tabs ===
-var dashTabInited = false;
-export function initDashboardTabs() {
-    if(dashTabInited) return;
-    dashTabInited = true;
-    // Move contents from old separate views into tab containers
-    var finSrc = document.getElementById('financesView');
-    var leadSrc = document.getElementById('leadReportingView');
-    var teamSrc = document.getElementById('teamView');
-    var finDest = document.getElementById('dashTabFinanzen');
-    var leadDest = document.getElementById('dashTabLeadreporting');
-    var teamDest = document.getElementById('dashTabTeam');
-    if(finSrc && finDest) { while(finSrc.firstChild) finDest.appendChild(finSrc.firstChild); }
-    if(leadSrc && leadDest) { while(leadSrc.firstChild) leadDest.appendChild(leadSrc.firstChild); }
-    if(teamSrc && teamDest) { while(teamSrc.firstChild) teamDest.appendChild(teamSrc.firstChild); }
-}
-export function showDashboardTab(tabName) {
-    initDashboardTabs();
-    document.querySelectorAll('.dash-tab-content').forEach(function(c){ c.style.display='none'; });
-    document.querySelectorAll('.dash-tab-btn').forEach(function(b){
-        b.className='dash-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
-    });
-    var tabMap = {finanzen:'Finanzen',leadreporting:'Leadreporting',team:'Team'};
-    var el = document.getElementById('dashTab' + (tabMap[tabName]||''));
-    if(el) el.style.display='block';
-    var btn = document.querySelector('.dash-tab-btn[data-tab="'+tabName+'"]');
-    if(btn) btn.className='dash-tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-}
-
-// === WISSEN TABS (kontextuell pro Modul) ===
-// Static knowledge base - can be enriched from DB (netzwerk_dokumente)
-var wissenData = { allgemein:{akademie:[],handbuecher:[],bestpractices:[],faq:[]}, marketing:{akademie:[],handbuecher:[],bestpractices:[],faq:[]}, einkauf:{akademie:[],handbuecher:[],bestpractices:[],faq:[]}, verkauf:{akademie:[],handbuecher:[],bestpractices:[],faq:[]} };
-
-export function renderWissenTab(bereich, containerId) {
-    var d = wissenData[bereich];
-    if(!d) return;
-    var el = document.getElementById(containerId);
-    if(!el || el.dataset.rendered) return;
-    el.dataset.rendered = 'true';
-    var h = '';
-
-    // Sub-Tab Navigation
-    h += '<div class="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">';
-    h += '<button onclick="switchWissenSub(\''+containerId+'\',\'akademie\')" class="wissen-sub-'+containerId+' flex-1 px-3 py-2 text-xs font-semibold rounded-md bg-white shadow text-vit-orange" data-sub="akademie">🎓 Akademie</button>';
-    h += '<button onclick="switchWissenSub(\''+containerId+'\',\'handbuecher\')" class="wissen-sub-'+containerId+' flex-1 px-3 py-2 text-xs font-semibold rounded-md text-gray-500 hover:bg-white" data-sub="handbuecher">📖 Handbuecher</button>';
-    h += '<button onclick="switchWissenSub(\''+containerId+'\',\'bestpractices\')" class="wissen-sub-'+containerId+' flex-1 px-3 py-2 text-xs font-semibold rounded-md text-gray-500 hover:bg-white" data-sub="bestpractices">💡 Best Practices</button>';
-    h += '<button onclick="switchWissenSub(\''+containerId+'\',\'faq\')" class="wissen-sub-'+containerId+' flex-1 px-3 py-2 text-xs font-semibold rounded-md text-gray-500 hover:bg-white" data-sub="faq">❓ FAQ</button>';
-    h += '</div>';
-
-    // Akademie
-    h += '<div id="'+containerId+'_akademie" class="wissen-section-'+containerId+'">';
-    h += '<div class="flex items-center justify-between mb-4"><h3 class="font-semibold text-gray-800">🎓 Schulungen & Kurse</h3><span class="text-xs text-gray-400">'+d.akademie.filter(function(k){return k.progress===100;}).length+' / '+d.akademie.length+' abgeschlossen</span></div>';
-    d.akademie.forEach(function(k) {
-        var pColor = k.progress===100?'bg-green-500':k.progress>0?'bg-vit-orange':'bg-gray-300';
-        var badge = k.typ==='pflicht'?'<span class="text-[10px] px-2 py-0.5 bg-red-100 text-red-600 rounded-full font-bold">Pflicht</span>':'<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-bold">Wahl</span>';
-        h += '<div class="vit-card p-4 mb-3 hover:shadow-md transition">';
-        h += '<div class="flex items-center justify-between mb-2"><div class="flex items-center space-x-2"><span class="font-semibold text-sm">'+k.title+'</span>'+badge+'</div><span class="text-xs text-gray-400">'+k.dauer+'</span></div>';
-        h += '<p class="text-xs text-gray-500 mb-2">'+k.desc+'</p>';
-        h += '<div class="flex items-center space-x-3"><div class="flex-1 bg-gray-200 rounded-full h-2"><div class="'+pColor+' h-2 rounded-full" style="width:'+k.progress+'%"></div></div><span class="text-xs font-bold '+(k.progress===100?'text-green-600':'text-gray-500')+'">'+k.progress+'%</span></div>';
-        h += '</div>';
-    });
-    h += '</div>';
-
-    // Handbuecher
-    h += '<div id="'+containerId+'_handbuecher" class="wissen-section-'+containerId+'" style="display:none;">';
-    h += '<h3 class="font-semibold text-gray-800 mb-4">📖 Technische Dokus & Marken-Guides</h3>';
-    h += '<div class="space-y-2">';
-    d.handbuecher.forEach(function(doc) {
-        h += '<div class="vit-card p-4 flex items-center justify-between hover:shadow-md transition cursor-pointer">';
-        h += '<div class="flex items-center space-x-3"><div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600 text-xs font-bold">PDF</div>';
-        h += '<div><p class="text-sm font-semibold">'+doc.title+'</p><p class="text-xs text-gray-400">'+doc.marke+' · '+doc.seiten+' Seiten</p></div></div>';
-        h += '<button class="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">Oeffnen</button>';
-        h += '</div>';
-    });
-    h += '</div></div>';
-
-    // Best Practices
-    h += '<div id="'+containerId+'_bestpractices" class="wissen-section-'+containerId+'" style="display:none;">';
-    h += '<h3 class="font-semibold text-gray-800 mb-4">💡 Best Practices aus dem Netzwerk</h3>';
-    d.bestpractices.forEach(function(bp) {
-        h += '<div class="vit-card p-5 mb-3 hover:shadow-md transition">';
-        h += '<div class="flex items-center justify-between mb-2"><span class="font-semibold text-sm">'+bp.title+'</span><span class="text-xs text-gray-400">'+bp.datum+'</span></div>';
-        h += '<div class="flex items-center space-x-2"><span class="text-xs text-gray-500">📍 '+bp.standort+'</span>';
-        bp.tags.forEach(function(t){ h += '<span class="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">'+t+'</span>'; });
-        h += '</div></div>';
-    });
-    h += '</div>';
-
-    // FAQ
-    h += '<div id="'+containerId+'_faq" class="wissen-section-'+containerId+'" style="display:none;">';
-    h += '<h3 class="font-semibold text-gray-800 mb-4">❓ Haeufige Fragen</h3>';
-    h += '<div class="space-y-2">';
-    d.faq.forEach(function(f,i) {
-        h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="this.querySelector(\'.faq-answer\').style.display=this.querySelector(\'.faq-answer\').style.display===\'none\'?\'block\':\'none\'">';
-        h += '<div class="flex items-center justify-between"><span class="text-sm font-semibold">'+f.frage+'</span><span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+f.kat+'</span></div>';
-        h += '<div class="faq-answer text-xs text-gray-500 mt-2" style="display:none;">Antwort wird geladen... (Im echten Produkt: vollstaendige Antwort aus der Wissensdatenbank)</div>';
-        h += '</div>';
-    });
-    h += '</div></div>';
-
-    el.innerHTML = h;
-}
-
-export function switchWissenSub(containerId, sub) {
-    document.querySelectorAll('.wissen-section-'+containerId).forEach(function(s){ s.style.display='none'; });
-    var target = document.getElementById(containerId+'_'+sub);
-    if(target) target.style.display='block';
-    document.querySelectorAll('.wissen-sub-'+containerId).forEach(function(b){
-        b.className='wissen-sub-'+containerId+' flex-1 px-3 py-2 text-xs font-semibold rounded-md text-gray-500 hover:bg-white';
-    });
-    var btn = document.querySelector('.wissen-sub-'+containerId+'[data-sub="'+sub+'"]');
-    if(btn) btn.className='wissen-sub-'+containerId+' flex-1 px-3 py-2 text-xs font-semibold rounded-md bg-white shadow text-vit-orange';
-}
-
-// === GLOBAL WISSEN VIEW ===
-
-var currentWissenBereich = 'all';
-window.currentWissenBereich = currentWissenBereich;
-var currentWissenTyp = 'portal';
-window.currentWissenTyp = currentWissenTyp;
-
-// Cache für DB-Artikel
-var _wissenArtikelCache = null;
-var _wissenArtikelLoading = false;
-
+// ══════════════════════════════════════════════════════
+// SHARED: Kategorie-Definitionen
+// ══════════════════════════════════════════════════════
 var _katLabels = {allgemein:'Allgemein',verkauf:'Verkauf',einkauf:'Einkauf',marketing:'Marketing',controlling:'Controlling',werkstatt:'Werkstatt',mitarbeiter:'Mitarbeiter',onboarding:'Onboarding',kommunikation:'Kommunikation',system:'System & WaWi'};
 var _katIcons  = {allgemein:'🏢',verkauf:'💰',einkauf:'🛒',marketing:'📣',controlling:'📊',werkstatt:'🔧',mitarbeiter:'👥',onboarding:'🚀',kommunikation:'✉️',system:'🖥️'};
 var _katColors = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',einkauf:'bg-cyan-100 text-cyan-700',marketing:'bg-orange-100 text-orange-700',controlling:'bg-green-100 text-green-700',werkstatt:'bg-yellow-100 text-yellow-700',mitarbeiter:'bg-purple-100 text-purple-700',onboarding:'bg-pink-100 text-pink-700',kommunikation:'bg-indigo-100 text-indigo-700',system:'bg-slate-100 text-slate-700'};
 
-async function _ladeWissenArtikel() {
-    if (_wissenArtikelCache) return _wissenArtikelCache;
-    if (_wissenArtikelLoading) return [];
+// ══════════════════════════════════════════════════════
+// SHARED: Cache & Laden
+// ══════════════════════════════════════════════════════
+var _wissenArtikelCache = null;
+var _wissenArtikelLoading = false;
+var _wissenGelesenSet = new Set(); // artikel_ids die der User gelesen hat
+
+async function _ladeWissenArtikel(forceReload) {
+    if (_wissenArtikelCache && !forceReload) return _wissenArtikelCache;
+    if (_wissenArtikelLoading) return _wissenArtikelCache || [];
     _wissenArtikelLoading = true;
     try {
         var sb = _sb(); if (!sb) return [];
-        var { data, error } = await sb.from('wissen_artikel').select('*').order('gepinnt', {ascending: false}).order('views', {ascending: false});
+        var { data, error } = await sb.from('wissen_artikel').select('*').order('gepinnt', {ascending: false}).order('updated_at', {ascending: false});
         if (error) throw error;
         _wissenArtikelCache = data || [];
     } catch(e) {
         console.warn('wissen_artikel Ladefehler:', e);
-        _wissenArtikelCache = [];
+        _wissenArtikelCache = _wissenArtikelCache || [];
     }
     _wissenArtikelLoading = false;
     return _wissenArtikelCache;
 }
 
-async function _artikelViewCount(id) {
+async function _ladeGelesenStatus() {
     try {
-        var sb = _sb(); if (!sb) return;
-        await sb.from('wissen_artikel').update({ views: (_wissenArtikelCache.find(function(a){return a.id===id;})||{views:0}).views + 1 }).eq('id', id);
-    } catch(e) {}
+        var sb = _sb(); var user = _sbUser(); if (!sb || !user) return;
+        var { data } = await sb.from('wissen_gelesen').select('artikel_id').eq('user_id', user.id);
+        _wissenGelesenSet = new Set((data || []).map(function(r){ return r.artikel_id; }));
+    } catch(e) { console.warn('wissen_gelesen Ladefehler:', e); }
 }
 
-window.openWissenArtikel = function(id) {
-    var artikel = (_wissenArtikelCache||[]).find(function(a){ return a.id === id; });
-    if (!artikel) return;
-    _artikelViewCount(id);
-    var modal = document.getElementById('wissenArtikelModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'wissenArtikelModal';
-        modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
-        modal.style.background = 'rgba(0,0,0,0.5)';
-        modal.onclick = function(e){ if(e.target===modal) modal.style.display='none'; };
-        document.body.appendChild(modal);
-    }
-    var kat = artikel.kategorie || 'allgemein';
-    var katColor = _katColors[kat] || 'bg-gray-100 text-gray-700';
-    var tags = (artikel.tags||[]).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
-    modal.innerHTML =
-        '<div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">' +
-            '<div class="flex items-start justify-between p-6 border-b border-gray-100">' +
-                '<div>' +
-                    '<div class="flex items-center space-x-2 mb-2">' +
-                        '<span class="text-sm">'+(_katIcons[kat]||'📄')+'</span>' +
-                        '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(_katLabels[kat]||kat)+'</span>' +
-                        (artikel.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌 Gepinnt</span>':'') +
-                    '</div>' +
-                    '<h2 class="text-lg font-bold text-gray-900">'+_escH(artikel.titel)+'</h2>' +
-                    '<div class="flex items-center space-x-3 mt-1">'+tags+'</div>' +
-                '</div>' +
-                '<button onclick="document.getElementById(\'wissenArtikelModal\').style.display=\'none\'" class="text-gray-400 hover:text-gray-600 text-xl font-bold ml-4">✕</button>' +
-            '</div>' +
-            '<div class="p-6 overflow-y-auto flex-1 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">'+_escH(artikel.inhalt||'')+'</div>' +
-            '<div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between">' +
-                '<span class="text-xs text-gray-400">👁️ '+artikel.views+' Aufrufe</span>' +
-                '<button onclick="document.getElementById(\'wissenArtikelModal\').style.display=\'none\'" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200">Schließen</button>' +
-            '</div>' +
-        '</div>';
-    modal.style.display = 'flex';
-};
+async function _markiereGelesen(artikelId) {
+    try {
+        var sb = _sb(); var user = _sbUser(); if (!sb || !user) return;
+        await sb.from('wissen_gelesen').upsert({ user_id: user.id, artikel_id: artikelId }, { onConflict: 'user_id,artikel_id' });
+        _wissenGelesenSet.add(artikelId);
+    } catch(e) { console.warn('Gelesen-Markierung fehlgeschlagen:', e); }
+}
+
+// ══════════════════════════════════════════════════════
+// PARTNER: Global Wissen View
+// ══════════════════════════════════════════════════════
+var currentWissenBereich = 'all';
+window.currentWissenBereich = currentWissenBereich;
 
 window.renderWissenGlobal = renderWissenGlobal;
 export async function renderWissenGlobal() {
     var el = document.getElementById('wissenGlobalContent');
     if (!el) return;
 
-    // Delegate Portal/Kurse/Onboarding-Typen
-    if (currentWissenTyp === 'portal' && typeof window.renderPortalGuide === 'function') { window.renderPortalGuide(); return; }
-    if (currentWissenTyp === 'kurse'  && typeof window.renderKurse === 'function')       { window.renderKurse(); return; }
-    if (currentWissenTyp === 'onboarding' && typeof window.renderOnboarding === 'function') { window.renderOnboarding(); return; }
-
     // Ladeindikator
     el.innerHTML = '<div class="text-center py-12 text-gray-400"><div class="animate-spin text-3xl mb-3">⚙️</div><p class="text-sm">Artikel werden geladen…</p></div>';
 
     var alleArtikel = await _ladeWissenArtikel();
+    await _ladeGelesenStatus();
 
     // Filter nach Kategorie
     var items = alleArtikel;
@@ -425,12 +97,13 @@ export async function renderWissenGlobal() {
     if (kpi) {
         var katCounts = {};
         alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
+        var gelesenCount = _wissenGelesenSet.size;
         kpi.innerHTML =
             '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-gray-800">'+alleArtikel.length+'</p><p class="text-xs text-gray-500">Artikel gesamt</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-slate-600">'+(katCounts['system']||0)+'</p><p class="text-xs text-gray-500">System & WaWi</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+(katCounts['verkauf']||0)+'</p><p class="text-xs text-gray-500">Verkauf</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">'+(katCounts['mitarbeiter']||0)+'</p><p class="text-xs text-gray-500">Mitarbeiter</p></div>' +
-            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-pink-600">'+(katCounts['onboarding']||0)+'</p><p class="text-xs text-gray-500">Onboarding</p></div>';
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-green-600">'+gelesenCount+'</p><p class="text-xs text-gray-500">Gelesen</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-vit-orange">'+(alleArtikel.length - gelesenCount)+'</p><p class="text-xs text-gray-500">Ungelesen</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-blue-600">'+alleArtikel.filter(function(a){return a.gepinnt;}).length+'</p><p class="text-xs text-gray-500">Gepinnt</p></div>' +
+            '<div class="vit-card p-4 text-center"><p class="text-2xl font-bold text-purple-600">'+Object.keys(katCounts).length+'</p><p class="text-xs text-gray-500">Kategorien</p></div>';
     }
 
     // Artikel-Karten rendern
@@ -444,12 +117,14 @@ export async function renderWissenGlobal() {
         var kat = a.kategorie || 'allgemein';
         var katColor = _katColors[kat] || 'bg-gray-100 text-gray-700';
         var tags = (a.tags||[]).slice(0,4).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
-        var preview = (a.inhalt||'').replace(/\s+/g,' ').trim().slice(0,160);
-        h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer" onclick="window.openWissenArtikel(\''+a.id+'\')">' +
+        var preview = (a.inhalt||'').replace(/<[^>]*>/g, '').replace(/\s+/g,' ').trim().slice(0,160);
+        var isGelesen = _wissenGelesenSet.has(a.id);
+        h += '<div class="vit-card p-4 hover:shadow-md transition cursor-pointer '+(isGelesen?'border-l-4 border-l-green-400':'border-l-4 border-l-transparent')+'" onclick="window.openWissenArtikel(\''+a.id+'\')">' +
             '<div class="flex items-start justify-between mb-2">' +
                 '<div class="flex items-center space-x-2 flex-wrap gap-1">' +
                     '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(_katIcons[kat]||'📄')+' '+(_katLabels[kat]||kat)+'</span>' +
                     (a.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌</span>':'') +
+                    (isGelesen?'<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-semibold">✓ Gelesen</span>':'') +
                     tags +
                 '</div>' +
                 '<span class="text-xs text-gray-400 ml-2 whitespace-nowrap">👁️ '+a.views+'</span>' +
@@ -462,6 +137,66 @@ export async function renderWissenGlobal() {
     el.innerHTML = h;
 }
 
+// Artikel-Modal (Partner-View)
+window.openWissenArtikel = function(id) {
+    var artikel = (_wissenArtikelCache||[]).find(function(a){ return a.id === id; });
+    if (!artikel) return;
+
+    // View-Counter erhöhen
+    _artikelViewCount(id);
+    // Als gelesen markieren
+    _markiereGelesen(id);
+
+    var modal = document.getElementById('wissenArtikelModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'wissenArtikelModal';
+        modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        modal.onclick = function(e){ if(e.target===modal) modal.style.display='none'; };
+        document.body.appendChild(modal);
+    }
+    var kat = artikel.kategorie || 'allgemein';
+    var katColor = _katColors[kat] || 'bg-gray-100 text-gray-700';
+    var tags = (artikel.tags||[]).map(function(t){ return '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">'+_escH(t)+'</span>'; }).join(' ');
+    var inhalt = artikel.inhalt || '';
+    // Wenn HTML-Inhalt, direkt rendern; sonst als Plaintext mit Zeilenumbrüchen
+    var inhaltHtml = inhalt.indexOf('<') > -1 ? inhalt : '<p>' + _escH(inhalt).replace(/\n/g, '</p><p>') + '</p>';
+
+    modal.innerHTML =
+        '<div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">' +
+            '<div class="flex items-start justify-between p-6 border-b border-gray-100">' +
+                '<div>' +
+                    '<div class="flex items-center space-x-2 mb-2">' +
+                        '<span class="text-sm">'+(_katIcons[kat]||'📄')+'</span>' +
+                        '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(_katLabels[kat]||kat)+'</span>' +
+                        (artikel.gepinnt?'<span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-semibold">📌 Gepinnt</span>':'') +
+                    '</div>' +
+                    '<h2 class="text-lg font-bold text-gray-900">'+_escH(artikel.titel)+'</h2>' +
+                    '<div class="flex items-center space-x-3 mt-1">'+tags+'</div>' +
+                '</div>' +
+                '<button onclick="document.getElementById(\'wissenArtikelModal\').style.display=\'none\'" class="text-gray-400 hover:text-gray-600 text-xl font-bold ml-4">✕</button>' +
+            '</div>' +
+            '<div class="p-6 overflow-y-auto flex-1 prose prose-sm max-w-none">'+inhaltHtml+'</div>' +
+            '<div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between">' +
+                '<div class="flex items-center space-x-4"><span class="text-xs text-gray-400">👁️ '+(artikel.views+1)+' Aufrufe</span><span class="text-xs text-green-600 font-semibold">✓ Als gelesen markiert</span></div>' +
+                '<button onclick="document.getElementById(\'wissenArtikelModal\').style.display=\'none\'" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200">Schließen</button>' +
+            '</div>' +
+        '</div>';
+    modal.style.display = 'flex';
+};
+
+async function _artikelViewCount(id) {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var artikel = (_wissenArtikelCache||[]).find(function(a){return a.id===id;});
+        var currentViews = artikel ? (artikel.views || 0) : 0;
+        await sb.from('wissen_artikel').update({ views: currentViews + 1 }).eq('id', id);
+        if (artikel) artikel.views = currentViews + 1;
+    } catch(e) {}
+}
+
+// Filter-Funktionen
 window.filterWissenBereich = filterWissenBereich;
 export function filterWissenBereich(b){
     currentWissenBereich=b; window.currentWissenBereich=b;
@@ -470,17 +205,11 @@ export function filterWissenBereich(b){
     if(btn) btn.className='wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white';
     renderWissenGlobal();
 }
-window.switchWissenTyp = switchWissenTyp;
-export function switchWissenTyp(t){
-    currentWissenTyp=t; window.currentWissenTyp=t;
-    document.querySelectorAll('.wissen-typ-btn').forEach(function(btn){btn.className='wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-transparent font-semibold text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';});
-    var btn=document.querySelector('.wissen-typ-btn[data-wtt="'+t+'"]');
-    if(btn) btn.className='wissen-typ-btn whitespace-nowrap py-3 px-1 border-b-2 border-vit-orange font-semibold text-sm text-vit-orange';
-    renderWissenGlobal();
-}
-export function filterWissenGlobal(){ renderWissenGlobal(); }
 
-// Kategorie-Filter-Buttons dynamisch aus DB-Daten aufbauen
+export function filterWissenGlobal(){ renderWissenGlobal(); }
+window.filterWissenGlobal = filterWissenGlobal;
+
+// Dynamische Bereich-Filter aus DB
 window.renderWissenBereichFilter = async function() {
     var container = document.getElementById('wissenBereichFilter');
     if (!container) return;
@@ -488,54 +217,312 @@ window.renderWissenBereichFilter = async function() {
     var katCounts = {};
     alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
     var kats = Object.keys(katCounts).sort(function(a,b){ return katCounts[b]-katCounts[a]; });
-    var h = '<button onclick="filterWissenBereich(\'all\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-wbf="all">Alle ('+alleArtikel.length+')</button>';
+    var h = '<button onclick="filterWissenBereich(\'all\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-vit-orange text-white" data-wbf="all">📚 Alle ('+alleArtikel.length+')</button>';
     kats.forEach(function(k){
         h += '<button onclick="filterWissenBereich(\''+k+'\')" class="wissen-bereich-filter text-xs px-3 py-1.5 rounded-full font-semibold bg-gray-100 text-gray-600" data-wbf="'+k+'">'+(_katIcons[k]||'📄')+' '+(_katLabels[k]||k)+' ('+katCounts[k]+')</button>';
     });
     container.innerHTML = h;
 };
 
-// Hook wissen rendering into tab switches (deferred until target functions exist)
+// ══════════════════════════════════════════════════════
+// HQ: Wissen-Verwaltung (CMS)
+// ══════════════════════════════════════════════════════
+var _quillEditor = null;
+var _editingArtikelId = null;
+
+function _ensureQuillLoaded(callback) {
+    if (window.Quill) { callback(); return; }
+    // CSS laden
+    if (!document.getElementById('quill-css')) {
+        var link = document.createElement('link');
+        link.id = 'quill-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css';
+        document.head.appendChild(link);
+    }
+    // JS laden
+    if (!document.getElementById('quill-js')) {
+        var script = document.createElement('script');
+        script.id = 'quill-js';
+        script.src = 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js';
+        script.onload = function() {
+            // Kurze Verzögerung damit Quill-Styles greifen
+            setTimeout(callback, 100);
+        };
+        document.head.appendChild(script);
+    } else {
+        // Script already loading, poll for Quill
+        var check = setInterval(function(){
+            if (window.Quill) { clearInterval(check); callback(); }
+        }, 100);
+    }
+}
+
+function _initQuillEditor() {
+    if (_quillEditor) return;
+    var container = document.getElementById('hqWissenEditor');
+    if (!container) return;
+    _quillEditor = new window.Quill('#hqWissenEditor', {
+        theme: 'snow',
+        placeholder: 'Artikel-Inhalt hier eingeben…',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+}
+
+window.renderHqWissen = renderHqWissen;
+export async function renderHqWissen() {
+    var el = document.getElementById('hqWissenList');
+    if (!el) return;
+
+    // KPIs aus DB laden
+    var alleArtikel = await _ladeWissenArtikel(true);
+    var katCounts = {};
+    alleArtikel.forEach(function(a){ var k=a.kategorie||'allgemein'; katCounts[k]=(katCounts[k]||0)+1; });
+
+    // KPI-Leiste aktualisieren
+    var kpiEl = document.getElementById('hqWissenKpis');
+    if (kpiEl) {
+        kpiEl.innerHTML =
+            '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-vit-orange">'+alleArtikel.length+'</div><div class="text-xs text-gray-500">Artikel gesamt</div></div>' +
+            '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-blue-600">'+Object.keys(katCounts).length+'</div><div class="text-xs text-gray-500">Kategorien</div></div>' +
+            '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-green-600">'+alleArtikel.filter(function(a){return a.gepinnt;}).length+'</div><div class="text-xs text-gray-500">Gepinnt</div></div>' +
+            '<div class="vit-card p-4 text-center"><div class="text-2xl font-bold text-purple-600">'+alleArtikel.reduce(function(s,a){return s+(a.views||0);},0)+'</div><div class="text-xs text-gray-500">Views gesamt</div></div>';
+    }
+
+    // Quill laden & initialisieren
+    _ensureQuillLoaded(function(){
+        _initQuillEditor();
+    });
+
+    // Kategorie-Dropdown dynamisch befüllen
+    var katSelect = document.getElementById('hqWissenKat');
+    if (katSelect && !katSelect.dataset.filled) {
+        katSelect.dataset.filled = 'true';
+        katSelect.innerHTML = '';
+        Object.keys(_katLabels).forEach(function(k){
+            var opt = document.createElement('option');
+            opt.value = k;
+            opt.textContent = (_katIcons[k]||'') + ' ' + _katLabels[k];
+            katSelect.appendChild(opt);
+        });
+    }
+
+    // Filter
+    var filterKat = (document.getElementById('hqWissenFilterKat') || {}).value || 'all';
+    var filterSearch = (document.getElementById('hqWissenSearch') || {}).value || '';
+    var filtered = alleArtikel;
+    if (filterKat !== 'all') filtered = filtered.filter(function(a){ return a.kategorie === filterKat; });
+    if (filterSearch) {
+        var s = filterSearch.toLowerCase();
+        filtered = filtered.filter(function(a){ return (a.titel||'').toLowerCase().indexOf(s)>-1 || (a.tags||[]).join(' ').toLowerCase().indexOf(s)>-1; });
+    }
+
+    // Artikel-Liste rendern
+    var katIcons = _katIcons;
+    var h = '';
+    if (!filtered.length) {
+        h = '<p class="text-gray-400 text-sm py-4 text-center">Keine Artikel gefunden.</p>';
+    }
+    filtered.forEach(function(a){
+        var kat = a.kategorie || 'allgemein';
+        var katColor = _katColors[kat] || 'bg-gray-100 text-gray-700';
+        var datum = a.updated_at ? new Date(a.updated_at).toLocaleDateString('de-DE') : '-';
+        h += '<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">' +
+            '<div class="flex items-center space-x-3 flex-1 min-w-0">' +
+                '<span class="text-lg flex-shrink-0">'+(katIcons[kat]||'📄')+'</span>' +
+                '<div class="min-w-0">' +
+                    '<p class="text-sm font-semibold text-gray-800 truncate">'+_escH(a.titel)+'</p>' +
+                    '<div class="flex items-center space-x-2 mt-0.5">' +
+                        '<span class="text-xs px-2 py-0.5 rounded-full font-semibold '+katColor+'">'+(_katLabels[kat]||kat)+'</span>' +
+                        '<span class="text-xs text-gray-400">'+datum+'</span>' +
+                        '<span class="text-xs text-gray-400">👁️ '+(a.views||0)+'</span>' +
+                        (a.gepinnt?'<span class="text-xs text-yellow-600">📌</span>':'') +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="flex items-center space-x-2 flex-shrink-0 ml-2">' +
+                '<button onclick="window.editWissenArtikel(\''+a.id+'\')" class="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-white" title="Bearbeiten">✏️</button>' +
+                '<button onclick="window.togglePinWissen(\''+a.id+'\','+(!a.gepinnt)+')" class="px-3 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-white" title="'+(a.gepinnt?'Entpinnen':'Pinnen')+'">'+(a.gepinnt?'📌':'📍')+'</button>' +
+                '<button onclick="window.deleteWissenArtikel(\''+a.id+'\',\''+_escH(a.titel).replace(/'/g,"\\'")+'\')" class="px-3 py-1.5 text-xs font-semibold border border-red-200 text-red-600 rounded-lg hover:bg-red-50" title="Löschen">🗑️</button>' +
+            '</div>' +
+        '</div>';
+    });
+    el.innerHTML = h;
+}
+
+// Neuen Artikel speichern
+window.addHqWissen = addHqWissen;
+export async function addHqWissen() {
+    var titelEl = document.getElementById('hqWissenTitel');
+    var katEl   = document.getElementById('hqWissenKat');
+    var tagsEl  = document.getElementById('hqWissenTags');
+    var titel = (titelEl||{}).value || '';
+    if (!titel.trim()) { _showToast('Bitte Titel eingeben', 'error'); return; }
+
+    var inhalt = _quillEditor ? _quillEditor.root.innerHTML : '';
+    if (!inhalt || inhalt === '<p><br></p>') { _showToast('Bitte Inhalt eingeben', 'error'); return; }
+
+    var kategorie = (katEl||{}).value || 'allgemein';
+    var tagsStr = (tagsEl||{}).value || '';
+    var tags = tagsStr.split(',').map(function(t){ return t.trim(); }).filter(function(t){ return t; });
+
+    var sb = _sb(); if (!sb) return;
+    var user = _sbUser();
+
+    try {
+        if (_editingArtikelId) {
+            // Update bestehenden Artikel
+            var { error } = await sb.from('wissen_artikel').update({
+                titel: titel.trim(),
+                inhalt: inhalt,
+                kategorie: kategorie,
+                tags: tags,
+                updated_at: new Date().toISOString()
+            }).eq('id', _editingArtikelId);
+            if (error) throw error;
+            _showToast('Artikel aktualisiert ✓', 'success');
+            _editingArtikelId = null;
+            var saveBtn = document.getElementById('hqWissenSaveBtn');
+            if (saveBtn) saveBtn.textContent = '📚 Veröffentlichen';
+            var cancelBtn = document.getElementById('hqWissenCancelBtn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+        } else {
+            // Neuen Artikel erstellen
+            var { error } = await sb.from('wissen_artikel').insert({
+                titel: titel.trim(),
+                inhalt: inhalt,
+                kategorie: kategorie,
+                tags: tags,
+                erstellt_von: user ? user.id : null,
+                views: 0,
+                gepinnt: false
+            });
+            if (error) throw error;
+            _showToast('Artikel veröffentlicht ✓', 'success');
+        }
+
+        // Form zurücksetzen
+        if (titelEl) titelEl.value = '';
+        if (tagsEl) tagsEl.value = '';
+        if (_quillEditor) _quillEditor.setText('');
+        _wissenArtikelCache = null; // Cache invalidieren
+        renderHqWissen();
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
+    }
+}
+
+// Artikel zum Bearbeiten laden
+window.editWissenArtikel = async function(id) {
+    var artikel = (_wissenArtikelCache||[]).find(function(a){ return a.id === id; });
+    if (!artikel) return;
+
+    _editingArtikelId = id;
+    var titelEl = document.getElementById('hqWissenTitel');
+    var katEl   = document.getElementById('hqWissenKat');
+    var tagsEl  = document.getElementById('hqWissenTags');
+
+    if (titelEl) titelEl.value = artikel.titel || '';
+    if (katEl) katEl.value = artikel.kategorie || 'allgemein';
+    if (tagsEl) tagsEl.value = (artikel.tags||[]).join(', ');
+
+    _ensureQuillLoaded(function(){
+        _initQuillEditor();
+        if (_quillEditor) {
+            // HTML-Inhalt in Quill setzen
+            var inhalt = artikel.inhalt || '';
+            if (inhalt.indexOf('<') > -1) {
+                _quillEditor.root.innerHTML = inhalt;
+            } else {
+                _quillEditor.setText(inhalt);
+            }
+        }
+    });
+
+    // Button-Text ändern
+    var saveBtn = document.getElementById('hqWissenSaveBtn');
+    if (saveBtn) saveBtn.textContent = '💾 Aktualisieren';
+    var cancelBtn = document.getElementById('hqWissenCancelBtn');
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+    // Zum Editor scrollen
+    var editorCard = document.getElementById('hqWissenEditorCard');
+    if (editorCard) editorCard.scrollIntoView({ behavior: 'smooth' });
+
+    _showToast('Artikel zum Bearbeiten geladen', 'info');
+};
+
+// Bearbeitung abbrechen
+window.cancelEditWissen = function() {
+    _editingArtikelId = null;
+    var titelEl = document.getElementById('hqWissenTitel');
+    var tagsEl  = document.getElementById('hqWissenTags');
+    if (titelEl) titelEl.value = '';
+    if (tagsEl) tagsEl.value = '';
+    if (_quillEditor) _quillEditor.setText('');
+    var saveBtn = document.getElementById('hqWissenSaveBtn');
+    if (saveBtn) saveBtn.textContent = '📚 Veröffentlichen';
+    var cancelBtn = document.getElementById('hqWissenCancelBtn');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    _showToast('Bearbeitung abgebrochen', 'info');
+};
+
+// Artikel löschen
+window.deleteWissenArtikel = async function(id, titel) {
+    if (!confirm('Artikel "'+titel+'" wirklich löschen? Dies kann nicht rückgängig gemacht werden.')) return;
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { error } = await sb.from('wissen_artikel').delete().eq('id', id);
+        if (error) throw error;
+        _showToast('Artikel gelöscht ✓', 'success');
+        _wissenArtikelCache = null;
+        renderHqWissen();
+    } catch(e) {
+        _showToast('Fehler beim Löschen: ' + e.message, 'error');
+    }
+};
+
+// Artikel pinnen/entpinnen
+window.togglePinWissen = async function(id, pinned) {
+    try {
+        var sb = _sb(); if (!sb) return;
+        var { error } = await sb.from('wissen_artikel').update({ gepinnt: pinned }).eq('id', id);
+        if (error) throw error;
+        _showToast(pinned ? 'Artikel angepinnt 📌' : 'Artikel entpinnt', 'success');
+        _wissenArtikelCache = null;
+        renderHqWissen();
+    } catch(e) {
+        _showToast('Fehler: ' + e.message, 'error');
+    }
+};
+
+// HQ Filter
+window.filterHqWissen = function() { renderHqWissen(); };
+
+// ══════════════════════════════════════════════════════
+// Event Hooks
+// ══════════════════════════════════════════════════════
 window.addEventListener('vit:modules-ready', function() {
-    // Wissen-View: Beim ersten Öffnen Filter + Artikel laden
     document.addEventListener('vit:view-changed', function(e) {
         if (e && e.detail && e.detail.view === 'wissen') {
             if (typeof window.renderWissenBereichFilter === 'function') window.renderWissenBereichFilter();
             renderWissenGlobal();
         }
     });
-    // Wrap showAllgemeinTab
-    if (typeof window.showAllgemeinTab === 'function') {
-        var origShowAllgemeinTab = window.showAllgemeinTab;
-        window.showAllgemeinTab = function(t) { origShowAllgemeinTab(t); if(t==='wissen') renderWissenTab('allgemein','allgTabWissen'); };
-    }
-    // Wrap showMarketingTab
-    if (typeof window.showMarketingTab === 'function') {
-        var origShowMarketingTab = window.showMarketingTab;
-        window.showMarketingTab = function(t) { origShowMarketingTab(t); if(t==='mktWissen') renderWissenTab('marketing','marketingTabMktWissen'); };
-    }
-    // Wrap showEinkaufTab
-    if (typeof window.showEinkaufTab === 'function') {
-        var origShowEinkaufTab = window.showEinkaufTab;
-        window.showEinkaufTab = function(t) { origShowEinkaufTab(t); if(t==='ekWissen') renderWissenTab('einkauf','ekTabEkWissen'); };
-    }
-    // Wrap showVerkaufTab
-    if (typeof window.showVerkaufTab === 'function') {
-        var origShowVerkaufTab = window.showVerkaufTab;
-        var ausLoaded = false;
-        var vtLoaded = false;
-        window.showVerkaufTab = function(t) { origShowVerkaufTab(t); if(t==='vkWissen') renderWissenTab('verkauf','vkTabVkWissen'); if(t==='auswertung' && !ausLoaded) { ausLoaded=true; loadAuswertung(); } if(t==='woche' && !vtLoaded) { vtLoaded=true; loadVerkaufTracking(); } if(t==='training') initTrainingModule(); };
-    }
 });
 
-
-
-// Strangler Fig
-const _exports = {showWissenTab,filterAkademie,renderAkademie,filterHbCat,filterHandbuecher,renderHandbuecher,filterBP,renderBP,filterFaqCat,filterFAQ,renderFAQ,toggleFaq,initDashboardTabs,renderWissenTab,switchWissenSub,renderWissenGlobal,filterWissenBereich,switchWissenTyp,filterWissenGlobal};
+// ══════════════════════════════════════════════════════
+// Strangler Fig Exports
+// ══════════════════════════════════════════════════════
+const _exports = {renderWissenGlobal,filterWissenBereich,filterWissenGlobal,renderHqWissen,addHqWissen};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-// [prod] log removed
-
-// === Window Exports (onclick handlers) ===
-window.filterWissenGlobal = filterWissenGlobal;
-window.openWissenArtikel = window.openWissenArtikel; // bereits oben registriert
-window.renderWissenBereichFilter = window.renderWissenBereichFilter; // bereits oben registriert
