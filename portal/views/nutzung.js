@@ -144,8 +144,8 @@ function renderDashboard(container, cache, savings, dbCosts, userCount, logData)
     html += '</div></div>';
 
     // KPIs: Cockpit-Kosten | HQ-Ersparnis | Standort-Ersparnis | Jährlich
-    var standortCount = _smUserCounts.standorte || 1;
-    var perStandortSavings = partnerSavings.length > 0 ? (displayPartnerSavings / standortCount) : 0;
+    // Standort spart = Summe aller Tools mit nutzer_typ partner/beide (das zahlt jeder Standort)
+    var perStandortSavings = displayPartnerSavings;
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">';
     html += kpi('Cockpit-Kosten', '\u20AC' + (totalRunning * factor).toFixed(0), perPeriod, 'text-red-500');
     html += kpi('HQ spart', '\u20AC' + displayHqSavings.toFixed(0), hqSavings.length + ' Tools', 'text-blue-600');
