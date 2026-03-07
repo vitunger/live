@@ -92,7 +92,7 @@ async function kommLoadData() {
     try {
         var [chResp, usersResp] = await Promise.all([
             _sb().from('chat_kanaele').select('*').order('name'),
-            _sb().from('users').select('id, name, vorname, nachname, rolle, standort_id, is_hq, status').eq('status', 'aktiv')
+            _sb().from('users').select('id, name, vorname, nachname, position, standort_id, is_hq, status, standorte:standort_id(name)').eq('status', 'aktiv')
         ]);
 
         var allKanaele = chResp.data || [];
@@ -382,7 +382,7 @@ async function kommLoadChat(el) {
 
     try {
         var resp = await _sb().from('chat_nachrichten')
-            .select('*, users:user_id(id, name, vorname, nachname, is_hq, rolle)')
+            .select('*, users:user_id(id, name, vorname, nachname, is_hq, position)')
             .eq('kanal_id', KOMM.activeId)
             .order('created_at', {ascending: true})
             .limit(100);
@@ -648,38 +648,51 @@ function kommLoadTeam(el) {
     // Gruppiere nach Standort
     var standorte = {};
     KOMM.allUsers.forEach(function(u) {
-        var sName = u.standort_id ? (u.standort_id) : 'Zentrale (HQ)';
-        if (u.is_hq) sName = 'hq';
+        var sName;
+        if (u.is_hq) {
+            sName = 'vit:bikes Zentrale (HQ)';
+        } else if (u.standorte && u.standorte.name) {
+            sName = u.standorte.name;
+        } else {
+            sName = 'Ohne Standort';
+        }
         if (!standorte[sName]) standorte[sName] = [];
         standorte[sName].push(u);
     });
 
-    // Standort-Namen laden (aus kanaele oder users)
     var h = '<div class="max-w-[700px] mx-auto py-4 px-4">';
 
-    Object.keys(standorte).forEach(function(sId) {
-        var users = standorte[sId];
-        var groupName = sId === 'hq' ? 'vit:bikes Zentrale (HQ)' : 'Standort';
-        // Versuche Standort-Name aus User
-        if (sId !== 'hq' && users[0]) {
-            // Einfach den standort_id anzeigen, wird durch join besser
-            groupName = 'Standort';
-        }
+    // Sortiere: eigener Standort zuerst, dann HQ, dann Rest
+    var myStandortName = _sbStandort() ? _sbStandort().name : '';
+    var sortedKeys = Object.keys(standorte).sort(function(a, b) {
+        if (a === myStandortName) return -1;
+        if (b === myStandortName) return 1;
+        if (a.indexOf('HQ') >= 0) return -1;
+        if (b.indexOf('HQ') >= 0) return 1;
+        return a.localeCompare(b);
+    });
 
+    sortedKeys.forEach(function(sName) {
+        var users = standorte[sName];
         h += '<div class="mb-5">';
-        h += '<div class="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2">' + _escH(groupName) + ' (' + users.length + ')</div>';
+        h += '<div class="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2">' + _escH(sName) + ' (' + users.length + ')</div>';
         users.forEach(function(u) {
             var name = kommUserName(u);
             var init = kommInitials(name);
+            var rolle = u.position || (u.is_hq ? 'HQ' : '');
             h += '<div class="bg-white rounded-xl border border-gray-200 px-3.5 py-2.5 flex items-center gap-3 cursor-pointer mb-1 hover:shadow-sm">';
             h += '<div class="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:' + kommAvatarColor(init) + '">' + init + '</div>';
             h += '<div class="flex-1"><div class="text-[13px] font-bold">' + _escH(name) + '</div>';
-            h += '<div class="text-[11px] text-gray-500">' + _escH(u.rolle || '') + '</div></div>';
-            h += '<button onclick="kommStartDMWith(\'' + u.id + '\',\'' + _escH(name) + '\')" class="px-2.5 py-1 rounded-md bg-orange-50 border border-[#EF7D0040] text-[11px] font-semibold text-[#EF7D00] cursor-pointer hover:bg-orange-100">💬 Chat</button>';
+            h += '<div class="text-[11px] text-gray-500">' + _escH(rolle) + '</div></div>';
+            h += '<button onclick="kommStartDMWith(\'' + u.id + '\',\'' + _escH(name).replace(/'/g,"\\'") + '\')" class="px-2.5 py-1 rounded-md bg-orange-50 border border-[#EF7D0040] text-[11px] font-semibold text-[#EF7D00] cursor-pointer hover:bg-orange-100">💬 Chat</button>';
             h += '</div>';
         });
         h += '</div>';
     });
+
+    if (KOMM.allUsers.length === 0) {
+        h += '<div class="text-center py-12 text-gray-400"><div class="text-3xl mb-2">👥</div><p class="text-sm">Keine Mitarbeiter gefunden</p></div>';
+    }
 
     h += '</div>';
     el.innerHTML = h;
@@ -773,7 +786,7 @@ async function kommOnNewMessage(msg) {
     if (msg.user_id === uid) return; // Eigene Nachricht schon angezeigt
 
     try {
-        var uResp = await _sb().from('users').select('id, name, vorname, nachname, is_hq, rolle').eq('id', msg.user_id).single();
+        var uResp = await _sb().from('users').select('id, name, vorname, nachname, is_hq, position').eq('id', msg.user_id).single();
         msg.users = uResp.data;
     } catch(e) {}
 
@@ -839,7 +852,7 @@ export async function kommSendMessage() {
         if (mentionIds.length > 0) insertData.mentions = mentionIds;
 
         var resp = await _sb().from('chat_nachrichten').insert(insertData)
-            .select('*, users:user_id(id, name, vorname, nachname, is_hq, rolle)').single();
+            .select('*, users:user_id(id, name, vorname, nachname, is_hq, position)').single();
 
         if (resp.error) throw resp.error;
 
@@ -1234,7 +1247,7 @@ export async function kommNewDM() {
     // Sicherstellen dass User geladen sind
     if (!KOMM.allUsers || KOMM.allUsers.length === 0) {
         try {
-            var resp = await _sb().from('users').select('id, name, vorname, nachname, rolle, standort_id, is_hq, status').eq('status', 'aktiv');
+            var resp = await _sb().from('users').select('id, name, vorname, nachname, position, standort_id, is_hq, status, standorte:standort_id(name)').eq('status', 'aktiv');
             KOMM.allUsers = (!resp.error && resp.data) ? resp.data : [];
         } catch(e) { KOMM.allUsers = []; }
     }
@@ -1410,7 +1423,7 @@ async function kommLoadUserCache() {
         return;
     }
     try {
-        var resp = await _sb().from('users').select('id, name, vorname, nachname, rolle, is_hq').eq('status', 'aktiv');
+        var resp = await _sb().from('users').select('id, name, vorname, nachname, position, is_hq').eq('status', 'aktiv');
         KOMM._userCache = (!resp.error && resp.data) ? resp.data : [];
     } catch(e) { KOMM._userCache = []; }
 }
