@@ -70,7 +70,7 @@ async function loadHqData() {
 
         var [tResp, uResp, cResp, wResp] = await Promise.all([
             ticketQuery,
-            _sb().from('users').select('id, email, name, vorname, nachname').eq('is_hq', true).eq('status', 'aktiv'),
+            _sb().from('users').select('id, email, name, vorname, nachname, is_hq').eq('status', 'aktiv').order('nachname'),
             _sb().from('support_canned_responses').select('*'),
             _sb().from('support_wissensartikel').select('*').order('created_at', {ascending: false})
         ]);
@@ -423,16 +423,21 @@ export async function hqSupOpenDetail(ticketId) {
         html += '<button onclick="hqSupUpdateAbteilung(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
         html += '</div>';
 
-        // Absender
-        html += '<div class="flex items-center gap-1">';
+        // Absender (Suchfeld mit Autocomplete)
+        var absenderUser = _hqSup.hqUsers.find(function(u) { return u.id === t.erstellt_von; });
+        var absenderName = absenderUser ? ((absenderUser.vorname||'') + ' ' + (absenderUser.nachname||'')).trim() : (t.absender_email || '');
+        html += '<div class="flex items-center gap-1 relative">';
         html += '<label class="text-xs text-gray-500">Absender:</label>';
-        html += '<select id="hqSupDetailAbsender" class="text-xs border border-gray-300 rounded px-2 py-1 max-w-[180px]">';
-        html += '<option value="">Unbekannt</option>';
+        html += '<div class="relative">';
+        html += '<input id="hqSupAbsenderSearch" type="text" value="' + _escH(absenderName) + '" placeholder="Name suchen..." autocomplete="off" oninput="hqSupAbsenderFilter()" class="text-xs border border-gray-300 rounded px-2 py-1 w-40">';
+        html += '<input type="hidden" id="hqSupAbsenderVal" value="' + _escH(t.erstellt_von || '') + '">';
+        html += '<div id="hqSupAbsenderDrop" class="hidden absolute top-6 left-0 bg-white border border-gray-200 rounded shadow-lg z-50 max-h-48 overflow-y-auto w-52">';
         _hqSup.hqUsers.forEach(function(u) {
-            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.name || '';
-            html += '<option value="' + u.id + '"' + (t.erstellt_von === u.id ? ' selected' : '') + '>' + _escH(name) + '</option>';
+            var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim() || u.email || '';
+            var badge = u.is_hq ? ' <span class=\"text-[9px] text-orange-500\">(HQ)</span>' : '';
+            html += '<div onclick="hqSupAbsenderPick(\'' + u.id + '\',\'' + name.replace(/'/g,'\'') + '\')" class="px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer">' + _escH(name) + badge + '</div>';
         });
-        html += '</select>';
+        html += '</div></div>';
         html += '<button onclick="hqSupUpdateAbsender(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">OK</button>';
         html += '</div>';
 
@@ -535,6 +540,30 @@ export async function hqSupOpenDetail(ticketId) {
 
         el.innerHTML = html;
         document.body.appendChild(el);
+
+        // KI-Antwort automatisch vorausfüllen (im Hintergrund)
+        setTimeout(async function() {
+            try {
+                var sess = await _sb().auth.getSession();
+                var token = sess.data && sess.data.session ? sess.data.session.access_token : '';
+                var resp = await fetch(window.SUPABASE_URL + '/functions/v1/support-ki-antwort', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ ticket_id: ticketId })
+                });
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (data.antwort) {
+                        var textarea = document.getElementById('hqSupKommentarInput');
+                        if (textarea && !textarea.value) {
+                            textarea.value = data.antwort;
+                            textarea.style.borderColor = '#a855f7';
+                            setTimeout(function() { textarea.style.borderColor = ''; }, 2000);
+                        }
+                    }
+                }
+            } catch(e) { /* silent fail */ }
+        }, 100);
 
     } catch(err) {
         console.error('[hq-support] openDetail:', err);
@@ -736,6 +765,32 @@ export function hqSupInsertCanned() {
     }
 }
 
+// ========== Absender Autocomplete ==========
+export function hqSupAbsenderFilter() {
+    var q = (document.getElementById('hqSupAbsenderSearch') || {}).value || '';
+    var drop = document.getElementById('hqSupAbsenderDrop');
+    if (!drop) return;
+    if (q.length < 1) { drop.classList.add('hidden'); return; }
+    q = q.toLowerCase();
+    var items = drop.querySelectorAll('div');
+    var any = false;
+    items.forEach(function(el) {
+        var match = el.textContent.toLowerCase().includes(q);
+        el.style.display = match ? '' : 'none';
+        if (match) any = true;
+    });
+    drop.classList.toggle('hidden', !any);
+}
+
+export function hqSupAbsenderPick(userId, name) {
+    var inp = document.getElementById('hqSupAbsenderSearch');
+    var val = document.getElementById('hqSupAbsenderVal');
+    var drop = document.getElementById('hqSupAbsenderDrop');
+    if (inp) inp.value = name;
+    if (val) val.value = userId;
+    if (drop) drop.classList.add('hidden');
+}
+
 // ========== Abteilung ändern ==========
 export async function hqSupUpdateAbteilung(ticketId) {
     var val = (document.getElementById('hqSupDetailAbteilung') || {}).value;
@@ -756,7 +811,7 @@ export async function hqSupUpdateAbteilung(ticketId) {
 
 // ========== Absender ändern ==========
 export async function hqSupUpdateAbsender(ticketId) {
-    var val = (document.getElementById('hqSupDetailAbsender') || {}).value || null;
+    var val = (document.getElementById('hqSupAbsenderVal') || {}).value || null;
     if (!val) return;
     try {
         var user = _sbUser();
@@ -1052,6 +1107,7 @@ const _exports = {
     renderHqSupport, hqSupShowTab, hqSupFilterChanged, hqSupOpenDetail, hqSupCloseDetail,
     hqSupUpdateStatus, hqSupUpdateAssignee, hqSupUpdatePrio, hqSupSendKommentar,
     hqSupInsertCanned, hqSupKiAntwort, hqSupDownload,
+    hqSupAbsenderFilter, hqSupAbsenderPick,
     hqSupUpdateAbteilung, hqSupUpdateAbsender,
     hqSupCreateTicket, hqSupSubmitNewTicket,
     hqSupArtikelStatus, hqSupNewArtikel, hqSupSaveArtikel, hqSupEditArtikel, hqSupUpdateArtikel
