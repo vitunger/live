@@ -199,11 +199,11 @@ if(stufe >= 2) {
     var eskText = document.getElementById('bwaEskText');
     var eskSub = document.getElementById('bwaEskSub');
     if(stufe === 2) {
-        eskText.textContent = 'Eskalationsstufe 2 – Nur noch ' + Math.max(0,days) + ' Tage!';
-        eskSub.textContent = 'Reiche jetzt ein, um Stufe 3 und HQ-Benachrichtigung zu vermeiden.';
+        if(eskText) eskText.textContent = 'Eskalationsstufe 2 \u2013 Nur noch ' + Math.max(0,days) + ' Tage!';
+        if(eskSub) eskSub.textContent = 'Reiche jetzt ein, um Stufe 3 und HQ-Benachrichtigung zu vermeiden.';
     } else {
-        eskText.textContent = 'Eskalationsstufe 3 – BWA überfällig!';
-        eskSub.textContent = 'Ohne aktuelle Zahlen können wir dich nicht gezielt bei Einkauf, Marketing und Controlling unterstützen.';
+        if(eskText) eskText.textContent = 'Eskalationsstufe 3 \u2013 BWA \u00fcberf\u00e4llig!';
+        if(eskSub) eskSub.textContent = 'Ohne aktuelle Zahlen k\u00f6nnen wir dich nicht gezielt bei Einkauf, Marketing und Controlling unterst\u00fctzen.';
         eskBanner.style.background = '#fef2f2';
         eskBanner.style.borderColor = '#fca5a5';
     }

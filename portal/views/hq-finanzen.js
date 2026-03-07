@@ -216,18 +216,19 @@ function renderHqFinKpis() {
     var prevYear = new Date().getFullYear() - 1;
     var getIst = function(s) {
         if (sel === 'ytd') return s.umsatzIst;
+        var detail = s.bwaMonateDetail || [];
         if (isPrevYear) {
-            var pvBwa = s.bwaMonateDetail.find(function(b) { return b.monat == prevYearMonth && b.jahr == prevYear; });
+            var pvBwa = detail.find(function(b) { return b.monat == prevYearMonth && b.jahr == prevYear; });
             return pvBwa ? pvBwa.umsatz : 0;
         }
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == sel && b.jahr == new Date().getFullYear(); });
+        var monatBwa = detail.find(function(b) { return b.monat == sel && b.jahr == new Date().getFullYear(); });
         return monatBwa ? monatBwa.umsatz : 0;
     };
     var getRoh = function(s) {
         if (sel === 'ytd') return s.rohertrag;
         var targetMonth = isPrevYear ? prevYearMonth : sel;
         var targetYear = isPrevYear ? prevYear : new Date().getFullYear();
-        var monatBwa = s.bwaMonateDetail.find(function(b) { return b.monat == targetMonth && (!b.jahr || b.jahr == targetYear); });
+        var monatBwa = (s.bwaMonateDetail || []).find(function(b) { return b.monat == targetMonth && (!b.jahr || b.jahr == targetYear); });
         if (!monatBwa || !monatBwa.umsatz) return 0;
         return monatBwa.rohertrag / monatBwa.umsatz * 100;
     };
@@ -253,7 +254,7 @@ function renderHqFinKpis() {
     var bwaCheckYear = (sel !== 'ytd' && !isPrevYear) ? new Date().getFullYear() : (currentMonth0 > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1);
     var mitBwa = hqFinStandorte.filter(function(s) {
         if (sel === 'ytd') return s.bwaMonate > 0;
-        return s.bwaMonateDetail.some(function(b) { return b.monat == bwaCheckMonth && b.jahr == bwaCheckYear; });
+        return (s.bwaMonateDetail || []).some(function(b) { return b.monat == bwaCheckMonth && b.jahr == bwaCheckYear; });
     }).length;
     var lastCompletedMonth = currentMonth0 > 0 ? currentMonth0 - 1 : 11;
     var lastCompletedYear = currentMonth0 > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1;

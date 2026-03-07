@@ -26,18 +26,22 @@ export async function loadHqStandorte() {
         // Load BWA data for current year
         var currentYear = new Date().getFullYear();
         var bwaResp = await _sb().from('bwa_daten').select('standort_id, monat, umsatzerloese, rohertrag, wareneinsatz, gesamtkosten, ergebnis_vor_steuern').eq('jahr', currentYear);
+        if(bwaResp.error) console.warn('[hq-cockpit] BWA:', bwaResp.error.message);
         var bwaData = bwaResp.data || [];
 
         // Load open tickets
         var ticketResp = await _sb().from('support_tickets').select('standort_id').neq('status','geloest');
+        if(ticketResp.error) console.warn('[hq-cockpit] Tickets:', ticketResp.error.message);
         var tickets = ticketResp.data || [];
 
         // Load leads
         var leadResp = await _sb().from('leads').select('standort_id, status, geschaetzter_wert');
+        if(leadResp.error) console.warn('[hq-cockpit] Leads:', leadResp.error.message);
         var leads = leadResp.data || [];
 
         // Load verkauf tracking
         var vtResp = await _sb().from('verkauf_tracking').select('standort_id, beratungen, verkauft, umsatz');
+        if(vtResp.error) console.warn('[hq-cockpit] Verkauf:', vtResp.error.message);
         var vtData = vtResp.data || [];
 
         // Load WaWi Belege (Rechnungen aktuelles Jahr) – neue Datenquelle
@@ -46,6 +50,7 @@ export async function loadHqStandorte() {
             .eq('status', 'neu')
             .gte('datum', currentYear + '-01-01')
             .lte('datum', currentYear + '-12-31');
+        if(wawiResp.error) console.warn('[hq-cockpit] WaWi:', wawiResp.error.message);
         var wawiData = wawiResp.data || [];
 
         // Build hqStandorte array matching old structure
