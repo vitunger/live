@@ -636,8 +636,8 @@
             <div class="flex justify-between items-center px-3 md:px-6 py-2 md:py-4">
                 <!-- Left: Hamburger (mobile) + Logo + Location -->
                 <div class="flex items-center space-x-2 md:space-x-3 min-w-0">
-                    <!-- Hamburger Menu Button (mobile only) -->
-                    <button onclick="toggleMobileSidebar()" class="topnav-mobile p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0" style="display:none;">
+                    <!-- Hamburger / Sidebar Toggle -->
+                    <button id="globalHamburgerBtn" onclick="window.innerWidth<=768?toggleMobileSidebar():toggleSidebarCollapse()" class="p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0 transition-colors" title="Sidebar ein-/ausklappen">
                         <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
