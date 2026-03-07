@@ -27,13 +27,12 @@ const VIEW_RENDER_MAP = {
     // === HQ Views ===
     'hqCockpit':     { fn: 'renderHqCockpit' },
     'hqStandorte':   { fn: 'showHqStandorteTab', args: ['uebersicht'] },
-    'hqScompler':    { fn: 'renderScompler' },
+    'hqSome':    { fn: 'renderSome' },
     'hqFinanzen':    { fn: 'renderHqFinanzen' },
     'marketing':     { fn: 'renderMarketing' },
     'hqMarketing':   { fn: 'renderHqMarketing' },
     'hqVerkauf':     { fn: 'renderHqVerkauf' },
     'hqAuswertung':  { fn: 'renderHqAuswertung' },
-    'hqApiNutzung':  { fn: 'renderApiNutzung' },
     'hqWissen':      { fn: 'renderHqWissen' },
     'hqSupport':     { fn: 'renderHqSupport' },
     'spiritus':      { fn: 'initSpiritus' },
@@ -44,7 +43,6 @@ const VIEW_RENDER_MAP = {
     'hqKommando':    { fn: 'renderKommandozentrale' },
     'hqEinstellungen': { fn: 'renderHqEinstellungen' },
     'hqBilling':     { fn: 'initBillingModule', chain: [{ fn: 'initBillingMonthSelect' }, { fn: 'loadBillingOverview' }, { fn: 'showBillingTab', args: ['overview'] }] },
-    'hqBuchungen':   { fn: 'renderHqBuchungen' },
     
     // === Standort Views ===
     'allgemein':     { fn: 'loadAllgemeinData', async: true, chain: [{ fn: 'showAllgemeinTab', args: ['uebersicht'] }] },
@@ -69,7 +67,7 @@ const VIEW_RENDER_MAP = {
     'hqOffice':      { fn: '_mountVitSpaceOffice', delay: 150 },
     
     // From allgemein.js wrapper
-    'support':       { fn: 'renderTickets' },
+    'support':       { fn: 'renderTickets', args: ['all'], chain: [{ fn: 'renderKontakte' }] },
     'entwicklung':   { fn: 'renderEntwicklung' },
     'wissen':        { fn: 'renderWissenGlobal' },
     'shop':          { fn: 'renderShop', before: function() { window.shopAllProducts = []; window.shopVariants = {}; } },
