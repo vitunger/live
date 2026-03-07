@@ -799,6 +799,29 @@ try {
         html += '<button onclick="addStdProduct(\''+stdId+'\',document.getElementById(\'addStdProductSelect\').value)" class="px-3 py-1.5 bg-vit-orange text-white rounded-lg text-[10px] font-semibold hover:bg-orange-600">+ Zuweisen</button></div>';
     }
     html += '</div>';
+    // LexOffice Kontakt-Matching
+    var lexId = s.lexoffice_contact_id;
+    var lexName = s.lexoffice_contact_name;
+    html += '<div class="mb-4 border-t border-gray-200 pt-4"><label class="block text-xs font-semibold text-gray-600 mb-2">\ud83d\udcce LexOffice Kontakt</label>';
+    if (lexId) {
+        html += '<div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">';
+        html += '<div><span class="text-sm font-semibold text-green-800">' + _escH(lexName || 'Verknüpft') + '</span>';
+        html += '<p class="text-[10px] text-green-600 font-mono">' + _escH(lexId) + '</p></div>';
+        html += '<button onclick="unlinkLexoffice(\''+s.id+'\')" class="text-xs text-red-400 hover:text-red-600">Trennen</button>';
+        html += '</div>';
+    } else {
+        html += '<div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">';
+        html += '<p class="text-xs text-yellow-700 mb-2">\u26a0\ufe0f Kein LexOffice-Kontakt verkn\u00fcpft. Rechnungen k\u00f6nnen nicht an LexOffice gesendet werden.</p>';
+        html += '<div class="flex flex-wrap gap-2">';
+        html += '<button onclick="searchLexofficeContact(\''+s.id+'\',\''+_escH(s.name).replace(/'/g,'')+'\',this)" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-semibold hover:bg-blue-700">\ud83d\udd0d Vorschlag suchen</button>';
+        html += '<button onclick="createLexofficeContact(\''+s.id+'\')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-[10px] font-semibold hover:bg-green-700">+ Neu erstellen</button>';
+        html += '<button onclick="manualLexofficeLink(\''+s.id+'\')" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-semibold hover:bg-gray-200">Manuell eingeben</button>';
+        html += '</div>';
+        html += '<div id="lexSearchResult-'+s.id+'" class="mt-2"></div>';
+        html += '</div>';
+    }
+    html += '</div>';
+
     // Settlement interval selector
     var intervalLabels = {monthly:'Monatlich', quarterly:'Vierteljährlich', semi_annual:'Halbjährlich'};
     var currentInterval = s.settlement_interval || 'semi_annual';
@@ -1160,6 +1183,98 @@ try {
 }
 
 
+
+
+// === LEXOFFICE MATCHING FUNCTIONS ===
+
+window.searchLexofficeContact = async function(stdId, stdName, btn) {
+    var resultDiv = document.getElementById('lexSearchResult-' + stdId);
+    if (!resultDiv) return;
+    btn.disabled = true; btn.textContent = '\u23f3 Suche...';
+    try {
+        var session = await _sb().auth.getSession();
+        var token = session?.data?.session?.access_token;
+        if (!token) { _showToast('Nicht angemeldet', 'error'); return; }
+        var resp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+            body: JSON.stringify({ action: 'search-contacts', query: stdName })
+        });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        var contacts = data.contacts || [];
+        var h = '';
+        if (contacts.length > 0) {
+            h += '<p class="text-xs text-gray-500 mb-1">' + contacts.length + ' Treffer in LexOffice:</p>';
+            contacts.forEach(function(c) {
+                var cName = c.company ? c.company.name : (c.person ? (c.person.firstName + ' ' + c.person.lastName) : 'Unbenannt');
+                h += '<button onclick="linkLexoffice(\'' + stdId + '\',\'' + c.id + '\',\'' + _escH(cName).replace(/'/g,'') + '\')" class="w-full text-left p-2 rounded-lg hover:bg-blue-50 border border-gray-200 mb-1 flex items-center justify-between">';
+                h += '<div><span class="text-sm font-semibold">' + _escH(cName) + '</span>';
+                if (c.company && c.company.street) h += '<br><span class="text-[10px] text-gray-400">' + _escH(c.company.street) + '</span>';
+                h += '</div><span class="text-xs text-blue-600 font-semibold">Verknüpfen \u2192</span></button>';
+            });
+        } else {
+            h += '<p class="text-xs text-gray-400">Kein passender Kontakt in LexOffice gefunden.</p>';
+        }
+        resultDiv.innerHTML = h;
+    } catch(err) {
+        resultDiv.innerHTML = '<p class="text-xs text-red-500">Fehler: ' + (err.message || err) + '</p>';
+    }
+    btn.disabled = false; btn.textContent = '\ud83d\udd0d Vorschlag suchen';
+};
+
+window.linkLexoffice = async function(stdId, contactId, contactName) {
+    var { error } = await _sb().from('standorte').update({
+        lexoffice_contact_id: contactId,
+        lexoffice_contact_name: contactName,
+        updated_at: new Date().toISOString()
+    }).eq('id', stdId);
+    if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+    _showToast('LexOffice-Kontakt verknüpft: ' + contactName, 'success');
+    closeStdDetailModal();
+    openStandortDetailModal(stdId);
+};
+
+window.unlinkLexoffice = async function(stdId) {
+    if (!confirm('LexOffice-Kontakt trennen?')) return;
+    await _sb().from('standorte').update({ lexoffice_contact_id: null, lexoffice_contact_name: null }).eq('id', stdId);
+    _showToast('LexOffice-Kontakt getrennt', 'info');
+    closeStdDetailModal();
+    openStandortDetailModal(stdId);
+};
+
+window.createLexofficeContact = async function(stdId) {
+    if (!confirm('Neuen Kontakt in LexOffice erstellen?\n\nDie Standort-Daten werden an LexOffice übertragen.')) return;
+    try {
+        var session = await _sb().auth.getSession();
+        var token = session?.data?.session?.access_token;
+        var resp = await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
+            body: JSON.stringify({ action: 'sync-contact', standort_id: stdId })
+        });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        // Save to standorte
+        var { data: stdData } = await _sb().from('standorte').select('name').eq('id', stdId).single();
+        await _sb().from('standorte').update({
+            lexoffice_contact_id: data.contactId,
+            lexoffice_contact_name: stdData?.name || 'Neu erstellt'
+        }).eq('id', stdId);
+        _showToast('LexOffice-Kontakt erstellt', 'success');
+        closeStdDetailModal();
+        openStandortDetailModal(stdId);
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
+};
+
+window.manualLexofficeLink = function(stdId) {
+    var contactId = prompt('LexOffice Kontakt-ID eingeben:');
+    if (!contactId) return;
+    var contactName = prompt('Name des Kontakts (zur Anzeige):') || 'Manuell verknüpft';
+    linkLexoffice(stdId, contactId.trim(), contactName.trim());
+};
 
 
 // === SETTLEMENT LIVE PREVIEW ===
