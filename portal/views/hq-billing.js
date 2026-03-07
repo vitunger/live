@@ -51,6 +51,9 @@ export async function billingApi(action, params) {
 }
 
 export function initBillingModule() {
+    // Hide deprecated Strategien tab
+    var stratTab = document.querySelector('.billing-tab[data-tab="strategies"]');
+    if (stratTab) stratTab.style.display = 'none';
     // Populate month selector
     var sel = document.getElementById('billingMonthSelect');
     if (!sel) return;
