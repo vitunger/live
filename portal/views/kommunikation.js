@@ -1,954 +1,1306 @@
 /**
- * views/kommunikation.js - Partner-Portal Kommunikation
+ * views/kommunikation.js - Kommunikation v4.0 (Quiply-Ersatz)
  *
- * Handles: Chat (channels, inbox), Announcements, Community/Forum,
- *          Realtime subscriptions, Message sending, Badge updates
- *
- * Globals via safe helpers: sb, sbUser, sbProfile, escH, t, triggerPush, showToast
+ * Channels, DMs, Gruppen, News, Pinnwand, Team-Verzeichnis
+ * Realtime-Chat, Emoji-Reaktionen, Datei-Anhaenge, Sprachnachrichten
  *
  * @module views/kommunikation
  */
-
-// -- safe access to globals --
 function _sb()           { return window.sb; }
 function _sbUser()       { return window.sbUser; }
 function _sbProfile()    { return window.sbProfile; }
+function _sbStandort()   { return window.sbStandort; }
 function _escH(s)        { return typeof window.escH === 'function' ? window.escH(s) : String(s); }
-function _t(k)           { return typeof window.t === 'function' ? window.t(k) : k; }
-function _triggerPush()  { if (typeof window.triggerPush === 'function') window.triggerPush.apply(null, arguments); }
 function _showToast(m,t) { if (typeof window.showToast === 'function') window.showToast(m,t); }
 
-// === KOMMUNIKATION v3.0: Teams-Hybrid Layout ===
-var kommState = {
-    activeConv: null,       // {type:'channel'|'inbox'|'announce', id:..., name:...}
-    convList: [],           // all conversations for sidebar
-    unreadInbox: 0,
-    unreadAnnounce: 0,
-    replyTo: null,          // {id, author, preview} for thread reply
-    allUsers: [],           // cached users for recipient selection
+var KOMM = {
+    view: 'channel',       // 'channel','dm','group','news','pinnwand','team','admin'
+    activeId: null,
+    activeName: '',
     kanaele: [],
+    dmList: [],
+    gruppen: [],
+    messages: [],
+    allUsers: [],
+    newsItems: [],
+    pinnwandPosts: [],
+    cannedReactions: ['👍','❤️','🔥','😂','🎉'],
     realtimeSub: null,
-    currentForumPost: null
+    loaded: false,
+    sidebarOpen: true,
+    recording: false,
+    recSeconds: 0,
+    recInterval: null,
+    mediaRecorder: null,
+    audioChunks: [],
+    sidebarSections: { standort: true, netzwerk: true, dms: true, gruppen: false }
 };
 
-// =============================================
-//  SIDEBAR: Load & render conversation list
-// =============================================
-export async function loadKommSidebar() {
-    var container = document.getElementById('kommConvList');
-    if(!container) return;
+var KOMM_EMOJIS = ['👍','❤️','🔥','😂','🎉','✅','👀','🙏'];
+
+// ========== Hilfsfunktionen ==========
+function kommUserName(u) {
+    if (!u) return 'Unbekannt';
+    return ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.name || 'Unbekannt';
+}
+
+function kommInitials(name) {
+    return (name || 'XX').split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().substring(0, 2);
+}
+
+function kommAvatarColor(initials) {
+    if (initials === 'HQ') return '#EF7D00';
+    var hash = 0;
+    for (var i = 0; i < initials.length; i++) hash = initials.charCodeAt(i) * 2345 + hash * 31;
+    var colors = ['#6366f1','#ec4899','#14b8a6','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#84cc16'];
+    return colors[Math.abs(hash) % colors.length];
+}
+
+function kommTimeAgo(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    var now = Date.now();
+    var diff = (now - d.getTime()) / 1000;
+    if (diff < 60) return 'gerade';
+    if (diff < 3600) return Math.floor(diff / 60) + ' Min.';
+    if (diff < 86400) return d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+    if (diff < 172800) return 'gestern';
+    return d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'});
+}
+
+function kommTimeShort(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+}
+
+function kommIsHQ() {
+    var p = _sbProfile();
+    return p && (p.is_hq || p.rolle === 'hq' || p.rolle === 'hq_zahlen');
+}
+
+function kommIsGF() {
+    var p = _sbProfile();
+    return kommIsHQ() || (p && p.rolle === 'inhaber');
+}
+
+// ========== Daten laden ==========
+async function kommLoadData() {
     var uid = _sbUser() ? _sbUser().id : null;
     var standortId = _sbProfile() ? _sbProfile().standort_id : null;
 
     try {
-        // 1. Load channels
-        var chResp = await _sb().from('chat_kanaele').select('*').order('created_at');
-        if(!chResp.error) kommState.kanaele = chResp.data || [];
+        var [chResp, usersResp] = await Promise.all([
+            _sb().from('chat_kanaele').select('*').order('name'),
+            _sb().from('users').select('id, name, vorname, nachname, rolle, standort_id, is_hq, status').eq('status', 'aktiv')
+        ]);
 
-        // 2. Load inbox conversations (grouped by partner)
-        var inboxResp = await _sb().from('nachrichten').select('*, absender:von_user_id(name), empfaenger:an_user_id(name)')
-            .or('von_user_id.eq.' + uid + ',an_user_id.eq.' + uid + (standortId ? ',an_standort_id.eq.' + standortId : ''))
-            .order('created_at', {ascending: false});
-        var inboxMsgs = !inboxResp.error ? (inboxResp.data || []) : [];
+        var allKanaele = chResp.data || [];
+        KOMM.allUsers = usersResp.data || [];
 
-        // Group inbox by conversation partner
-        var inboxConvs = {};
-        inboxMsgs.forEach(function(m) {
-            var isSender = m.von_user_id === uid;
-            var partnerId = isSender ? m.an_user_id : m.von_user_id;
-            var partnerName = isSender ? (m.empfaenger ? m.empfaenger.name : 'Unbekannt') : (m.absender ? m.absender.name : 'Unbekannt');
-            if(!partnerId) { partnerId = 'standort'; partnerName = 'Standort-Nachrichten'; }
-            if(!inboxConvs[partnerId]) {
-                inboxConvs[partnerId] = { partnerId: partnerId, partnerName: partnerName, lastMsg: m, unread: 0, messages: [] };
-            }
-            inboxConvs[partnerId].messages.push(m);
-            if(!isSender && !m.gelesen) inboxConvs[partnerId].unread++;
+        // Kanaele aufteilen
+        KOMM.kanaele = allKanaele.filter(function(k) { return k.typ === 'channel' || !k.typ; });
+        KOMM.gruppen = allKanaele.filter(function(k) { return k.typ === 'group'; });
+
+        // DMs laden
+        var dmResp = await _sb().from('chat_kanaele').select('*, kanal_mitglieder!inner(user_id)')
+            .eq('typ', 'dm');
+        var dmKanaele = (dmResp.data || []).filter(function(k) {
+            return k.kanal_mitglieder && k.kanal_mitglieder.some(function(m) { return m.user_id === uid; });
         });
+        KOMM.dmList = dmKanaele;
 
-        // 3. Count unread
-        kommState.unreadInbox = 0;
-        Object.values(inboxConvs).forEach(function(c) { kommState.unreadInbox += c.unread; });
-
-        // 4. Announcements unread count
-        var ankResp = await _sb().from('ankuendigungen').select('id');
-        var ankAll = !ankResp.error ? (ankResp.data || []) : [];
-        var gelesenResp = await _sb().from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', uid || '');
-        var gelesenIds = !gelesenResp.error ? (gelesenResp.data || []).map(function(g){return g.ankuendigung_id;}) : [];
-        kommState.unreadAnnounce = ankAll.filter(function(a) { return gelesenIds.indexOf(a.id) === -1; }).length;
-
-        // Build sidebar HTML
-        var html = '';
-
-        // --- Split channels into Netzwerk vs Standort ---
-        var netzwerkKanaele = kommState.kanaele.filter(function(k) { return !k.standort_id; });
-        var standortKanaele = kommState.kanaele.filter(function(k) { return !!k.standort_id; });
-
-        // Netzwerk-Kanäle (global, blau)
-        html += '<div class="px-3 pt-3 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🌐 Netzwerk</span></div>';
-        if(netzwerkKanaele.length === 0) {
-            html += '<div class="mx-2 px-3 py-1.5 text-[11px] text-gray-400">Keine Netzwerk-Kanäle</div>';
-        }
-        netzwerkKanaele.forEach(function(k) {
-            var isActive = kommState.activeConv && kommState.activeConv.type === 'channel' && kommState.activeConv.id === k.id;
-            html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-blue-50 border-l-3 border-blue-500' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'channel\',\'' + k.id + '\',\'' + _escH(k.name).replace(/'/g,"\\'") + '\')">';
-            html += '<div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">#</div>';
-            html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">' + _escH(k.name) + '</p>';
-            html += '<p class="text-[11px] text-blue-500 truncate">Netzwerk-Kanal</p></div>';
-            html += '</div>';
-        });
-
-        // Standort-Kanäle (lokal, orange)
-        var standortName = _sbProfile() && _sbProfile().standort_id ? (typeof standorte !== 'undefined' && Array.isArray(standorte) ? (standorte.find(function(s){return s.id===_sbProfile().standort_id})||{}).name : '') : '';
-        html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">🏪 ' + (standortName ? _escH(standortName) : 'Mein Standort') + '</span>';
-        html += '<button onclick="kommCreateKanal()" class="text-gray-400 hover:text-vit-orange" title="Neuen Kanal erstellen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>';
-        html += '</div>';
-        if(standortKanaele.length === 0) {
-            html += '<div class="mx-2 px-3 py-1.5 text-[11px] text-gray-400">Keine Standort-Kanäle</div>';
-        }
-        standortKanaele.forEach(function(k) {
-            var isActive = kommState.activeConv && kommState.activeConv.type === 'channel' && kommState.activeConv.id === k.id;
-            html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-vit-orange/10 border-l-3 border-vit-orange' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'channel\',\'' + k.id + '\',\'' + _escH(k.name).replace(/'/g,"\\'") + '\')">';
-            html += '<div class="w-8 h-8 bg-vit-orange rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">#</div>';
-            html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800 truncate">' + _escH(k.name) + '</p>';
-            html += '<p class="text-[11px] text-vit-orange truncate">Standort-Kanal</p></div>';
-            html += '</div>';
-        });
-
-        // --- Announcements ---
-        html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Ankündigungen</span>';
-        if(kommState.unreadAnnounce > 0) html += '<span class="bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">' + kommState.unreadAnnounce + '</span>';
-        html += '</div>';
-        var isAnnActive = kommState.activeConv && kommState.activeConv.type === 'announce';
-        html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isAnnActive ? 'bg-vit-orange/10' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'announce\',\'all\',\'Ankündigungen\')">';
-        html += '<div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm">📢</div>';
-        html += '<div class="flex-1 min-w-0"><p class="text-sm font-semibold text-gray-800">Alle Ankündigungen</p>';
-        html += '<p class="text-[11px] text-gray-400">Von der Zentrale</p></div>';
-        if(kommState.unreadAnnounce > 0) html += '<span class="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0"></span>';
-        html += '</div>';
-
-        // --- Inbox Conversations ---
-        html += '<div class="px-3 pt-4 pb-1 flex items-center justify-between"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nachrichten</span>';
-        if(kommState.unreadInbox > 0) html += '<span class="bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">' + kommState.unreadInbox + '</span>';
-        html += '</div>';
-
-        var sortedConvs = Object.values(inboxConvs).sort(function(a,b) { return new Date(b.lastMsg.created_at) - new Date(a.lastMsg.created_at); });
-        if(sortedConvs.length === 0) {
-            html += '<div class="mx-2 px-3 py-2 text-xs text-gray-400 text-center">Keine Nachrichten</div>';
-        }
-        sortedConvs.forEach(function(conv) {
-            var isActive = kommState.activeConv && kommState.activeConv.type === 'inbox' && kommState.activeConv.id === conv.partnerId;
-            var initials = conv.partnerName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-            var colors = ['bg-emerald-500','bg-blue-500','bg-purple-500','bg-pink-500','bg-cyan-500','bg-red-500'];
-            var ci = conv.partnerName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-            var lastDate = new Date(conv.lastMsg.created_at);
-            var timeStr = isToday(lastDate) ? lastDate.getHours()+':'+String(lastDate.getMinutes()).padStart(2,'0') : lastDate.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
-            var preview = conv.lastMsg.betreff || conv.lastMsg.inhalt || '';
-            if(preview.length > 40) preview = preview.substring(0,40) + '…';
-
-            html += '<div class="komm-conv-item mx-2 px-3 py-2.5 rounded-lg cursor-pointer flex items-center space-x-3 ' + (isActive ? 'bg-vit-orange/10' : 'hover:bg-gray-100') + '" onclick="openKommConv(\'inbox\',\'' + conv.partnerId + '\',\'' + _escH(conv.partnerName).replace(/'/g,"\\'") + '\')">';
-            html += '<div class="w-8 h-8 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">' + initials + '</div>';
-            html += '<div class="flex-1 min-w-0"><div class="flex items-center justify-between"><p class="text-sm font-semibold text-gray-800 truncate">' + _escH(conv.partnerName) + '</p><span class="text-[10px] text-gray-400 flex-shrink-0 ml-1">' + timeStr + '</span></div>';
-            html += '<p class="text-[11px] text-gray-500 truncate ' + (conv.unread > 0 ? 'font-semibold text-gray-700' : '') + '">' + _escH(preview) + '</p></div>';
-            if(conv.unread > 0) html += '<span class="bg-vit-orange text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center flex-shrink-0">' + conv.unread + '</span>';
-            html += '</div>';
-        });
-
-        container.innerHTML = html;
-        updateKommBadges();
-
+        KOMM.loaded = true;
     } catch(err) {
-        console.error('Sidebar laden:', err);
-        container.innerHTML = '<div class="p-4 text-xs text-red-400">Fehler: ' + _escH(err.message) + '</div>';
+        console.error('[kommunikation] loadData:', err);
     }
 }
 
-function isToday(d) { var t = new Date(); return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear(); }
-
-export function filterKommSidebar(q) {
-    q = q.toLowerCase();
-    document.querySelectorAll('.komm-conv-item').forEach(function(el) {
-        el.style.display = (!q || el.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
-    });
+// ========== HAUPT-RENDER ==========
+export async function showKommTab(tab) {
+    // Compat: alte Tab-Namen mappen
+    if (tab === 'chat') tab = 'channel';
+    if (tab === 'community') tab = 'pinnwand';
+    renderKomm();
 }
 
-// =============================================
-//  OPEN CONVERSATION (right pane)
-// =============================================
-export async function openKommConv(type, id, name) {
-    kommState.activeConv = { type: type, id: id, name: name };
-    kommState.replyTo = null;
-    document.getElementById('kommReplyBar').classList.add('hidden');
-    document.getElementById('kommChatInput').style.display = '';
+export async function renderKomm() {
+    var container = document.getElementById('kommunikationView');
+    if (!container) return;
 
-    // Update header
-    var avatar = document.getElementById('kommChatAvatar');
-    var title = document.getElementById('kommChatTitle');
-    var subtitle = document.getElementById('kommChatSubtitle');
-    var actions = document.getElementById('kommChatHeaderActions');
-    title.textContent = name;
-    actions.innerHTML = '';
-
-    if(type === 'channel') {
-        var kanal = kommState.kanaele.find(function(k){return k.id===id;});
-        var isNetzwerk = kanal && !kanal.standort_id;
-        avatar.className = 'w-9 h-9 ' + (isNetzwerk ? 'bg-blue-500' : 'bg-vit-orange') + ' rounded-lg flex items-center justify-center text-white font-bold text-sm';
-        avatar.textContent = '#';
-        var kanalLabel = isNetzwerk ? '🌐 Netzwerk-Kanal' : '🏪 Standort-Kanal';
-        subtitle.textContent = (kanal && kanal.beschreibung ? kanal.beschreibung + ' · ' : '') + kanalLabel;
-        await loadChannelMessages(id);
-        subscribeToChannel(id);
-    } else if(type === 'inbox') {
-        var initials = name.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-        var colors = ['bg-emerald-500','bg-blue-500','bg-purple-500','bg-pink-500','bg-cyan-500','bg-red-500'];
-        var ci = name.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-        avatar.className = 'w-9 h-9 ' + colors[ci] + ' rounded-full flex items-center justify-center text-white font-bold text-sm';
-        avatar.textContent = initials;
-        subtitle.textContent = 'Direktnachricht';
-        await loadInboxConversation(id);
-    } else if(type === 'announce') {
-        avatar.className = 'w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm';
-        avatar.textContent = '📢';
-        subtitle.textContent = 'Ankündigungen von der Zentrale';
-        document.getElementById('kommChatInput').style.display = _sbProfile() && _sbProfile().is_hq ? '' : 'none';
-        await loadAnnouncements();
-    }
-
-    // Re-highlight sidebar
-    loadKommSidebar();
-}
-
-// =============================================
-//  CHANNEL MESSAGES
-// =============================================
-export async function loadChannelMessages(kanalId) {
-    var container = document.getElementById('kommChatMessages');
-    container.innerHTML = '<div class="flex justify-center py-8"><span class="text-gray-400 text-sm">Nachrichten laden...</span></div>';
-
-    try {
-        var resp = await _sb().from('chat_nachrichten').select('*, users(name)')
-            .eq('kanal_id', kanalId).order('created_at', {ascending:true});
-        if(resp.error) throw resp.error;
-
-        var messages = resp.data || [];
-        container.innerHTML = renderChatBubbles(messages, 'channel');
-        container.scrollTop = container.scrollHeight;
-    } catch(err) {
-        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
-    }
-}
-
-export function subscribeToChannel(kanalId) {
-    if(kommState.realtimeSub) { _sb().removeChannel(kommState.realtimeSub); kommState.realtimeSub = null; }
-    kommState.realtimeSub = _sb().channel('komm-chat-' + kanalId)
-        .on('postgres_changes', {
-            event: 'INSERT', schema: 'public', table: 'chat_nachrichten',
-            filter: 'kanal_id=eq.' + kanalId
-        }, async function(payload) {
-            var msg = payload.new;
-            if(msg.user_id === (_sbUser() ? _sbUser().id : null)) return;
-            var userResp = await _sb().from('users').select('name').eq('id', msg.user_id).single();
-            msg.users = userResp.data || { name: 'Unbekannt' };
-            var container = document.getElementById('kommChatMessages');
-            if(!container) return;
-            var bubble = renderSingleBubble(msg, 'channel');
-            container.insertAdjacentHTML('beforeend', bubble);
-            container.scrollTop = container.scrollHeight;
-        }).subscribe();
-}
-
-// =============================================
-//  INBOX CONVERSATION (1:1 messages)
-// =============================================
-export async function loadInboxConversation(partnerId) {
-    var container = document.getElementById('kommChatMessages');
-    container.innerHTML = '<div class="flex justify-center py-8"><span class="text-gray-400 text-sm">Nachrichten laden...</span></div>';
-    var uid = _sbUser() ? _sbUser().id : null;
-
-    try {
-        var resp = await _sb().from('nachrichten').select('*, absender:von_user_id(name), empfaenger:an_user_id(name)')
-            .or('and(von_user_id.eq.' + uid + ',an_user_id.eq.' + partnerId + '),and(von_user_id.eq.' + partnerId + ',an_user_id.eq.' + uid + ')')
-            .order('created_at', {ascending:true});
-        if(resp.error) throw resp.error;
-
-        var msgs = resp.data || [];
-
-        // Mark unread as read
-        var unreadIds = msgs.filter(function(m){ return m.an_user_id === uid && !m.gelesen; }).map(function(m){return m.id;});
-        if(unreadIds.length > 0) {
-            for(var i=0;i<unreadIds.length;i++) {
-                await _sb().from('nachrichten').update({gelesen:true}).eq('id', unreadIds[i]);
-            }
-            kommState.unreadInbox = Math.max(0, kommState.unreadInbox - unreadIds.length);
-            updateKommBadges();
+    if (!KOMM.loaded) {
+        container.innerHTML = '<div class="flex items-center justify-center h-96"><div class="animate-spin w-6 h-6 border-2 border-vit-orange border-t-transparent rounded-full mr-3"></div><span class="text-gray-500">Kommunikation wird geladen...</span></div>';
+        await kommLoadData();
+        // Default: ersten Channel oeffnen
+        var netzwerk = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
+        if (netzwerk.length > 0 && !KOMM.activeId) {
+            KOMM.activeId = netzwerk[0].id;
+            KOMM.activeName = netzwerk[0].name;
+            KOMM.view = 'channel';
         }
-
-        container.innerHTML = renderInboxBubbles(msgs);
-        container.scrollTop = container.scrollHeight;
-    } catch(err) {
-        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
     }
+
+    var standortName = _sbStandort() ? _sbStandort().name : 'Mein Standort';
+
+    var h = '<div class="flex h-[calc(100vh-140px)] min-h-[500px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">';
+
+    // ── SIDEBAR ──
+    h += '<div id="kommSidebar" class="w-72 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col ' + (KOMM.sidebarOpen ? '' : 'hidden md:flex') + '">';
+
+    // Sidebar Header
+    h += '<div class="p-3 border-b border-gray-100 flex items-center gap-2.5">';
+    h += '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm" style="background:#EF7D00">💬</div>';
+    h += '<div class="flex-1 min-w-0"><div class="text-sm font-bold text-gray-800">Kommunikation</div>';
+    h += '<div class="text-[10px] text-gray-400">vit:bikes Netzwerk</div></div>';
+    h += '</div>';
+
+    // Top Nav Items
+    h += kommSidebarItem('news', '📢', 'News & Ankuendigungen', 0);
+    h += kommSidebarItem('pinnwand', '📌', 'Pinnwand', 0);
+    h += kommSidebarItem('team', '👥', 'Team', 0);
+
+    h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
+
+    // Standort Channels
+    var standortKanaele = KOMM.kanaele.filter(function(k) { return !k.ist_netzwerk && k.standort_id; });
+    var netzwerkKanaele = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
+
+    h += kommSidebarSection('🏪 ' + _escH(standortName), 'standort', standortKanaele);
+    h += kommSidebarSection('🌐 Netzwerk', 'netzwerk', netzwerkKanaele);
+
+    h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
+
+    // DMs
+    h += kommSidebarDMs();
+
+    // Gruppen
+    h += kommSidebarGruppen();
+
+    // Settings (nur GF/HQ)
+    if (kommIsGF()) {
+        h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
+        h += '<div onclick="kommGoView(\'admin\',\'admin\',\'Einstellungen\')" class="mx-2 my-1 px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 ' + (KOMM.view === 'admin' ? 'bg-orange-50' : 'hover:bg-gray-50') + '">';
+        h += '<span class="text-sm">⚙️</span><span class="text-xs text-gray-400">Einstellungen</span></div>';
+    }
+
+    h += '</div>'; // end sidebar
+
+    // ── CONTENT ──
+    h += '<div class="flex-1 flex flex-col min-w-0">';
+    h += kommRenderHeader();
+    h += '<div class="flex-1 overflow-y-auto" id="kommContent">';
+    h += '</div>'; // content placeholder - filled after mount
+    h += kommRenderInputBar();
+    h += '</div>'; // end content
+
+    h += '</div>'; // end flex
+
+    container.innerHTML = h;
+
+    // Content async laden
+    await kommLoadContent();
 }
 
-export function renderInboxBubbles(msgs) {
-    if(msgs.length === 0) return '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Noch keine Nachrichten in dieser Konversation</div>';
-    var uid = _sbUser() ? _sbUser().id : null;
-    var html = '';
-    var lastDateStr = '';
-
-    msgs.forEach(function(m) {
-        var d = new Date(m.created_at);
-        var dateStr = d.toLocaleDateString('de-DE', {weekday:'short', day:'numeric', month:'long'});
-        if(dateStr !== lastDateStr) {
-            html += '<div class="flex justify-center my-4"><span class="text-[11px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + '</span></div>';
-            lastDateStr = dateStr;
-        }
-
-        var isMe = m.von_user_id === uid;
-        var authorName = isMe ? 'Du' : (m.absender ? m.absender.name : 'Unbekannt');
-        var time = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-
-        html += '<div class="flex ' + (isMe ? 'justify-end' : 'justify-start') + ' mb-2 group">';
-        html += '<div class="max-w-[70%] ' + (isMe ? 'bg-vit-orange/10 border border-vit-orange/20' : 'bg-gray-100') + ' rounded-2xl ' + (isMe ? 'rounded-tr-sm' : 'rounded-tl-sm') + ' px-4 py-2.5">';
-        if(m.betreff) html += '<p class="text-[11px] font-bold text-gray-500 mb-1">' + _escH(m.betreff) + '</p>';
-        html += '<p class="text-sm text-gray-800">' + _escH(m.inhalt) + '</p>';
-        html += '<div class="flex items-center justify-between mt-1.5">';
-        html += '<span class="text-[10px] text-gray-400">' + time + '</span>';
-        if(!isMe) html += '<button onclick="setReply(\'' + m.id + '\',\'' + _escH(authorName).replace(/'/g,"\\'") + '\',\'' + _escH(m.inhalt).substring(0,50).replace(/'/g,"\\'") + '\')" class="text-[10px] text-vit-orange font-semibold opacity-0 group-hover:opacity-100 ml-3 hover:underline">↩ Antworten</button>';
-        html += '</div></div></div>';
-    });
-    return html;
+// ========== Sidebar Helpers ==========
+function kommSidebarItem(view, icon, label, badge) {
+    var active = KOMM.view === view;
+    return '<div onclick="kommGoView(\'' + view + '\',\'' + view + '\',\'' + _escH(label) + '\')" class="mx-2 my-0.5 px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'hover:bg-gray-50 border-l-[3px] border-transparent') + '">'
+        + '<span class="text-base">' + icon + '</span>'
+        + '<span class="flex-1 text-[13px] font-semibold ' + (active ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + label + '</span>'
+        + (badge > 0 ? '<span class="bg-[#EF7D00] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">' + badge + '</span>' : '')
+        + '</div>';
 }
 
-// =============================================
-//  ANNOUNCEMENTS in chat view
-// =============================================
-export async function loadAnnouncements() {
-    var container = document.getElementById('kommChatMessages');
-    container.innerHTML = '<div class="flex justify-center py-8"><span class="text-gray-400 text-sm">Ankündigungen laden...</span></div>';
-
-    try {
-        var resp = await _sb().from('ankuendigungen').select('*, users(name)').order('created_at', {ascending:false});
-        if(resp.error) throw resp.error;
-        var anns = resp.data || [];
-
-        var gelesenResp = await _sb().from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', _sbUser() ? _sbUser().id : '');
-        var gelesenIds = !gelesenResp.error ? (gelesenResp.data||[]).map(function(g){return g.ankuendigung_id;}) : [];
-
-        var icons = {news:'📢',event:'📅',schulung:'🎓',marketing:'📣',sortiment:'🚲',preise:'💰',it:'💻'};
-        var html = '';
-        anns.forEach(function(a) {
-            var d = new Date(a.created_at);
-            var dateStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
-            var time = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-            var gelesen = gelesenIds.indexOf(a.id) !== -1;
-            var authorName = a.users ? a.users.name : 'Zentrale';
-
-            html += '<div class="mb-4 group ' + (gelesen ? 'opacity-60' : '') + '">';
-            html += '<div class="flex justify-center mb-2"><span class="text-[11px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + ' · ' + time + '</span></div>';
-            html += '<div class="bg-gradient-to-r ' + (a.wichtig ? 'from-red-50 to-orange-50 border border-red-200' : 'from-blue-50 to-indigo-50 border border-blue-200') + ' rounded-2xl px-5 py-4">';
-            html += '<div class="flex items-start space-x-3">';
-            html += '<div class="text-2xl flex-shrink-0">' + (icons[a.kategorie] || '📢') + '</div>';
-            html += '<div class="flex-1">';
-            html += '<div class="flex items-center space-x-2 mb-1">';
-            if(a.wichtig) html += '<span class="text-[10px] font-bold bg-red-100 text-red-600 rounded px-1.5 py-0.5">Wichtig</span>';
-            if(!gelesen) html += '<span class="text-[10px] font-bold bg-blue-100 text-blue-600 rounded px-1.5 py-0.5">Neu</span>';
-            html += '<span class="text-[11px] text-gray-400">' + _escH(authorName) + '</span>';
-            html += '</div>';
-            html += '<h3 class="font-bold text-gray-800 text-sm mb-1">' + _escH(a.titel) + '</h3>';
-            html += '<p class="text-sm text-gray-600">' + _escH(a.inhalt) + '</p>';
-            if(!gelesen) html += '<button onclick="markAnkGelesen(\'' + a.id + '\',this)" class="mt-2 text-xs text-green-600 font-semibold hover:underline">✓ Als gelesen markieren</button>';
-            html += '</div></div></div></div>';
+function kommSidebarSection(title, key, channels) {
+    var open = KOMM.sidebarSections[key];
+    var h = '<div class="mb-1">';
+    h += '<div onclick="kommToggleSection(\'' + key + '\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between select-none hover:text-gray-600">';
+    h += title;
+    h += '<span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span>';
+    h += '</div>';
+    if (open) {
+        channels.forEach(function(ch) {
+            var active = (KOMM.view === 'channel' || KOMM.view === 'group') && KOMM.activeId === ch.id;
+            h += '<div onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
+            h += '<span class="text-sm">' + (ch.icon || '💬') + '</span>';
+            h += '<span class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : 'text-gray-600') + ' truncate">' + _escH(ch.name) + '</span>';
+            h += '</div>';
         });
-
-        if(anns.length === 0) html = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Keine Ankündigungen</div>';
-        container.innerHTML = html;
-    } catch(err) {
-        container.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
     }
+    h += '</div>';
+    return h;
 }
 
-export async function markAnkGelesen(id, btn) {
-    if(!sbUser) return;
-    try {
-        await _sb().from('ankuendigungen_gelesen').upsert({ankuendigung_id: id, user_id: _sbUser().id});
-        var card = btn.closest('.mb-4.group');
-        if(card) card.classList.add('opacity-60');
-        btn.remove();
-        kommState.unreadAnnounce = Math.max(0, kommState.unreadAnnounce - 1);
-        updateKommBadges();
-    } catch(err) { console.error('Gelesen markieren:', err); }
-}
-
-// =============================================
-//  RENDER CHAT BUBBLES (Channel)
-// =============================================
-export function renderChatBubbles(messages, type) {
-    if(messages.length === 0) return '<div class="flex items-center justify-center h-full text-gray-400 text-sm"><div class="text-center"><div class="text-3xl mb-2">👋</div><p>Noch keine Nachrichten. Schreib die erste!</p></div></div>';
+function kommSidebarDMs() {
+    var open = KOMM.sidebarSections.dms;
     var uid = _sbUser() ? _sbUser().id : null;
-    var html = '';
-    var lastDateStr = '';
-    var lastAuthor = '';
-
-    messages.forEach(function(m) {
-        var d = new Date(m.created_at);
-        var dateStr = d.toLocaleDateString('de-DE', {weekday:'short', day:'numeric', month:'long'});
-        if(dateStr !== lastDateStr) {
-            html += '<div class="flex justify-center my-4"><span class="text-[11px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full">' + dateStr + '</span></div>';
-            lastDateStr = dateStr;
-            lastAuthor = '';
-        }
-        html += renderSingleBubble(m, type, lastAuthor === m.user_id);
-        lastAuthor = m.user_id;
-    });
-    return html;
+    var h = '<div class="mb-1">';
+    h += '<div onclick="kommToggleSection(\'dms\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between select-none hover:text-gray-600">';
+    h += '💬 Direktnachrichten <span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span></div>';
+    if (open) {
+        KOMM.dmList.forEach(function(dm) {
+            var active = KOMM.view === 'dm' && KOMM.activeId === dm.id;
+            // DM-Partner ermitteln
+            var partnerId = (dm.kanal_mitglieder || []).map(function(m) { return m.user_id; }).find(function(id) { return id !== uid; });
+            var partner = KOMM.allUsers.find(function(u) { return u.id === partnerId; });
+            var name = partner ? kommUserName(partner) : dm.name || 'Chat';
+            var initials = kommInitials(name);
+            h += '<div onclick="kommGoView(\'dm\',\'' + dm.id + '\',\'' + _escH(name) + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
+            h += '<div class="relative flex-shrink-0"><div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div></div>';
+            h += '<div class="flex-1 min-w-0">';
+            h += '<div class="text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : 'text-gray-600') + ' truncate">' + _escH(name) + '</div>';
+            if (dm.letzte_nachricht_vorschau) h += '<div class="text-[11px] text-gray-400 truncate">' + _escH(dm.letzte_nachricht_vorschau) + '</div>';
+            h += '</div>';
+            if (dm.letzte_nachricht_at) h += '<span class="text-[10px] text-gray-400 flex-shrink-0">' + kommTimeAgo(dm.letzte_nachricht_at) + '</span>';
+            h += '</div>';
+        });
+        h += '<div onclick="kommNewDM()" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 text-gray-400 text-xs hover:bg-gray-50">＋ Neuer Chat</div>';
+    }
+    h += '</div>';
+    return h;
 }
 
-export function renderSingleBubble(m, type, isConsecutive) {
-    var uid = _sbUser() ? _sbUser().id : null;
-    var isMe = (type === 'channel') ? m.user_id === uid : m.von_user_id === uid;
-    var authorName = m.users ? m.users.name : (m.absender ? m.absender.name : 'Unbekannt');
-    var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-    var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500','bg-teal-500'];
-    var ci = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-    var d = new Date(m.created_at);
-    var time = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-    var text = type === 'channel' ? m.nachricht : m.inhalt;
+function kommSidebarGruppen() {
+    var open = KOMM.sidebarSections.gruppen;
+    var h = '<div class="mb-1">';
+    h += '<div onclick="kommToggleSection(\'gruppen\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between select-none hover:text-gray-600">';
+    h += '👥 Gruppen <span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span></div>';
+    if (open) {
+        KOMM.gruppen.forEach(function(g) {
+            var active = KOMM.view === 'group' && KOMM.activeId === g.id;
+            h += '<div onclick="kommGoView(\'group\',\'' + g.id + '\',\'' + _escH(g.name) + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50' : 'hover:bg-gray-50') + '">';
+            h += '<span class="text-sm">' + (g.icon || '👥') + '</span>';
+            h += '<span class="flex-1 text-[12.5px] text-gray-600 truncate">' + _escH(g.name) + '</span></div>';
+        });
+        h += '<div onclick="kommNewGroup()" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 text-gray-400 text-xs hover:bg-gray-50">＋ Neue Gruppe</div>';
+    }
+    h += '</div>';
+    return h;
+}
 
-    var html = '<div class="flex items-start space-x-2.5 group ' + (isConsecutive ? 'mt-0.5' : 'mt-3') + '">';
-    if(!isConsecutive) {
-        html += '<div class="w-8 h-8 ' + (isMe ? 'bg-vit-orange' : colors[ci]) + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">' + initials + '</div>';
+// ========== Header ==========
+function kommRenderHeader() {
+    var h = '<div class="px-5 py-3 border-b border-gray-200 bg-white flex items-center gap-3 flex-shrink-0">';
+    // Mobile toggle
+    h += '<button onclick="kommToggleSidebar()" class="md:hidden text-gray-400 hover:text-gray-600">☰</button>';
+
+    if (KOMM.view === 'news') {
+        h += '<span class="text-xl">📢</span><div class="flex-1"><div class="text-[15px] font-bold">News & Ankuendigungen</div><div class="text-[11px] text-gray-400">Wichtige Infos aus der Zentrale</div></div>';
+        if (kommIsHQ()) h += '<button onclick="kommNewNews()" class="px-3.5 py-1.5 rounded-lg bg-[#EF7D00] text-white text-xs font-bold hover:opacity-90">+ Ankuendigung</button>';
+    } else if (KOMM.view === 'pinnwand') {
+        h += '<span class="text-xl">📌</span><div class="flex-1"><div class="text-[15px] font-bold">Pinnwand</div><div class="text-[11px] text-gray-400">Social Feed — Erfolge, Fragen & Fotos</div></div>';
+    } else if (KOMM.view === 'team') {
+        h += '<span class="text-xl">👥</span><div class="flex-1"><div class="text-[15px] font-bold">Team-Verzeichnis</div><div class="text-[11px] text-gray-400">' + KOMM.allUsers.length + ' Mitarbeiter</div></div>';
+    } else if (KOMM.view === 'admin') {
+        h += '<span class="text-xl">⚙️</span><div class="flex-1"><div class="text-[15px] font-bold">Einstellungen</div><div class="text-[11px] text-gray-400">HQ-Administration → Kommunikation</div></div>';
+    } else if (KOMM.view === 'dm') {
+        var initials = kommInitials(KOMM.activeName);
+        h += '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
+        h += '<div class="flex-1"><div class="text-[15px] font-bold">' + _escH(KOMM.activeName) + '</div><div class="text-[11px] text-gray-400">Direktnachricht</div></div>';
     } else {
-        html += '<div class="w-8 flex-shrink-0 flex items-center justify-center"><span class="text-[9px] text-gray-300 opacity-0 group-hover:opacity-100">' + time + '</span></div>';
+        // Channel / Group
+        h += '<span class="text-lg">#</span>';
+        h += '<div class="flex-1"><div class="text-[15px] font-bold">' + _escH(KOMM.activeName || 'Channel') + '</div><div class="text-[11px] text-gray-400">Channel</div></div>';
     }
-    html += '<div class="flex-1 min-w-0">';
-    if(!isConsecutive) {
-        html += '<div class="flex items-baseline space-x-2 mb-0.5"><span class="text-sm font-semibold ' + (isMe ? 'text-vit-orange' : 'text-gray-800') + '">' + _escH(authorName) + '</span><span class="text-[10px] text-gray-400">' + time + '</span></div>';
+    h += '</div>';
+    return h;
+}
+
+// ========== Input Bar ==========
+function kommRenderInputBar() {
+    if (KOMM.view !== 'channel' && KOMM.view !== 'dm' && KOMM.view !== 'group') return '';
+    var isDm = KOMM.view === 'dm' || KOMM.view === 'group';
+
+    var h = '<div class="px-4 py-3 border-t border-gray-200 bg-white flex items-end gap-2 flex-shrink-0">';
+
+    // Attach Button
+    h += '<button onclick="kommAttachFile()" class="w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-base cursor-pointer flex-shrink-0 hover:bg-gray-50">📎</button>';
+
+    // Recording state
+    h += '<div id="kommRecBar" class="hidden flex-1 flex items-center gap-2 bg-red-50 rounded-xl px-3 py-2">';
+    h += '<div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>';
+    h += '<span id="kommRecTime" class="text-sm font-semibold text-red-500">0:00</span>';
+    h += '<button onclick="kommStopRecording()" class="ml-auto px-3 py-1 rounded-lg bg-red-500 text-white text-[11px] font-bold">⏹ Senden</button>';
+    h += '</div>';
+
+    // Text input
+    h += '<textarea id="kommMsgInput" class="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-[13px] resize-none outline-none focus:border-[#EF7D00]" rows="1" placeholder="Nachricht schreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendMessage()}"></textarea>';
+
+    // Voice button (DMs + Groups only)
+    if (isDm) {
+        h += '<button onclick="kommStartRecording()" id="kommVoiceBtn" class="w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-base cursor-pointer flex-shrink-0 hover:bg-gray-50">🎤</button>';
     }
-    html += '<div class="text-sm text-gray-700 hover:bg-gray-50 rounded px-1 -mx-1 py-0.5 relative group">' + _escH(text).replace(/\n/g, '<br>');
-    // Reply button (thread)
-    html += '<button onclick="setReply(\'' + m.id + '\',\'' + _escH(authorName).replace(/'/g,"\\'") + '\',\'' + _escH(text).substring(0,50).replace(/'/g,"\\'").replace(/\n/g,' ') + '\')" class="absolute right-1 top-0 text-[10px] text-gray-400 hover:text-vit-orange opacity-0 group-hover:opacity-100 bg-white px-1.5 py-0.5 rounded shadow-sm border">↩</button>';
-    html += '</div></div></div>';
-    return html;
+
+    // Send button
+    h += '<button onclick="kommSendMessage()" class="w-9 h-9 rounded-lg bg-gray-200 text-white flex items-center justify-center text-base flex-shrink-0" id="kommSendBtn">↑</button>';
+
+    h += '</div>';
+    return h;
 }
 
-// =============================================
-//  REPLY / THREAD
-// =============================================
-export function setReply(msgId, author, preview) {
-    kommState.replyTo = { id: msgId, author: author, preview: preview };
-    document.getElementById('kommReplyBar').classList.remove('hidden');
-    document.getElementById('kommReplyTo').textContent = author;
-    document.getElementById('kommReplyPreview').textContent = preview;
-    document.getElementById('kommMsgInput').focus();
-}
+// ========== Content laden ==========
+async function kommLoadContent() {
+    var el = document.getElementById('kommContent');
+    if (!el) return;
 
-export function cancelReply() {
-    kommState.replyTo = null;
-    document.getElementById('kommReplyBar').classList.add('hidden');
-}
-
-// =============================================
-//  SEND MESSAGE (unified)
-// =============================================
-export async function kommSendMessage() {
-    var input = document.getElementById('kommMsgInput');
-    var text = input.value.trim();
-    if(!text || !sbUser || !kommState.activeConv) return;
-
-    input.value = '';
-    input.style.height = 'auto';
-    input.disabled = true;
-    var replyCtx = kommState.replyTo ? (' [↩ ' + kommState.replyTo.author + ': ' + kommState.replyTo.preview + ']') : '';
-    cancelReply();
-
-    try {
-        var conv = kommState.activeConv;
-        if(conv.type === 'channel') {
-            var resp = await _sb().from('chat_nachrichten').insert({
-                kanal_id: conv.id, user_id: _sbUser().id, nachricht: replyCtx ? text + '\n' + replyCtx : text
-            });
-            if(resp.error) throw resp.error;
-            window.logAudit && window.logAudit('nachricht_gesendet', 'kommunikation', { typ: 'kanal', kanal_id: conv.id });
-            // Push: notify channel members
-            (async function() { try { var { data: members } = await _sb().from('kanal_mitglieder').select('user_id').eq('kanal_id', conv.id); if (members) { var sn = _sbProfile() ? _sbProfile().name : 'Jemand'; var ids = members.map(function(m){return m.user_id;}).filter(function(id){return id !== _sbUser().id;}); _triggerPush(ids, '💬 ' + sn, text.substring(0,100), '/?view=kommunikation', 'push_neue_nachricht'); } } catch(e){} })();
-            // Optimistic append
-            var container = document.getElementById('kommChatMessages');
-            var emptyMsg = container.querySelector('.text-center');
-            if(emptyMsg && container.children.length === 1) container.innerHTML = '';
-            container.insertAdjacentHTML('beforeend', renderSingleBubble({
-                user_id: _sbUser().id, users: {name: _sbProfile() ? _sbProfile().name : 'Ich'},
-                nachricht: replyCtx ? text + '\n' + replyCtx : text, created_at: new Date().toISOString()
-            }, 'channel', false));
-            container.scrollTop = container.scrollHeight;
-
-        } else if(conv.type === 'inbox') {
-            var resp = await _sb().from('nachrichten').insert({
-                von_user_id: _sbUser().id, an_user_id: conv.id,
-                betreff: '', inhalt: replyCtx ? text + '\n' + replyCtx : text,
-                kategorie: 'direkt'
-            });
-            if(resp.error) throw resp.error;
-            window.logAudit && window.logAudit('nachricht_gesendet', 'kommunikation', { typ: 'direkt', an: conv.id });
-            _triggerPush([conv.id], '✉️ ' + (_sbProfile() ? _sbProfile().name : 'Nachricht'), text.substring(0,100), '/?view=kommunikation', 'push_neue_nachricht');
-            await loadInboxConversation(conv.id);
-
-        } else if(conv.type === 'announce') {
-            // Only HQ can post announcements via chat
-            if(_sbProfile() && _sbProfile().is_hq) {
-                var resp = await _sb().from('ankuendigungen').insert({
-                    erstellt_von: _sbUser().id, titel: text.split('\n')[0].substring(0,80),
-                    inhalt: text, kategorie: 'news', wichtig: false
-                });
-                if(resp.error) throw resp.error;
-                window.logAudit && window.logAudit('ankuendigung_erstellt', 'kommunikation', { titel: text.split('\n')[0].substring(0,60) });
-                (async function() { try { var { data: au } = await _sb().from('users').select('id'); if(au) { var ids = au.map(function(u){return u.id;}).filter(function(id){return id!==_sbUser().id;}); _triggerPush(ids, '📢 Ankündigung', text.split('\n')[0].substring(0,60), '/?view=kommunikation', 'push_ankuendigung'); } } catch(e){} })();
-                await loadAnnouncements();
-            }
-        }
-    } catch(err) {
-        _showToast('Senden fehlgeschlagen: ' + err.message, 'error');
-        input.value = text;
-    } finally {
-        input.disabled = false;
-        input.focus();
+    if (KOMM.view === 'channel' || KOMM.view === 'dm' || KOMM.view === 'group') {
+        await kommLoadChat(el);
+    } else if (KOMM.view === 'news') {
+        await kommLoadNews(el);
+    } else if (KOMM.view === 'pinnwand') {
+        await kommLoadPinnwand(el);
+    } else if (KOMM.view === 'team') {
+        kommLoadTeam(el);
+    } else if (KOMM.view === 'admin') {
+        kommLoadAdmin(el);
     }
 }
 
-export function kommInputKeydown(e) {
-    if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); kommSendMessage(); }
-}
-
-export function kommAutoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-
-// =============================================
-//  NEW CHAT (compose to new recipient)
-// =============================================
-export async function kommStartNewChat() {
-    if(kommState.allUsers.length === 0) {
-        var resp = await _sb().from('users').select('id, name, is_hq, standorte(name)').eq('status','aktiv').order('name');
-        if(!resp.error) kommState.allUsers = (resp.data||[]).filter(function(u){return u.id !== (_sbUser() ?_sbUser().id:null);});
-    }
-
-    var container = document.getElementById('kommChatMessages');
-    document.getElementById('kommChatInput').style.display = '';
-    document.getElementById('kommChatTitle').textContent = 'Neue Nachricht';
-    document.getElementById('kommChatSubtitle').textContent = 'Empfänger wählen';
-    document.getElementById('kommChatAvatar').className = 'w-9 h-9 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-sm';
-    document.getElementById('kommChatAvatar').textContent = '+';
-
-    var html = '<div class="p-4"><div class="mb-4">';
-    html += '<select id="kommNewChatRecipient" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-vit-orange" onchange="kommSelectNewRecipient(this.value)">';
-    html += '<option value="">– Empfänger wählen –</option>';
-    kommState.allUsers.forEach(function(u) {
-        var label = u.name + (u.standorte ? ' (' + u.standorte.name + ')' : (u.is_hq ? ' (HQ)' : ''));
-        html += '<option value="' + u.id + '" data-name="' + _escH(label) + '">' + _escH(label) + '</option>';
-    });
-    html += '</select></div>';
-    html += '<div class="text-center text-gray-400 text-sm mt-8"><div class="text-3xl mb-2">✉️</div><p>Wähle einen Empfänger, um die Konversation zu starten</p></div></div>';
-
-    container.innerHTML = html;
-    kommState.activeConv = null;
-}
-
-export function kommSelectNewRecipient(userId) {
-    if(!userId) return;
-    var sel = document.getElementById('kommNewChatRecipient');
-    var opt = sel.options[sel.selectedIndex];
-    var name = opt.getAttribute('data-name') || opt.textContent;
-    openKommConv('inbox', userId, name);
-}
-
-// =============================================
-//  BADGES
-// =============================================
-// =============================================
-//  CREATE KANAL
-// =============================================
-export async function kommCreateKanal() {
-    var name = prompt('Name des neuen Kanals:');
-    if(!name || !name.trim()) return;
-    var beschreibung = prompt('Kurze Beschreibung (optional):') || '';
-    try {
-        var isHQ = _sbProfile() && _sbProfile().is_hq;
-        var resp = await _sb().from('chat_kanaele').insert({
-            name: name.trim(),
-            beschreibung: beschreibung.trim() || null,
-            standort_id: isHQ ? null : (_sbProfile() ? _sbProfile().standort_id : null),
-            erstellt_von: _sbUser().id,
-            ist_privat: false
-        });
-        if(resp.error) throw resp.error;
-        await loadKommSidebar();
-    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
-}
-
-export function updateKommBadges() {
-    var total = kommState.unreadInbox + kommState.unreadAnnounce;
-    // Sidebar badge
-    var sidebarBtn = document.querySelector('[data-module="kommunikation"]');
-    if(sidebarBtn) {
-        var sBadge = sidebarBtn.querySelector('.komm-sidebar-badge');
-        if(total > 0) {
-            if(!sBadge) {
-                sidebarBtn.insertAdjacentHTML('beforeend', '<span class="komm-sidebar-badge ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center">' + total + '</span>');
-            } else {
-                sBadge.textContent = total;
-            }
-        } else if(sBadge) { sBadge.remove(); }
-    }
-    // Chat tab badge
-    var chatBtn = document.querySelector('.komm-tab-btn[data-tab="chat"]');
-    if(chatBtn) {
-        var cBadge = chatBtn.querySelector('.komm-chat-badge');
-        if(total > 0) {
-            if(!cBadge) {
-                chatBtn.insertAdjacentHTML('beforeend', ' <span class="komm-chat-badge bg-red-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 ml-1">' + total + '</span>');
-            } else {
-                cBadge.textContent = total;
-            }
-        } else if(cBadge) { cBadge.remove(); }
-    }
-}
-
-// =============================================
-//  COMMUNITY (merged Forum + Brett)
-// =============================================
-var communityMarktplatzCats = ['suche','biete','tipp'];
-
-export async function renderCommunityPosts(cat) {
-    var container = document.getElementById('forumPosts');
-    if(!container) return;
-    container.innerHTML = '<div class="text-center py-4"><span class="text-gray-400 text-sm">Beiträge werden geladen...</span></div>';
-
-    try {
-        // Load forum posts
-        var fQuery = _sb().from('forum_beitraege').select('*, users(name)').order('gepinnt',{ascending:false}).order('created_at',{ascending:false});
-        if(cat && cat !== 'all' && communityMarktplatzCats.indexOf(cat) === -1) fQuery = fQuery.eq('kategorie', cat);
-        if(cat && communityMarktplatzCats.indexOf(cat) !== -1) fQuery = fQuery.eq('kategorie', 'NONE_MATCH');
-        var fResp = await fQuery;
-        var forumPosts = (!fResp.error ? fResp.data : []) || [];
-
-        // Load brett entries
-        var bQuery = _sb().from('brett_eintraege').select('*, users(name)').eq('aktiv', true).order('created_at',{ascending:false});
-        if(cat && cat !== 'all' && communityMarktplatzCats.indexOf(cat) !== -1) bQuery = bQuery.eq('kategorie', cat);
-        if(cat && cat !== 'all' && communityMarktplatzCats.indexOf(cat) === -1) bQuery = bQuery.eq('kategorie', 'NONE_MATCH');
-        var bResp = await bQuery;
-        var brettPosts = (!bResp.error ? bResp.data : []) || [];
-
-        // Merge into unified list
-        var allPosts = [];
-        forumPosts.forEach(function(p) {
-            allPosts.push({ source:'forum', id:p.id, titel:p.titel, inhalt:p.inhalt, kategorie:p.kategorie, user_id:p.user_id, users:p.users, created_at:p.created_at, gepinnt:p.gepinnt });
-        });
-        brettPosts.forEach(function(p) {
-            allPosts.push({ source:'brett', id:p.id, titel:p.titel, inhalt:p.beschreibung, kategorie:p.kategorie, user_id:p.user_id, users:p.users, created_at:p.created_at, gepinnt:false });
-        });
-
-        // Sort: pinned first, then by date
-        allPosts.sort(function(a,b) {
-            if(a.gepinnt && !b.gepinnt) return -1;
-            if(!a.gepinnt && b.gepinnt) return 1;
-            return new Date(b.created_at) - new Date(a.created_at);
-        });
-
-        // Load comment counts for forum posts
-        var commentCounts = {};
-        for(var i=0;i<forumPosts.length;i++) {
-            var cr = await _sb().from('forum_kommentare').select('id',{count:'exact',head:true}).eq('beitrag_id', forumPosts[i].id);
-            commentCounts[forumPosts[i].id] = cr.count || 0;
-        }
-
-        var catColors = {
-            allgemein:'bg-gray-100 text-gray-700', verkauf:'bg-purple-100 text-purple-700', werkstatt:'bg-cyan-100 text-cyan-700',
-            einkauf:'bg-yellow-100 text-yellow-700', zentrale:'bg-orange-100 text-orange-700', news:'bg-vit-orange text-white',
-            suche:'bg-red-100 text-red-700', biete:'bg-green-100 text-green-700', tipp:'bg-blue-100 text-blue-700', frage:'bg-indigo-100 text-indigo-700'
-        };
-        var catLabels = {
-            allgemein:'💬 Allgemein', verkauf:'🛒 Verkauf', werkstatt:'🔧 Werkstatt', einkauf:'📦 Einkauf',
-            zentrale:'Zentrale', news:'News', suche:'🔍 Gesucht', biete:'🏷️ Biete', tipp:'💡 Tipp', frage:'❓ Frage'
-        };
-
-        var html = '';
-        if(allPosts.length===0) html = '<div class="text-center py-8"><span class="text-gray-400 text-sm">Keine Beiträge. Starte die Diskussion!</span></div>';
-
-        allPosts.forEach(function(p) {
-            var authorName = p.users ? p.users.name : 'Unbekannt';
-            var initials = authorName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-            var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
-            var colorIdx = authorName.split('').reduce(function(a,c){return a+c.charCodeAt(0);},0) % colors.length;
-            var d = new Date(p.created_at);
-            var dateStr = d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' · ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-            var isOwn = p.user_id === (_sbUser() ? _sbUser().id : null);
-            var isHQ = _sbProfile() && _sbProfile().is_hq;
-            var isMarkt = communityMarktplatzCats.indexOf(p.kategorie) !== -1;
-            var replyCount = commentCounts[p.id] || 0;
-
-            html += '<div class="vit-card p-5 hover:shadow-md transition cursor-pointer ' + (p.gepinnt ? 'border-l-4 border-vit-orange' : '') + (isMarkt ? ' border-l-4 border-green-400' : '') + '" ' + (p.source==='forum' ? 'onclick="openForumDetail(\'' + p.id + '\')"' : '') + '>';
-            html += '<div class="flex items-start space-x-4">';
-            html += '<div class="w-10 h-10 ' + (p.gepinnt ? 'bg-vit-orange' : colors[colorIdx]) + ' rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">' + initials + '</div>';
-            html += '<div class="flex-1 min-w-0">';
-            html += '<div class="flex items-center space-x-2 mb-1 flex-wrap">';
-            if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-1.5 py-0.5">📌 Angepinnt</span>';
-            if(isMarkt) html += '<span class="text-[10px] font-bold bg-green-50 text-green-600 rounded px-1.5 py-0.5 border border-green-200">Marktplatz</span>';
-            html += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (catColors[p.kategorie]||catColors.allgemein) + '">' + (catLabels[p.kategorie]||p.kategorie) + '</span>';
-            if(isOwn || isHQ) {
-                if(p.source==='forum') html += '<button onclick="event.stopPropagation();deleteForumPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Löschen">🗑️</button>';
-                if(p.source==='brett') html += '<button onclick="event.stopPropagation();deactivateBrettPost(\'' + p.id + '\')" class="text-xs text-gray-300 hover:text-red-500 ml-auto" title="Entfernen">✕</button>';
-            }
-            html += '</div>';
-            html += '<h3 class="font-bold text-gray-800 mb-1 ' + (p.source==='forum'?'hover:text-vit-orange':'') + '">' + _escH(p.titel) + '</h3>';
-            if(p.inhalt) html += '<p class="text-sm text-gray-600 mb-2 line-clamp-2">' + _escH(p.inhalt) + '</p>';
-            html += '<div class="flex items-center space-x-4 text-xs text-gray-400">';
-            html += '<span class="font-semibold text-gray-600">' + _escH(authorName) + '</span>';
-            html += '<span>' + dateStr + '</span>';
-            if(p.source==='forum') html += '<span>💬 ' + replyCount + '</span>';
-            if(isMarkt && !isOwn) html += '<button onclick="event.stopPropagation();openKommConv(\'inbox\',\'' + p.user_id + '\',\'' + _escH(authorName).replace(/'/g,"\\'") + '\');showKommTab(\'chat\')" class="text-vit-orange font-semibold hover:underline">✉ Nachricht</button>';
-            html += '</div></div></div></div>';
-        });
-
-        container.innerHTML = html;
-    } catch(err) {
-        container.innerHTML = '<div class="text-center py-4 text-red-400 text-sm">Fehler: ' + _escH(err.message) + '</div>';
-    }
-}
-
-export async function createCommunityPost() {
-    var titel = (document.getElementById('forumNewTitle')||{}).value;
-    var body = (document.getElementById('forumNewBody')||{}).value;
-    var kat = (document.getElementById('forumNewCat')||{}).value || 'allgemein';
-    if(!titel||!titel.trim()) { _showToast(_t('alert_enter_subject'), 'error'); return; }
-
-    var isMarkt = communityMarktplatzCats.indexOf(kat) !== -1;
-    try {
-        if(isMarkt) {
-            var resp = await _sb().from('brett_eintraege').insert({
-                user_id: _sbUser().id, standort_id: _sbProfile() ? _sbProfile().standort_id : null,
-                titel: titel.trim(), beschreibung: body ? body.trim() : null, kategorie: kat
-            });
-            if(resp.error) throw resp.error;
-        } else {
-            if(!body||!body.trim()) { _showToast(_t('alert_enter_message'), 'error'); return; }
-            var resp = await _sb().from('forum_beitraege').insert({
-                user_id: _sbUser().id, standort_id: _sbProfile() ? _sbProfile().standort_id : null,
-                titel: titel.trim(), inhalt: body.trim(), kategorie: kat
-            });
-            if(resp.error) throw resp.error;
-        }
-        document.getElementById('forumNewTitle').value = '';
-        document.getElementById('forumNewBody').value = '';
-        document.getElementById('forumNewPost').classList.add('hidden');
-        triggerPushStandort('💬 Neuer Beitrag', (_sbProfile() ?_sbProfile().name:'Jemand') + ': ' + titel.trim().substring(0,60), '/?view=forum', 'push_neue_nachricht');
-        renderCommunityPosts('all');
-    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
-}
-
-export async function deactivateBrettPost(id) {
-    if(!confirm(_t('confirm_delete_entry'))) return;
-    try { await _sb().from('brett_eintraege').update({aktiv:false}).eq('id',id); renderCommunityPosts('all'); } catch(err) { _showToast('Fehler: '+err.message, 'error'); }
-}
-
-export async function deleteForumPost(id) {
-    if(!confirm(_t('confirm_delete_post'))) return;
-    try {
-        await _sb().from('forum_kommentare').delete().eq('beitrag_id', id);
-        await _sb().from('forum_beitraege').delete().eq('id', id);
-        renderCommunityPosts('all');
-    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
-}
-
-export function filterCommunity(cat) {
-    document.querySelectorAll('.comm-cat-btn').forEach(function(b){ b.className='comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200'; });
-    var btn = document.querySelector('.comm-cat-btn[data-cat="'+cat+'"]');
-    if(btn) btn.className='comm-cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-vit-orange text-white';
-    renderCommunityPosts(cat);
-}
-
-export async function openForumDetail(postId) {
-    kommState.currentForumPost = postId;
-    document.getElementById('forumListView').classList.add('hidden');
-    document.getElementById('forumDetailView').classList.remove('hidden');
-    var contentEl = document.getElementById('forumDetailContent');
-    var commentsEl = document.getElementById('forumComments');
-    try {
-        var resp = await _sb().from('forum_beitraege').select('*, users(name)').eq('id', postId).single();
-        if(resp.error) throw resp.error;
-        var p = resp.data;
-        var authorName = p.users ? p.users.name : 'Unbekannt';
-        var d = new Date(p.created_at);
-        var dateStr = d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}) + ' um ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-        var html = '<div class="flex items-center space-x-2 mb-3">';
-        if(p.gepinnt) html += '<span class="text-xs font-bold bg-yellow-100 text-yellow-700 rounded px-2 py-0.5">📌 Angepinnt</span>';
-        html += '<span class="text-xs text-gray-400">' + dateStr + '</span></div>';
-        html += '<h2 class="text-xl font-bold text-gray-800 mb-3">' + _escH(p.titel) + '</h2>';
-        html += '<div class="flex items-center space-x-2 mb-4"><span class="text-sm font-semibold text-gray-700">' + _escH(authorName) + '</span></div>';
-        html += '<div class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(p.inhalt) + '</div>';
-        contentEl.innerHTML = html;
-
-        var commResp = await _sb().from('forum_kommentare').select('*, users(name)').eq('beitrag_id', postId).order('created_at',{ascending:true});
-        var comments = !commResp.error ? (commResp.data||[]) : [];
-        var cHtml = '';
-        if(comments.length===0) cHtml = '<div class="text-sm text-gray-400 py-2">Noch keine Kommentare. Sei der Erste!</div>';
-        comments.forEach(function(c) {
-            var cName = c.users ? c.users.name : 'Unbekannt';
-            var cInit = cName.split(' ').map(function(n){return n[0];}).join('').substring(0,2);
-            var colors = ['bg-blue-500','bg-green-600','bg-purple-500','bg-cyan-600','bg-pink-500','bg-red-500'];
-            var cci = cName.split('').reduce(function(a,ch){return a+ch.charCodeAt(0);},0) % colors.length;
-            var cd = new Date(c.created_at);
-            cHtml += '<div class="flex items-start space-x-3 py-2 border-b border-gray-100">';
-            cHtml += '<div class="w-8 h-8 ' + colors[cci] + ' rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + cInit + '</div>';
-            cHtml += '<div class="flex-1"><div class="flex items-baseline space-x-2"><span class="font-semibold text-gray-800 text-sm">' + _escH(cName) + '</span><span class="text-xs text-gray-400">' + cd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}) + ' ' + cd.getHours()+':'+String(cd.getMinutes()).padStart(2,'0') + '</span></div>';
-            cHtml += '<p class="text-sm text-gray-700 mt-0.5">' + _escH(c.inhalt) + '</p></div></div>';
-        });
-        commentsEl.innerHTML = cHtml;
-    } catch(err) { contentEl.innerHTML = '<div class="text-red-400">Fehler: ' + _escH(err.message) + '</div>'; }
-}
-
-export async function postForumComment() {
-    var input = document.getElementById('forumCommentInput');
-    var text = input ? input.value.trim() : '';
-    if(!text||!kommState.currentForumPost) { _showToast(_t('alert_enter_comment'), 'error'); return; }
-    try {
-        var resp = await _sb().from('forum_kommentare').insert({ beitrag_id: kommState.currentForumPost, user_id: _sbUser().id, inhalt: text });
-        if(resp.error) throw resp.error;
-        input.value = '';
-        openForumDetail(kommState.currentForumPost);
-    } catch(err) { _showToast('Fehler: ' + err.message, 'error'); }
-}
-
-export function closeForumDetail() {
-    document.getElementById('forumDetailView').classList.add('hidden');
-    document.getElementById('forumListView').classList.remove('hidden');
-    kommState.currentForumPost = null;
-}
-
-export function showKommTab(tabName) {
-    // === DEMO-MODUS ===
-    if (typeof window.isModuleDemo === 'function' && window.isModuleDemo('kommunikation')) {
-        var container = document.querySelector('.komm-tab-content') || document.getElementById('kommunikationContent');
-        // Show demo in the first visible container
-        var allContainers = document.querySelectorAll('.komm-tab-content');
-        allContainers.forEach(function(t){t.style.display='none';});
-        var chatEl = document.getElementById('kommTabChat');
-        if (chatEl) {
-            chatEl.style.display = 'block';
-            chatEl.innerHTML = _renderKommDemo();
-        }
+// ========== CHAT VIEW ==========
+async function kommLoadChat(el) {
+    if (!KOMM.activeId || KOMM.activeId === 'channel') {
+        el.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm"><div class="text-center"><div class="text-4xl mb-3">💬</div><p class="font-semibold">Waehle einen Channel</p></div></div>';
         return;
     }
 
-    document.querySelectorAll('.komm-tab-content').forEach(function(t){t.style.display='none';});
-    document.querySelectorAll('.komm-tab-btn').forEach(function(b){
-        b.className = b.className.replace(/bg-white text-gray-800 shadow-sm/g, 'text-gray-500 hover:text-gray-700').replace(/ shadow-sm/g, '');
-    });
-    var tabMap = {chat:'Chat',community:'Community'};
-    var el = document.getElementById('kommTab' + (tabMap[tabName]||''));
-    if(el) el.style.display = 'block';
-    var btn = document.querySelector('.komm-tab-btn[data-tab="'+tabName+'"]');
-    if(btn) btn.className = 'komm-tab-btn px-4 py-2 rounded-md text-sm font-semibold bg-white text-gray-800 shadow-sm';
+    el.innerHTML = '<div class="flex items-center justify-center py-8"><div class="animate-spin w-5 h-5 border-2 border-vit-orange border-t-transparent rounded-full"></div></div>';
 
-    if(tabName==='chat') loadKommSidebar();
-    if(tabName==='community') { closeForumDetail(); renderCommunityPosts('all'); }
+    try {
+        var resp = await _sb().from('chat_nachrichten')
+            .select('*, users:user_id(id, name, vorname, nachname, is_hq, rolle)')
+            .eq('kanal_id', KOMM.activeId)
+            .order('created_at', {ascending: true})
+            .limit(100);
+
+        KOMM.messages = resp.data || [];
+
+        // Reaktionen laden
+        var msgIds = KOMM.messages.map(function(m) { return m.id; });
+        var reactions = {};
+        if (msgIds.length > 0) {
+            var rxResp = await _sb().from('komm_reactions')
+                .select('*')
+                .eq('parent_type', 'chat')
+                .in('parent_id', msgIds);
+            (rxResp.data || []).forEach(function(r) {
+                if (!reactions[r.parent_id]) reactions[r.parent_id] = [];
+                reactions[r.parent_id].push(r);
+            });
+        }
+
+        var uid = _sbUser() ? _sbUser().id : null;
+        var isDm = KOMM.view === 'dm';
+        var h = '<div class="max-w-[800px] mx-auto px-4 py-4">';
+
+        // KI-Zusammenfassung Button (nur Channels)
+        if (KOMM.view === 'channel' && KOMM.messages.length > 5) {
+            h += '<div class="flex justify-center mb-3">';
+            h += '<button onclick="kommSummarize()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-white cursor-pointer" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">🧠 Was hab ich verpasst?</button>';
+            h += '</div>';
+        }
+
+        // Datum-Trenner
+        h += '<div class="text-center py-2 text-[11px] text-gray-400">— Heute —</div>';
+
+        KOMM.messages.forEach(function(m) {
+            var isOwn = m.user_id === uid;
+            var userName = m.users ? kommUserName(m.users) : 'Unbekannt';
+            var isHq = m.users && (m.users.is_hq || m.users.rolle === 'hq');
+            var initials = kommInitials(userName);
+            var msgReactions = reactions[m.id] || [];
+
+            h += '<div class="flex gap-2.5 py-1.5 group">';
+            h += '<div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
+            h += '<div class="flex-1 min-w-0">';
+            h += '<div class="flex items-baseline gap-2 mb-0.5">';
+            h += '<span class="text-[13px] font-bold ' + (isHq ? 'text-[#EF7D00]' : 'text-gray-800') + '">' + _escH(userName) + '</span>';
+            if (isHq) h += '<span class="text-[9px] font-bold bg-orange-50 text-[#EF7D00] px-1.5 py-0.5 rounded">HQ</span>';
+            h += '<span class="text-[11px] text-gray-400">' + kommTimeShort(m.created_at) + '</span>';
+            // Gelesen-Status in DMs
+            if (isDm && isOwn) {
+                var read = m.gelesen_von && m.gelesen_von.length > 0;
+                h += '<span class="text-[11px] ml-auto ' + (read ? 'text-blue-500' : 'text-gray-300') + '">' + (read ? '✓✓' : '✓') + '</span>';
+            }
+            h += '</div>';
+            h += '<p class="text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p>';
+
+            // Reaktionen
+            if (msgReactions.length > 0 || true) {
+                h += '<div class="flex gap-1 mt-1 flex-wrap">';
+                // Gruppiere Reaktionen nach Emoji
+                var emojiCounts = {};
+                msgReactions.forEach(function(r) {
+                    if (!emojiCounts[r.emoji]) emojiCounts[r.emoji] = { count: 0, myReaction: false };
+                    emojiCounts[r.emoji].count++;
+                    if (r.user_id === uid) emojiCounts[r.emoji].myReaction = true;
+                });
+                Object.keys(emojiCounts).forEach(function(emoji) {
+                    var ec = emojiCounts[emoji];
+                    h += '<button onclick="kommToggleReaction(\'' + m.id + '\',\'' + emoji + '\')" class="px-2 py-0.5 rounded-full text-[12px] font-semibold cursor-pointer ' + (ec.myReaction ? 'border-[1.5px] border-[#EF7D00] bg-orange-50 text-[#EF7D00]' : 'border border-gray-200 bg-white text-gray-500 hover:bg-gray-50') + '">' + emoji + ' ' + ec.count + '</button>';
+                });
+                // Add reaction button
+                h += '<button onclick="kommShowEmojiPicker(\'' + m.id + '\')" class="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-[12px] text-gray-400 cursor-pointer hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">+</button>';
+                h += '</div>';
+            }
+
+            h += '</div></div>';
+        });
+
+        h += '</div>';
+        el.innerHTML = h;
+        el.scrollTop = el.scrollHeight;
+
+        // Realtime subscription
+        kommSubscribeRealtime();
+
+        // Gelesen markieren
+        kommMarkAsRead();
+
+    } catch(err) {
+        console.error('[kommunikation] loadChat:', err);
+        el.innerHTML = '<div class="text-center py-8 text-red-500 text-sm">Fehler beim Laden der Nachrichten</div>';
+    }
 }
 
-// Init on first load
+// ========== NEWS VIEW ==========
+async function kommLoadNews(el) {
+    try {
+        var resp = await _sb().from('ankuendigungen')
+            .select('*, users:erstellt_von(name, vorname, nachname, is_hq)')
+            .order('pinned', {ascending: false})
+            .order('created_at', {ascending: false})
+            .limit(30);
 
-// Strangler Fig: window.* registration
+        KOMM.newsItems = resp.data || [];
 
-// ── DEMO-RENDERER für Kommunikation (status='demo' in modul_status) ──
-function _renderKommDemo() {
-    var now = new Date();
-    var pad = function(n){return String(n).padStart(2,'0');};
-    var timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
-    var html = '';
+        // Gelesen-Status laden
+        var uid = _sbUser() ? _sbUser().id : null;
+        var newsIds = KOMM.newsItems.map(function(n) { return n.id; });
+        var gelesenSet = {};
+        if (newsIds.length > 0 && uid) {
+            var gResp = await _sb().from('ankuendigungen_gelesen').select('ankuendigung_id').eq('user_id', uid).in('ankuendigung_id', newsIds);
+            (gResp.data || []).forEach(function(g) { gelesenSet[g.ankuendigung_id] = true; });
+        }
 
-    html += '<div class="flex h-full" style="min-height:420px">';
+        var h = '<div class="max-w-[700px] mx-auto py-4 px-4 space-y-3">';
 
-    // Sidebar
-    html += '<div class="w-64 border-r border-gray-200 flex flex-col bg-gray-50">';
-    html += '<div class="p-3 border-b border-gray-200">';
-    html += '<p class="text-xs font-bold text-gray-500 uppercase mb-2">Kanäle</p>';
-    var channels = [
-        {icon:'#️⃣', name:'allgemein', unread:3, active:true},
-        {icon:'🛒', name:'verkauf', unread:0, active:false},
-        {icon:'🔧', name:'werkstatt', unread:1, active:false},
+        // Pflicht-Lesebestaetigungen Banner
+        var pflichtItems = KOMM.newsItems.filter(function(n) { return n.ist_pflicht; });
+        if (pflichtItems.length > 0 && kommIsHQ()) {
+            pflichtItems.forEach(function(pf) {
+                h += '<div class="bg-yellow-50 border border-yellow-300 rounded-xl p-3 flex items-center justify-between">';
+                h += '<div class="flex items-center gap-2"><span>📊</span><div>';
+                h += '<div class="text-xs font-bold text-yellow-800">Pflicht: "' + _escH(pf.titel) + '"</div>';
+                h += '<div class="text-[11px] text-yellow-700">Lesebestaetigungen ausstehend</div>';
+                h += '</div></div>';
+                h += '<button onclick="kommShowPflichtDetails(\'' + pf.id + '\')" class="px-2.5 py-1 rounded-md bg-white border border-yellow-400 text-[11px] font-semibold text-yellow-800 cursor-pointer hover:bg-yellow-50">Details →</button>';
+                h += '</div>';
+            });
+        }
+
+        // News-Karten
+        KOMM.newsItems.forEach(function(n) {
+            var d = new Date(n.created_at);
+            var authorName = n.users ? kommUserName(n.users) : 'HQ';
+            var isHq = n.users && n.users.is_hq;
+            var gelesen = gelesenSet[n.id];
+            var catBg = n.wichtig ? 'bg-red-50 text-red-600' : n.kategorie === 'update' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600';
+            var catLabel = n.wichtig ? '⚠️ Wichtig' : n.kategorie === 'update' ? '🔄 Update' : '📰 News';
+
+            h += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">';
+            if (n.pinned) h += '<div class="bg-[#EF7D00] px-3.5 py-1 text-[10px] font-bold text-white">📌 ANGEPINNT</div>';
+            h += '<div class="p-4">';
+
+            // Author + Meta
+            h += '<div class="flex items-center gap-2 mb-2.5">';
+            var aInit = kommInitials(authorName);
+            h += '<div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold" style="background:' + kommAvatarColor(aInit) + '">' + aInit + '</div>';
+            h += '<span class="text-xs font-semibold">' + _escH(authorName) + '</span>';
+            h += '<span class="text-[11px] text-gray-400">' + kommTimeAgo(n.created_at) + '</span>';
+            h += '<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ml-auto ' + catBg + '">' + catLabel + '</span>';
+            h += '</div>';
+
+            h += '<h3 class="text-[15px] font-bold mb-1.5">' + _escH(n.titel) + '</h3>';
+            h += '<p class="text-[13px] text-gray-600 leading-relaxed">' + _escH(n.inhalt || '') + '</p>';
+
+            // Anhang
+            if (n.hat_attachment) {
+                h += '<div class="mt-2.5 inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px]">📎 <span class="font-semibold">Anhang</span></div>';
+            }
+
+            // Footer
+            h += '<div class="flex gap-4 mt-3 pt-2.5 border-t border-gray-100">';
+            h += '<button onclick="kommLikeNews(\'' + n.id + '\')" class="text-xs text-gray-500 bg-transparent border-none cursor-pointer hover:text-[#EF7D00]">❤️ ' + (n.likes_count || 0) + '</button>';
+            h += '<button class="text-xs text-gray-500 bg-transparent border-none cursor-pointer">💬 ' + (n.kommentar_count || 0) + '</button>';
+            if (gelesen) h += '<span class="ml-auto text-[11px] text-green-500">✓ Gelesen</span>';
+            else h += '<button onclick="kommMarkNewsRead(\'' + n.id + '\')" class="ml-auto text-[11px] text-gray-400 cursor-pointer hover:text-green-500">Als gelesen markieren</button>';
+            h += '</div>';
+
+            h += '</div></div>';
+        });
+
+        if (KOMM.newsItems.length === 0) {
+            h += '<div class="text-center py-12"><div class="text-4xl mb-3">📢</div><p class="text-gray-500 font-semibold">Noch keine Ankuendigungen</p></div>';
+        }
+
+        h += '</div>';
+        el.innerHTML = h;
+
+        // Auto-Lesebestaetigungen
+        KOMM.newsItems.forEach(function(n) {
+            if (!gelesenSet[n.id] && uid) {
+                _sb().from('ankuendigungen_gelesen').insert({ ankuendigung_id: n.id, user_id: uid, gelesen_am: new Date().toISOString() }).then(function(){});
+            }
+        });
+
+    } catch(err) {
+        console.error('[kommunikation] loadNews:', err);
+        el.innerHTML = '<div class="text-center py-8 text-red-500 text-sm">Fehler beim Laden der News</div>';
+    }
+}
+
+// ========== PINNWAND VIEW ==========
+async function kommLoadPinnwand(el) {
+    try {
+        var resp = await _sb().from('pinnwand_posts')
+            .select('*, users:user_id(name, vorname, nachname, is_hq, standort_id, standorte:standort_id(name))')
+            .order('created_at', {ascending: false})
+            .limit(30);
+        KOMM.pinnwandPosts = resp.data || [];
+
+        var h = '<div class="max-w-[600px] mx-auto py-4 px-4">';
+
+        // Post-Eingabe
+        h += '<div class="bg-white rounded-xl border border-gray-200 p-3.5 mb-3.5">';
+        h += '<div class="flex gap-2.5">';
+        var myName = _sbProfile() ? kommUserName(_sbProfile()) : 'Du';
+        var myInit = kommInitials(myName);
+        h += '<div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(myInit) + '">' + myInit + '</div>';
+        h += '<textarea id="kommPinnwandInput" placeholder="Was gibts Neues? Fotos, Erfolge, Fragen..." rows="2" class="flex-1 border border-gray-200 rounded-lg px-2.5 py-2 text-[13px] resize-none outline-none focus:border-[#EF7D00]"></textarea>';
+        h += '</div>';
+        h += '<div class="flex justify-between mt-2 pl-10">';
+        h += '<div class="flex gap-2">';
+        h += '<button onclick="kommPinnwandAttach(\'bild\')" class="text-xs text-gray-500 bg-transparent border-none cursor-pointer">📷 Foto</button>';
+        h += '<button onclick="kommPinnwandAttach(\'datei\')" class="text-xs text-gray-500 bg-transparent border-none cursor-pointer">📎 Datei</button>';
+        h += '</div>';
+        h += '<button onclick="kommPostPinnwand()" class="px-4 py-1.5 rounded-lg bg-[#EF7D00] text-white text-xs font-bold border-none cursor-pointer hover:opacity-90">Posten</button>';
+        h += '</div></div>';
+
+        // Posts
+        KOMM.pinnwandPosts.forEach(function(p) {
+            var authorName = p.users ? kommUserName(p.users) : 'Unbekannt';
+            var standortName = p.users && p.users.standorte ? p.users.standorte.name : '';
+            var aInit = kommInitials(authorName);
+
+            h += '<div class="bg-white rounded-xl border border-gray-200 mb-3 p-3.5">';
+            h += '<div class="flex items-center gap-2 mb-2">';
+            h += '<div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(aInit) + '">' + aInit + '</div>';
+            h += '<span class="text-[13px] font-bold">' + _escH(authorName) + '</span>';
+            h += '<span class="text-[11px] text-gray-400">· ' + _escH(standortName) + ' · ' + kommTimeAgo(p.created_at) + '</span>';
+            // Loeschen fuer HQ + eigene
+            var uid = _sbUser() ? _sbUser().id : null;
+            if (kommIsHQ() || p.user_id === uid) {
+                h += '<button onclick="kommDeletePinnwand(\'' + p.id + '\')" class="ml-auto text-xs text-gray-300 hover:text-red-500 cursor-pointer">🗑</button>';
+            }
+            h += '</div>';
+            h += '<p class="text-[13.5px] leading-relaxed whitespace-pre-wrap">' + _escH(p.text) + '</p>';
+            if (p.hat_bild && p.bild_url) {
+                h += '<div class="mt-2.5 rounded-lg overflow-hidden"><img src="' + _escH(p.bild_url) + '" class="max-w-full max-h-60 object-cover rounded-lg" alt="Bild"></div>';
+            } else if (p.hat_bild) {
+                h += '<div class="mt-2.5 bg-gray-100 rounded-lg h-36 flex items-center justify-center text-gray-400 text-xs">📷 Bild-Vorschau</div>';
+            }
+            h += '<div class="flex gap-4 mt-2.5 pt-2 border-t border-gray-100">';
+            h += '<button onclick="kommLikePinnwand(\'' + p.id + '\')" class="text-xs ' + (p.likes_count > 0 ? 'text-[#EF7D00] font-semibold' : 'text-gray-500') + ' bg-transparent border-none cursor-pointer">❤️ ' + (p.likes_count || 'Gefaellt mir') + '</button>';
+            h += '<button onclick="kommShowPinnwandComments(\'' + p.id + '\')" class="text-xs text-gray-500 bg-transparent border-none cursor-pointer">💬 ' + (p.kommentar_count || 0) + '</button>';
+            h += '</div></div>';
+        });
+
+        if (KOMM.pinnwandPosts.length === 0) {
+            h += '<div class="text-center py-12"><div class="text-4xl mb-3">📌</div><p class="text-gray-500 font-semibold">Noch keine Posts</p></div>';
+        }
+
+        h += '</div>';
+        el.innerHTML = h;
+
+    } catch(err) {
+        console.error('[kommunikation] loadPinnwand:', err);
+        el.innerHTML = '<div class="text-center py-8 text-red-500 text-sm">Fehler beim Laden der Pinnwand</div>';
+    }
+}
+
+// ========== TEAM VIEW ==========
+function kommLoadTeam(el) {
+    // Gruppiere nach Standort
+    var standorte = {};
+    KOMM.allUsers.forEach(function(u) {
+        var sName = u.standort_id ? (u.standort_id) : 'Zentrale (HQ)';
+        if (u.is_hq) sName = 'hq';
+        if (!standorte[sName]) standorte[sName] = [];
+        standorte[sName].push(u);
+    });
+
+    // Standort-Namen laden (aus kanaele oder users)
+    var h = '<div class="max-w-[700px] mx-auto py-4 px-4">';
+
+    Object.keys(standorte).forEach(function(sId) {
+        var users = standorte[sId];
+        var groupName = sId === 'hq' ? 'vit:bikes Zentrale (HQ)' : 'Standort';
+        // Versuche Standort-Name aus User
+        if (sId !== 'hq' && users[0]) {
+            // Einfach den standort_id anzeigen, wird durch join besser
+            groupName = 'Standort';
+        }
+
+        h += '<div class="mb-5">';
+        h += '<div class="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-2">' + _escH(groupName) + ' (' + users.length + ')</div>';
+        users.forEach(function(u) {
+            var name = kommUserName(u);
+            var init = kommInitials(name);
+            h += '<div class="bg-white rounded-xl border border-gray-200 px-3.5 py-2.5 flex items-center gap-3 cursor-pointer mb-1 hover:shadow-sm">';
+            h += '<div class="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-xs font-bold" style="background:' + kommAvatarColor(init) + '">' + init + '</div>';
+            h += '<div class="flex-1"><div class="text-[13px] font-bold">' + _escH(name) + '</div>';
+            h += '<div class="text-[11px] text-gray-500">' + _escH(u.rolle || '') + '</div></div>';
+            h += '<button onclick="kommStartDMWith(\'' + u.id + '\',\'' + _escH(name) + '\')" class="px-2.5 py-1 rounded-md bg-orange-50 border border-[#EF7D0040] text-[11px] font-semibold text-[#EF7D00] cursor-pointer hover:bg-orange-100">💬 Chat</button>';
+            h += '</div>';
+        });
+        h += '</div>';
+    });
+
+    h += '</div>';
+    el.innerHTML = h;
+}
+
+// ========== ADMIN VIEW ==========
+function kommLoadAdmin(el) {
+    var netzwerk = KOMM.kanaele.filter(function(k) { return k.ist_netzwerk; });
+    var standort = KOMM.kanaele.filter(function(k) { return !k.ist_netzwerk; });
+
+    var h = '<div class="max-w-[900px] mx-auto py-4 px-4 flex gap-6">';
+
+    // Settings Sidebar
+    h += '<div class="w-44 flex-shrink-0">';
+    ['Allgemein','Benutzer','Standorte','Rollen','Kommunikation','Schnittstellen','Billing'].forEach(function(t) {
+        var active = t === 'Kommunikation';
+        h += '<div class="px-3.5 py-2 text-[13px] cursor-pointer rounded-lg mb-0.5 ' + (active ? 'font-bold text-[#EF7D00] bg-orange-50' : 'text-gray-500 hover:bg-gray-50') + '">' + t + '</div>';
+    });
+    h += '</div>';
+
+    // Content
+    h += '<div class="flex-1">';
+    h += '<h3 class="text-base font-bold mb-1">Kommunikation verwalten</h3>';
+    h += '<p class="text-xs text-gray-400 mb-5">Channels, Gruppen und Berechtigungen</p>';
+
+    // Netzwerk Channels
+    h += '<div class="mb-6">';
+    h += '<div class="flex justify-between mb-2.5"><h4 class="text-[13px] font-bold">🌐 Netzwerk-Channels</h4>';
+    if (kommIsHQ()) h += '<button onclick="kommNewChannel(true)" class="px-3 py-1 rounded-md bg-[#EF7D00] text-white text-[11px] font-bold cursor-pointer border-none hover:opacity-90">＋ Channel</button>';
+    h += '</div>';
+    h += '<div class="border border-gray-200 rounded-xl overflow-hidden"><table class="w-full border-collapse text-xs">';
+    h += '<thead><tr class="bg-gray-50"><th class="text-left p-2.5 text-gray-500">Channel</th><th class="text-left p-2.5 text-gray-500">Sichtbar</th><th></th></tr></thead><tbody>';
+    netzwerk.forEach(function(c) {
+        h += '<tr class="border-t border-gray-100"><td class="p-2.5 font-semibold">' + (c.icon || '💬') + ' ' + _escH(c.name) + '</td>';
+        h += '<td class="p-2.5"><span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600">Alle</span></td>';
+        h += '<td class="p-2.5 text-right">';
+        if (kommIsHQ()) {
+            h += '<button onclick="kommEditChannel(\'' + c.id + '\')" class="text-[11px] text-gray-400 bg-transparent border-none cursor-pointer">✏️</button> ';
+            h += '<button onclick="kommDeleteChannel(\'' + c.id + '\')" class="text-[11px] text-red-400 bg-transparent border-none cursor-pointer">🗑</button>';
+        }
+        h += '</td></tr>';
+    });
+    h += '</tbody></table></div></div>';
+
+    // Berechtigungen
+    h += '<div class="bg-gray-50 rounded-xl p-4">';
+    h += '<h4 class="text-[13px] font-bold mb-2.5">🔐 Berechtigungen</h4>';
+    var perms = [
+        ['Netzwerk-Channel erstellen', '🏢 HQ'],
+        ['Standort-Channel/Gruppe', '👔 GF'],
+        ['DM senden', '👤 Alle'],
+        ['Gruppe erstellen', '👤 Alle'],
+        ['Ankuendigung erstellen', '🏢 HQ'],
+        ['Pflicht-Lesebestaetigung', '🏢 HQ'],
+        ['Pinnwand-Post loeschen', '🏢 HQ, 👔 GF']
     ];
-    channels.forEach(function(ch) {
-        html += '<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg mb-0.5 cursor-default ' + (ch.active ? 'bg-orange-50 border border-orange-200' : 'hover:bg-gray-100') + '">';
-        html += '<span class="text-sm">' + ch.icon + '</span>';
-        html += '<span class="text-sm flex-1 ' + (ch.active ? 'font-semibold text-orange-700' : 'text-gray-700') + '">' + ch.name + '</span>';
-        if (ch.unread > 0) html += '<span class="text-[10px] bg-orange-500 text-white rounded-full px-1.5 py-0.5 font-bold">' + ch.unread + '</span>';
-        html += '</div>';
+    perms.forEach(function(p) {
+        h += '<div class="flex justify-between px-2.5 py-1.5 rounded-md bg-white border border-gray-100 mb-1 text-xs">';
+        h += '<span>' + p[0] + '</span><span class="text-gray-500">' + p[1] + '</span></div>';
     });
-    html += '</div>';
-    html += '<div class="p-3">';
-    html += '<p class="text-xs font-bold text-gray-500 uppercase mb-2">Direktnachrichten</p>';
-    var dms = [{name:'HQ Team', status:'online'},{name:'Matthias F.', status:'offline'}];
-    dms.forEach(function(dm) {
-        html += '<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg mb-0.5 hover:bg-gray-100 cursor-default">';
-        html += '<div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-bold">' + dm.name[0] + '</div>';
-        html += '<span class="text-sm text-gray-700 flex-1">' + dm.name + '</span>';
-        html += '<div class="w-2 h-2 rounded-full ' + (dm.status==='online' ? 'bg-green-400' : 'bg-gray-300') + '"></div>';
-        html += '</div>';
+    h += '</div>';
+
+    h += '</div></div>';
+    el.innerHTML = h;
+}
+
+// ========== Realtime ==========
+function kommSubscribeRealtime() {
+    if (KOMM.realtimeSub) {
+        _sb().removeChannel(KOMM.realtimeSub);
+        KOMM.realtimeSub = null;
+    }
+    if (!KOMM.activeId) return;
+
+    KOMM.realtimeSub = _sb()
+        .channel('komm-chat-' + KOMM.activeId)
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_nachrichten',
+            filter: 'kanal_id=eq.' + KOMM.activeId
+        }, function(payload) {
+            kommOnNewMessage(payload.new);
+        })
+        .subscribe();
+}
+
+async function kommOnNewMessage(msg) {
+    // Lade User-Daten fuer die neue Nachricht
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (msg.user_id === uid) return; // Eigene Nachricht schon angezeigt
+
+    try {
+        var uResp = await _sb().from('users').select('id, name, vorname, nachname, is_hq, rolle').eq('id', msg.user_id).single();
+        msg.users = uResp.data;
+    } catch(e) {}
+
+    KOMM.messages.push(msg);
+    var el = document.getElementById('kommContent');
+    if (el) {
+        await kommLoadChat(el);
+    }
+}
+
+// ========== Navigation ==========
+export function kommGoView(view, id, name) {
+    KOMM.view = view;
+    KOMM.activeId = id;
+    KOMM.activeName = name;
+    renderKomm();
+}
+
+export function kommToggleSection(key) {
+    KOMM.sidebarSections[key] = !KOMM.sidebarSections[key];
+    renderKomm();
+}
+
+export function kommToggleSidebar() {
+    KOMM.sidebarOpen = !KOMM.sidebarOpen;
+    var sidebar = document.getElementById('kommSidebar');
+    if (sidebar) sidebar.classList.toggle('hidden');
+}
+
+// ========== Nachrichten senden ==========
+export async function kommSendMessage() {
+    var input = document.getElementById('kommMsgInput');
+    if (!input || !input.value.trim()) return;
+
+    var text = input.value.trim();
+    input.value = '';
+
+    try {
+        var user = _sbUser();
+        var resp = await _sb().from('chat_nachrichten').insert({
+            kanal_id: KOMM.activeId,
+            user_id: user ? user.id : null,
+            nachricht: text
+        }).select('*, users:user_id(id, name, vorname, nachname, is_hq, rolle)').single();
+
+        if (resp.error) throw resp.error;
+
+        // Sofort anzeigen
+        KOMM.messages.push(resp.data);
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadChat(el);
+
+        // Letzte Nachricht auf Kanal aktualisieren
+        _sb().from('chat_kanaele').update({
+            letzte_nachricht_at: new Date().toISOString(),
+            letzte_nachricht_vorschau: text.substring(0, 80)
+        }).eq('id', KOMM.activeId).then(function(){});
+
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
+}
+
+// ========== Emoji-Reaktionen ==========
+export async function kommToggleReaction(msgId, emoji) {
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (!uid) return;
+    try {
+        // Pruefen ob schon reagiert
+        var check = await _sb().from('komm_reactions')
+            .select('id')
+            .eq('parent_type', 'chat')
+            .eq('parent_id', msgId)
+            .eq('user_id', uid)
+            .eq('emoji', emoji);
+        if (check.data && check.data.length > 0) {
+            await _sb().from('komm_reactions').delete().eq('id', check.data[0].id);
+        } else {
+            await _sb().from('komm_reactions').insert({
+                parent_type: 'chat',
+                parent_id: msgId,
+                emoji: emoji,
+                user_id: uid
+            });
+        }
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadChat(el);
+    } catch(err) {
+        console.error('[kommunikation] toggleReaction:', err);
+    }
+}
+
+export function kommShowEmojiPicker(msgId) {
+    // Einfaches Emoji-Picker Popup
+    var existing = document.getElementById('kommEmojiPicker');
+    if (existing) existing.remove();
+
+    var el = document.createElement('div');
+    el.id = 'kommEmojiPicker';
+    el.className = 'fixed z-50 bg-white rounded-xl shadow-lg border border-gray-200 p-2 flex gap-1';
+    el.style.top = (event.clientY - 50) + 'px';
+    el.style.left = event.clientX + 'px';
+    KOMM_EMOJIS.forEach(function(e) {
+        el.innerHTML += '<button onclick="kommToggleReaction(\'' + msgId + '\',\'' + e + '\');document.getElementById(\'kommEmojiPicker\').remove()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-lg cursor-pointer border-none bg-transparent">' + e + '</button>';
     });
+    document.body.appendChild(el);
+    setTimeout(function() {
+        document.addEventListener('click', function handler() {
+            var picker = document.getElementById('kommEmojiPicker');
+            if (picker) picker.remove();
+            document.removeEventListener('click', handler);
+        });
+    }, 100);
+}
+
+// ========== Gelesen ==========
+async function kommMarkAsRead() {
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (!uid || !KOMM.activeId) return;
+    // Fuer DMs: gelesen_von aktualisieren
+    if (KOMM.view === 'dm') {
+        var unread = KOMM.messages.filter(function(m) {
+            return m.user_id !== uid && (!m.gelesen_von || m.gelesen_von.indexOf(uid) === -1);
+        });
+        for (var i = 0; i < unread.length; i++) {
+            var m = unread[i];
+            var gv = (m.gelesen_von || []).concat([uid]);
+            _sb().from('chat_nachrichten').update({ gelesen_von: gv }).eq('id', m.id).then(function(){});
+        }
+    }
+}
+
+// ========== Datei-Upload ==========
+export function kommAttachFile() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = async function() {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        try {
+            var path = 'chat/' + KOMM.activeId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            var upResp = await _sb().storage.from('komm-attachments').upload(path, file);
+            if (upResp.error) throw upResp.error;
+            // URL holen
+            var urlResp = _sb().storage.from('komm-attachments').getPublicUrl(path);
+            var url = urlResp.data ? urlResp.data.publicUrl : path;
+            // Nachricht mit Anhang senden
+            var user = _sbUser();
+            await _sb().from('chat_nachrichten').insert({
+                kanal_id: KOMM.activeId,
+                user_id: user ? user.id : null,
+                nachricht: '📎 ' + file.name,
+                hat_attachment: true
+            });
+            // Attachment-Datensatz
+            await _sb().from('komm_attachments').insert({
+                parent_type: 'chat',
+                parent_id: KOMM.activeId,
+                datei_name: file.name,
+                datei_url: url,
+                datei_groesse: file.size,
+                datei_typ: file.type,
+                uploaded_by: user ? user.id : null
+            });
+            _showToast('Datei gesendet', 'success');
+            var el = document.getElementById('kommContent');
+            if (el) await kommLoadChat(el);
+        } catch(err) {
+            _showToast('Upload fehlgeschlagen: ' + (err.message || err), 'error');
+        }
+    };
+    input.click();
+}
+
+// ========== Sprachnachrichten ==========
+export async function kommStartRecording() {
+    try {
+        var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        KOMM.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+        KOMM.audioChunks = [];
+        KOMM.mediaRecorder.ondataavailable = function(e) { KOMM.audioChunks.push(e.data); };
+        KOMM.mediaRecorder.onstop = function() {
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            kommSendVoice();
+        };
+        KOMM.mediaRecorder.start();
+        KOMM.recording = true;
+        KOMM.recSeconds = 0;
+        KOMM.recInterval = setInterval(function() {
+            KOMM.recSeconds++;
+            var el = document.getElementById('kommRecTime');
+            if (el) el.textContent = Math.floor(KOMM.recSeconds / 60) + ':' + (KOMM.recSeconds % 60).toString().padStart(2, '0');
+            if (KOMM.recSeconds >= 300) kommStopRecording(); // 5 min limit
+        }, 1000);
+        // UI
+        var recBar = document.getElementById('kommRecBar');
+        var msgInput = document.getElementById('kommMsgInput');
+        var voiceBtn = document.getElementById('kommVoiceBtn');
+        if (recBar) recBar.classList.remove('hidden');
+        if (msgInput) msgInput.classList.add('hidden');
+        if (voiceBtn) voiceBtn.classList.add('hidden');
+    } catch(err) {
+        _showToast('Mikrofon-Zugriff verweigert', 'error');
+    }
+}
+
+export function kommStopRecording() {
+    if (KOMM.mediaRecorder && KOMM.mediaRecorder.state !== 'inactive') {
+        KOMM.mediaRecorder.stop();
+    }
+    KOMM.recording = false;
+    clearInterval(KOMM.recInterval);
+    // UI zuruecksetzen
+    var recBar = document.getElementById('kommRecBar');
+    var msgInput = document.getElementById('kommMsgInput');
+    var voiceBtn = document.getElementById('kommVoiceBtn');
+    if (recBar) recBar.classList.add('hidden');
+    if (msgInput) msgInput.classList.remove('hidden');
+    if (voiceBtn) voiceBtn.classList.remove('hidden');
+}
+
+async function kommSendVoice() {
+    if (KOMM.audioChunks.length === 0) return;
+    try {
+        var blob = new Blob(KOMM.audioChunks, { type: 'audio/webm' });
+        var filename = 'voice_' + Date.now() + '.webm';
+        var path = 'voice/' + KOMM.activeId + '/' + filename;
+        var upResp = await _sb().storage.from('komm-attachments').upload(path, blob);
+        if (upResp.error) throw upResp.error;
+        var urlResp = _sb().storage.from('komm-attachments').getPublicUrl(path);
+        var url = urlResp.data ? urlResp.data.publicUrl : path;
+
+        var user = _sbUser();
+        await _sb().from('chat_nachrichten').insert({
+            kanal_id: KOMM.activeId,
+            user_id: user ? user.id : null,
+            nachricht: '🎤 Sprachnachricht (' + KOMM.recSeconds + 's)',
+            hat_attachment: true
+        });
+        _showToast('Sprachnachricht gesendet', 'success');
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadChat(el);
+    } catch(err) {
+        _showToast('Upload fehlgeschlagen: ' + (err.message || err), 'error');
+    }
+}
+
+// ========== News Actions ==========
+export async function kommNewNews() {
+    if (document.getElementById('kommNewsOverlay')) return;
+    var el = document.createElement('div');
+    el.id = 'kommNewsOverlay';
+    el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8';
+    el.onclick = function(e) { if (e.target === el) el.remove(); };
+
+    var html = '<div class="bg-white rounded-xl w-full max-w-lg mx-4 shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<div class="p-5 border-b border-gray-100 flex items-center justify-between">';
+    html += '<h3 class="text-lg font-bold text-gray-800">Neue Ankuendigung</h3>';
+    html += '<button onclick="document.getElementById(\'kommNewsOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+    html += '<div class="p-5">';
+    html += '<div class="mb-3"><label class="block text-xs font-semibold text-gray-600 mb-1">Titel *</label>';
+    html += '<input type="text" id="kommNewsTitel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></div>';
+    html += '<div class="mb-3"><label class="block text-xs font-semibold text-gray-600 mb-1">Inhalt *</label>';
+    html += '<textarea id="kommNewsInhalt" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-y"></textarea></div>';
+    html += '<div class="grid grid-cols-2 gap-3 mb-3">';
+    html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie</label>';
+    html += '<select id="kommNewsKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">';
+    html += '<option value="news">📰 News</option><option value="update">🔄 Update</option></select></div>';
+    html += '<div class="flex flex-col gap-2 pt-5">';
+    html += '<label class="flex items-center gap-2 text-xs"><input type="checkbox" id="kommNewsWichtig"> ⚠️ Wichtig</label>';
+    html += '<label class="flex items-center gap-2 text-xs"><input type="checkbox" id="kommNewsPflicht"> 📊 Pflicht-Lesebestaetigung</label>';
+    html += '<label class="flex items-center gap-2 text-xs"><input type="checkbox" id="kommNewsPinned"> 📌 Anpinnen</label>';
     html += '</div></div>';
+    html += '<div class="flex justify-end gap-2">';
+    html += '<button onclick="document.getElementById(\'kommNewsOverlay\').remove()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Abbrechen</button>';
+    html += '<button onclick="kommSubmitNews()" class="px-4 py-2 bg-[#EF7D00] text-white rounded-lg text-sm font-semibold hover:opacity-90">Veroeffentlichen</button>';
+    html += '</div></div></div>';
+    el.innerHTML = html;
+    document.body.appendChild(el);
+}
 
-    // Chat area
-    html += '<div class="flex-1 flex flex-col">';
-    html += '<div class="p-3 border-b border-gray-200 bg-white flex items-center gap-2">';
-    html += '<span class="text-sm font-bold"># allgemein</span>';
-    html += '<span class="text-xs bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">🎭 Demo</span>';
-    html += '</div>';
+export async function kommSubmitNews() {
+    var titel = (document.getElementById('kommNewsTitel') || {}).value || '';
+    var inhalt = (document.getElementById('kommNewsInhalt') || {}).value || '';
+    var kategorie = (document.getElementById('kommNewsKat') || {}).value || 'news';
+    var wichtig = (document.getElementById('kommNewsWichtig') || {}).checked || false;
+    var pflicht = (document.getElementById('kommNewsPflicht') || {}).checked || false;
+    var pinned = (document.getElementById('kommNewsPinned') || {}).checked || false;
 
-    // Messages
-    html += '<div class="flex-1 overflow-y-auto p-4 space-y-4">';
-    var msgs = [
-        {author:'HQ Team', avatar:'H', time:'09:15', text:'Guten Morgen! Denkt an das BWA-Upload bis Ende des Monats.', isHq:true},
-        {author:'Du', avatar:'T', time:'09:22', text:'Erledigt! Habe heute früh bereits hochgeladen ✓', isHq:false},
-        {author:'HQ Team', avatar:'H', time:'09:24', text:'Super, danke! Habt ihr Fragen zur neuen Orbea-Kampagne?', isHq:true},
-        {author:'Du', avatar:'T', time:'09:31', text:'Wann kommen die neuen POS-Materialien an?', isHq:false},
-        {author:'HQ Team', avatar:'H', time:'09:45', text:'Diese Woche noch – ich schicke euch eine Sendungsverfolgung.', isHq:true},
-    ];
-    msgs.forEach(function(m) {
-        html += '<div class="flex gap-3 ' + (!m.isHq ? 'flex-row-reverse' : '') + '">';
-        html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold ' + (m.isHq ? 'bg-orange-500' : 'bg-gray-500') + '">' + m.avatar + '</div>';
-        html += '<div class="max-w-xs">';
-        html += '<div class="flex items-center gap-1 mb-0.5 ' + (!m.isHq ? 'justify-end' : '') + '">';
-        html += '<span class="text-xs font-semibold">' + m.author + '</span>';
-        html += '<span class="text-[10px] text-gray-400">' + m.time + '</span>';
+    if (!titel.trim() || !inhalt.trim()) { _showToast('Titel und Inhalt sind Pflichtfelder', 'error'); return; }
+
+    try {
+        var user = _sbUser();
+        await _sb().from('ankuendigungen').insert({
+            erstellt_von: user ? user.id : null,
+            titel: titel.trim(),
+            inhalt: inhalt.trim(),
+            kategorie: kategorie,
+            wichtig: wichtig,
+            ist_pflicht: pflicht,
+            pinned: pinned
+        });
+        var overlay = document.getElementById('kommNewsOverlay');
+        if (overlay) overlay.remove();
+        _showToast('Ankuendigung veroeffentlicht', 'success');
+        KOMM.view = 'news';
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadNews(el);
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
+}
+
+export async function kommMarkNewsRead(newsId) {
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (!uid) return;
+    try {
+        await _sb().from('ankuendigungen_gelesen').insert({ ankuendigung_id: newsId, user_id: uid, gelesen_am: new Date().toISOString() });
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadNews(el);
+    } catch(err) {}
+}
+
+export async function kommLikeNews(newsId) {
+    try {
+        var uid = _sbUser() ? _sbUser().id : null;
+        // Toggle reaction
+        var check = await _sb().from('komm_reactions').select('id').eq('parent_type', 'ankuendigung').eq('parent_id', newsId).eq('user_id', uid);
+        if (check.data && check.data.length > 0) {
+            await _sb().from('komm_reactions').delete().eq('id', check.data[0].id);
+            await _sb().from('ankuendigungen').update({ likes_count: Math.max(0, (KOMM.newsItems.find(function(n){return n.id===newsId;}) || {}).likes_count - 1 || 0) }).eq('id', newsId);
+        } else {
+            await _sb().from('komm_reactions').insert({ parent_type: 'ankuendigung', parent_id: newsId, emoji: '❤️', user_id: uid });
+            await _sb().from('ankuendigungen').update({ likes_count: ((KOMM.newsItems.find(function(n){return n.id===newsId;}) || {}).likes_count || 0) + 1 }).eq('id', newsId);
+        }
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadNews(el);
+    } catch(err) {}
+}
+
+export async function kommShowPflichtDetails(newsId) {
+    try {
+        var resp = await _sb().from('ankuendigungen_gelesen').select('*, users:user_id(name, vorname, nachname)').eq('ankuendigung_id', newsId);
+        var gelesen = resp.data || [];
+        var total = KOMM.allUsers.length;
+        var gelesenIds = gelesen.map(function(g) { return g.user_id; });
+        var ungelesen = KOMM.allUsers.filter(function(u) { return gelesenIds.indexOf(u.id) === -1; });
+
+        var el = document.createElement('div');
+        el.id = 'kommPflichtOverlay';
+        el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        el.onclick = function(e) { if (e.target === el) el.remove(); };
+        var html = '<div class="bg-white rounded-xl w-full max-w-md mx-4 p-5 shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">';
+        html += '<div class="flex items-center justify-between mb-4"><h3 class="font-bold text-gray-800">📊 Lesebestaetigung</h3>';
+        html += '<button onclick="document.getElementById(\'kommPflichtOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+        html += '<div class="p-3 bg-green-50 rounded-lg mb-3"><p class="text-sm font-semibold text-green-700">✅ Gelesen (' + gelesen.length + '/' + total + ')</p>';
+        gelesen.forEach(function(g) {
+            var name = g.users ? kommUserName(g.users) : 'Unbekannt';
+            html += '<p class="text-xs text-green-600">' + _escH(name) + ' · ' + kommTimeAgo(g.gelesen_am) + '</p>';
+        });
         html += '</div>';
-        html += '<div class="rounded-xl px-3 py-2 text-sm ' + (m.isHq ? 'bg-gray-100 text-gray-800' : 'bg-orange-500 text-white') + '">' + m.text + '</div>';
+        html += '<div class="p-3 bg-red-50 rounded-lg"><p class="text-sm font-semibold text-red-700">⏳ Ausstehend (' + ungelesen.length + ')</p>';
+        ungelesen.forEach(function(u) {
+            html += '<p class="text-xs text-red-600">' + _escH(kommUserName(u)) + '</p>';
+        });
         html += '</div></div>';
-    });
-    html += '</div>';
-
-    // Input (disabled in demo)
-    html += '<div class="p-3 border-t border-gray-200 bg-white">';
-    html += '<div class="flex gap-2 items-center">';
-    html += '<input disabled placeholder="Kommunikation wird bald freigeschaltet..." class="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-400 cursor-not-allowed" />';
-    html += '<button disabled class="btn-primary text-sm py-2 px-3 opacity-40 cursor-not-allowed">Senden</button>';
-    html += '</div></div>';
-
-    html += '</div></div>'; // close chat + flex
-
-    return html;
+        el.innerHTML = html;
+        document.body.appendChild(el);
+    } catch(err) {}
 }
 
-const _exports = {loadKommSidebar,filterKommSidebar,openKommConv,loadChannelMessages,subscribeToChannel,loadInboxConversation,renderInboxBubbles,loadAnnouncements,markAnkGelesen,renderChatBubbles,renderSingleBubble,setReply,cancelReply,kommSendMessage,kommInputKeydown,kommAutoResize,kommStartNewChat,kommSelectNewRecipient,kommCreateKanal,updateKommBadges,renderCommunityPosts,createCommunityPost,deactivateBrettPost,deleteForumPost,filterCommunity,openForumDetail,postForumComment,closeForumDetail,showKommTab};
+// ========== Pinnwand Actions ==========
+export async function kommPostPinnwand() {
+    var input = document.getElementById('kommPinnwandInput');
+    if (!input || !input.value.trim()) { _showToast('Bitte Text eingeben', 'error'); return; }
+    try {
+        var user = _sbUser();
+        var profile = _sbProfile();
+        await _sb().from('pinnwand_posts').insert({
+            standort_id: profile ? profile.standort_id : null,
+            user_id: user ? user.id : null,
+            text: input.value.trim(),
+            ist_netzwerk: true
+        });
+        input.value = '';
+        _showToast('Post veroeffentlicht', 'success');
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadPinnwand(el);
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
+}
+
+export async function kommLikePinnwand(postId) {
+    try {
+        var uid = _sbUser() ? _sbUser().id : null;
+        var check = await _sb().from('komm_reactions').select('id').eq('parent_type', 'pinnwand').eq('parent_id', postId).eq('user_id', uid);
+        if (check.data && check.data.length > 0) {
+            await _sb().from('komm_reactions').delete().eq('id', check.data[0].id);
+            var post = KOMM.pinnwandPosts.find(function(p){return p.id===postId;});
+            await _sb().from('pinnwand_posts').update({ likes_count: Math.max(0, (post ? post.likes_count : 1) - 1) }).eq('id', postId);
+        } else {
+            await _sb().from('komm_reactions').insert({ parent_type: 'pinnwand', parent_id: postId, emoji: '❤️', user_id: uid });
+            var post2 = KOMM.pinnwandPosts.find(function(p){return p.id===postId;});
+            await _sb().from('pinnwand_posts').update({ likes_count: ((post2 ? post2.likes_count : 0) || 0) + 1 }).eq('id', postId);
+        }
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadPinnwand(el);
+    } catch(err) {}
+}
+
+export async function kommDeletePinnwand(postId) {
+    if (!confirm('Post wirklich loeschen?')) return;
+    try {
+        await _sb().from('pinnwand_posts').delete().eq('id', postId);
+        _showToast('Post geloescht', 'success');
+        var el = document.getElementById('kommContent');
+        if (el) await kommLoadPinnwand(el);
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
+}
+
+export function kommShowPinnwandComments(postId) {
+    _showToast('Kommentare werden spaeter implementiert', 'info');
+}
+
+export function kommPinnwandAttach(type) {
+    _showToast('Anhang-Upload wird spaeter implementiert', 'info');
+}
+
+// ========== DM/Group/Channel erstellen ==========
+export function kommNewDM() {
+    if (document.getElementById('kommNewDMOverlay')) return;
+    var el = document.createElement('div');
+    el.id = 'kommNewDMOverlay';
+    el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8';
+    el.onclick = function(e) { if (e.target === el) el.remove(); };
+
+    var html = '<div class="bg-white rounded-xl w-full max-w-sm mx-4 shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<div class="p-4 border-b border-gray-100 flex items-center justify-between">';
+    html += '<h3 class="text-base font-bold">Neuer Chat</h3>';
+    html += '<button onclick="document.getElementById(\'kommNewDMOverlay\').remove()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button></div>';
+    html += '<div class="p-4 max-h-80 overflow-y-auto">';
+    KOMM.allUsers.forEach(function(u) {
+        var uid = _sbUser() ? _sbUser().id : null;
+        if (u.id === uid) return;
+        var name = kommUserName(u);
+        var init = kommInitials(name);
+        html += '<div onclick="kommStartDMWith(\'' + u.id + '\',\'' + _escH(name) + '\')" class="flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-50">';
+        html += '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[10px] font-bold" style="background:' + kommAvatarColor(init) + '">' + init + '</div>';
+        html += '<div><div class="text-[13px] font-semibold">' + _escH(name) + '</div><div class="text-[11px] text-gray-400">' + _escH(u.rolle || '') + '</div></div></div>';
+    });
+    html += '</div></div>';
+    el.innerHTML = html;
+    document.body.appendChild(el);
+}
+
+export async function kommStartDMWith(userId, userName) {
+    // Overlay schliessen
+    var overlay = document.getElementById('kommNewDMOverlay');
+    if (overlay) overlay.remove();
+
+    var uid = _sbUser() ? _sbUser().id : null;
+    // Check ob DM schon existiert
+    var existing = KOMM.dmList.find(function(dm) {
+        return dm.kanal_mitglieder && dm.kanal_mitglieder.some(function(m) { return m.user_id === userId; });
+    });
+    if (existing) {
+        kommGoView('dm', existing.id, userName);
+        return;
+    }
+
+    // Neuen DM-Kanal erstellen
+    try {
+        var chResp = await _sb().from('chat_kanaele').insert({
+            name: 'DM',
+            typ: 'dm',
+            ist_privat: true,
+            erstellt_von: uid
+        }).select().single();
+        if (chResp.error) throw chResp.error;
+
+        // Mitglieder hinzufuegen
+        await _sb().from('kanal_mitglieder').insert([
+            { kanal_id: chResp.data.id, user_id: uid, rolle: 'mitglied' },
+            { kanal_id: chResp.data.id, user_id: userId, rolle: 'mitglied' }
+        ]);
+
+        KOMM.loaded = false;
+        await kommLoadData();
+        kommGoView('dm', chResp.data.id, userName);
+
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
+}
+
+export function kommNewGroup() {
+    _showToast('Gruppen-Erstellung wird spaeter implementiert', 'info');
+}
+
+export function kommNewChannel(isNetzwerk) {
+    _showToast('Channel-Erstellung wird spaeter implementiert', 'info');
+}
+
+export function kommEditChannel(id) {
+    _showToast('Channel-Bearbeitung wird spaeter implementiert', 'info');
+}
+
+export function kommDeleteChannel(id) {
+    _showToast('Channel-Loeschung wird spaeter implementiert', 'info');
+}
+
+// ========== KI-Zusammenfassung ==========
+export async function kommSummarize() {
+    _showToast('KI-Zusammenfassung wird spaeter implementiert', 'info');
+}
+
+// ========== Legacy Compat ==========
+export function loadKommSidebar() { renderKomm(); }
+export function openKommConv(type, id, name) { kommGoView(type, id, name); }
+export function filterKommSidebar(q) { /* TODO: sidebar filter */ }
+export function kommStartNewChat() { kommNewDM(); }
+export function kommInputKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); kommSendMessage(); } }
+export function kommAutoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+export function filterCommunity() {}
+export function showForumDetail() {}
+export function submitForumPost() {}
+export function submitForumComment() {}
+export function showBrettDetail() {}
+export function submitBrettPost() {}
+
+// ========== Strangler Fig: window.* registration ==========
+const _exports = {
+    renderKomm, showKommTab, loadKommSidebar, openKommConv, kommSendMessage,
+    filterKommSidebar, kommGoView, kommToggleSection, kommToggleSidebar,
+    kommToggleReaction, kommShowEmojiPicker, kommAttachFile,
+    kommStartRecording, kommStopRecording,
+    kommNewNews, kommSubmitNews, kommMarkNewsRead, kommLikeNews, kommShowPflichtDetails,
+    kommPostPinnwand, kommLikePinnwand, kommDeletePinnwand, kommShowPinnwandComments, kommPinnwandAttach,
+    kommNewDM, kommStartDMWith, kommNewGroup, kommNewChannel, kommEditChannel, kommDeleteChannel,
+    kommSummarize, kommStartNewChat, kommInputKeydown, kommAutoResize,
+    filterCommunity, showForumDetail, submitForumPost, submitForumComment, showBrettDetail, submitBrettPost
+};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
-// [prod] log removed
-
-// === Window Exports (onclick handlers) ===
-window.cancelReply = cancelReply;
-window.closeForumDetail = closeForumDetail;
-window.createCommunityPost = createCommunityPost;
-window.filterCommunity = filterCommunity;
-window.filterKommSidebar = filterKommSidebar;
-window.kommAutoResize = kommAutoResize;
-window.kommSendMessage = kommSendMessage;
-window.kommStartNewChat = kommStartNewChat;
-window.postForumComment = postForumComment;
-window.showKommTab = showKommTab;
-
