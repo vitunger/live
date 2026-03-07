@@ -46,9 +46,9 @@ export function switchKalView(view){
     document.querySelectorAll('.kal-view-btn').forEach(function(b){b.className='kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md text-gray-500';});
     var btn=document.getElementById('kalViewBtn'+view.charAt(0).toUpperCase()+view.slice(1));
     if(btn)btn.className='kal-view-btn px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-gray-800 shadow-sm';
-    document.getElementById('kalMonthContainer').style.display=view==='month'?'':'none';
-    document.getElementById('kalWeekContainer').style.display=view==='week'?'':'none';
-    document.getElementById('kalDayContainer').style.display=view==='day'?'':'none';
+    var _mc=document.getElementById('kalMonthContainer'); if(_mc) _mc.style.display=view==='month'?'':'none';
+    var _wc=document.getElementById('kalWeekContainer'); if(_wc) _wc.style.display=view==='week'?'':'none';
+    var _dc=document.getElementById('kalDayContainer'); if(_dc) _dc.style.display=view==='day'?'':'none';
     kalRenderActive();
 }
 
@@ -94,7 +94,7 @@ export function kalUpdateNavTitle(){
         title='KW '+kw+' · '+title;
     }
     else if(kalCurrentView==='day'){title=dayNames[kalDayDate.getDay()]+', '+kalDayDate.getDate()+'. '+months[kalDayDate.getMonth()]+' '+kalDayDate.getFullYear();}
-    document.getElementById('kalNavTitle').textContent=title;
+    var _nt=document.getElementById('kalNavTitle'); if(_nt) _nt.textContent=title;
 }
 
 // === FILTERED TERMINE HELPER ===
@@ -117,7 +117,7 @@ export function renderKalender(){
     firstDay=firstDay===0?6:firstDay-1;
     var daysInMonth=new Date(kalYear,kalMonth+1,0).getDate();
     var today=new Date(); var todayStr=kalFmtDate(today);
-    var grid=document.getElementById('kalGrid'); var h='';
+    var grid=document.getElementById('kalGrid'); if(!grid) return; var h='';
 
     for(var i=0;i<firstDay;i++) h+='<div class="min-h-[80px] border-b border-r border-gray-100 p-1 bg-gray-50"></div>';
 
@@ -145,7 +145,7 @@ export function renderKalender(){
     // Upcoming list
     var todayStrUp=kalFmtDate(new Date());
     var upcoming=filtered.filter(function(t){return t.date>=todayStrUp;}).sort(function(a,b){return a.date>b.date?1:-1;}).slice(0,8);
-    var uEl=document.getElementById('kalUpcoming'); var uh='';
+    var uEl=document.getElementById('kalUpcoming'); if(!uEl) return; var uh='';
     var dayNamesShort=['So','Mo','Di','Mi','Do','Fr','Sa'];
     upcoming.forEach(function(t){
         var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
@@ -211,10 +211,10 @@ export function renderKalWeek(){
         adEl.className='p-1.5 border-r border-b border-gray-100 min-h-[32px]'+(weekDays[i].isToday?' bg-orange-50':'');
         if(adTerms.length>0) hasAllDay=true;
     }
-    document.getElementById('kalWeekAllDay').style.display=hasAllDay?'':'none';
+    var _wad=document.getElementById('kalWeekAllDay'); if(_wad) _wad.style.display=hasAllDay?'':'none';
 
     // Time grid
-    var gridEl=document.getElementById('kalWeekGrid');
+    var gridEl=document.getElementById('kalWeekGrid'); if(!gridEl) return;
     var h='';
     for(var hour=kalHourStart;hour<=kalHourEnd;hour++){
         h+='<div class="grid grid-cols-8 border-b border-gray-50" style="min-height:60px;">';
@@ -291,17 +291,17 @@ export function renderKalDay(){
     var adEl=document.getElementById('kalDayAllDay');
     var adList=document.getElementById('kalDayAllDayList');
     if(allDayTerms.length>0){
-        adEl.style.display='';
+        if(adEl) adEl.style.display='';
         var ah='';
         allDayTerms.forEach(function(t){
             var cls=typeColors[t.type]||'bg-gray-100 text-gray-600';
             ah+='<div onclick="openTerminDetail(\''+t.id+'\')" class="px-3 py-2 rounded-lg border cursor-pointer hover:shadow-sm transition '+cls+'"><span class="font-semibold text-sm">'+_escH(t.title)+'</span>'+(t.ort?' <span class="text-xs opacity-70">· '+_escH(t.ort)+'</span>':'')+'</div>';
         });
-        adList.innerHTML=ah;
-    }else{adEl.style.display='none';}
+        if(adList) adList.innerHTML=ah;
+    }else{if(adEl) adEl.style.display='none';}
 
     // Hour grid
-    var gridEl=document.getElementById('kalDayGrid');
+    var gridEl=document.getElementById('kalDayGrid'); if(!gridEl) return;
     var h='';
     var nowHour=new Date().getHours();
     var nowMin=new Date().getMinutes();
@@ -345,8 +345,8 @@ export function renderKalDay(){
 
     // Sidebar: list of day's termine
     var months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-    document.getElementById('kalDaySideTitle').textContent='Termine am '+kalDayDate.getDate()+'. '+months[kalDayDate.getMonth()];
-    var sideEl=document.getElementById('kalDaySideList');
+    var _dst=document.getElementById('kalDaySideTitle'); if(_dst) _dst.textContent='Termine am '+kalDayDate.getDate()+'. '+months[kalDayDate.getMonth()];
+    var sideEl=document.getElementById('kalDaySideList'); if(!sideEl) return;
     if(dayTermine.length===0){sideEl.innerHTML='<p class="text-sm text-gray-400">Keine Termine an diesem Tag.</p>';
     }else{
         var sh='';
@@ -367,7 +367,7 @@ export function renderKalDay(){
     }
 
     // Stats
-    var statsEl=document.getElementById('kalDayStats');
+    var statsEl=document.getElementById('kalDayStats'); if(!statsEl) return;
     var typeCount={};dayTermine.forEach(function(t){typeCount[t.type]=(typeCount[t.type]||0)+1;});
     var statH='<p><span class="font-semibold text-gray-800">'+dayTermine.length+'</span> Termine gesamt</p>';
     Object.keys(typeCount).forEach(function(k){
@@ -463,7 +463,7 @@ export async function loadKalTermine() {
                 };
             }).filter(Boolean).map(kalResolveVerkaufer);
         } else { kalTermine = []; }
-    } catch(e) { console.warn('Kalender load:', e); kalTermine = []; }
+    } catch(e) { console.warn('Kalender load:', e); kalTermine = []; _showToast('Termine konnten nicht geladen werden','error'); }
     kalRenderActive();
 }
 

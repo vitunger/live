@@ -4,6 +4,22 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get('authorization') || ''
+  const token = authHeader.replace('Bearer ', '')
+  if (!token) return null
+  try {
+    const sb = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    )
+    const { data: { user }, error } = await sb.auth.getUser(token)
+    if (error || !user) return null
+    return { user_id: user.id }
+  } catch { return null }
+}
+
 serve(async (req) => {
   const CORS = {
     'Access-Control-Allow-Origin': '*',
@@ -12,6 +28,14 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
   try {
+    // Verify JWT - only authenticated users can trigger notifications
+    const auth = await verifyJwt(req)
+    if (!auth) {
+      return new Response(JSON.stringify({ error: 'Nicht authentifiziert' }), {
+        status: 401, headers: CORS
+      })
+    }
+
     const sb = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
