@@ -494,10 +494,10 @@ function spRenderUpload() {
     html += '</select></div>';
     html += '</div>';
 
-    // Mode toggle (Audio deaktiviert - Transkriptions-API noch nicht implementiert)
+    // Mode toggle
     html += '<div class="flex gap-2 mb-5">';
-    html += '<button disabled title="Audio-Transkription kommt bald" class="flex-1 py-2 rounded-lg text-sm font-semibold bg-gray-50 text-gray-400 cursor-not-allowed">\uD83C\uDFB5 Audio-Datei (bald)</button>';
-    html += '<button onclick="spSetMode(\'text\')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition cursor-pointer bg-orange-500 text-white">\uD83D\uDCDD Transkript-Text</button>';
+    html += '<button onclick="spSetMode(\'audio\')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition cursor-pointer ' + (SP.uploadMode === 'audio' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">\uD83C\uDFB5 Audio-Datei</button>';
+    html += '<button onclick="spSetMode(\'text\')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition cursor-pointer ' + (SP.uploadMode === 'text' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">\uD83D\uDCDD Transkript-Text</button>';
     html += '</div>';
 
     // Upload area
@@ -622,7 +622,16 @@ export async function spSubmit() {
 
     var transcriptText = '';
 
+    var sb = _sb();
+    var user = _sbUser();
+    if (!sb || !user) { _showToast('Nicht eingeloggt.', 'error'); return; }
+
+    var sess = await sb.auth.getSession();
+    var token = (sess.data.session || {}).access_token;
+    var baseUrl = (window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co');
+
     if (SP.uploadMode === 'audio') {
+        // --- Audio-Modus: Upload + AssemblyAI Transkription + KI-Analyse in einem Call ---
         var audioInput = document.getElementById('spAudioInput');
         if (!audioInput || !audioInput.files[0]) { _showToast('Bitte Audio-Datei w\u00e4hlen.', 'warning'); return; }
         var file = audioInput.files[0];
@@ -630,11 +639,7 @@ export async function spSubmit() {
 
         SP.processing = true;
         spRenderUpload();
-        _showToast('\u23F3 Audio wird transkribiert\u2026', 'info');
-
-        var sb = _sb();
-        var user = _sbUser();
-        if (!sb || !user) { SP.processing = false; spRenderUpload(); _showToast('Nicht eingeloggt.', 'error'); return; }
+        _showToast('\u23F3 Audio wird hochgeladen und transkribiert\u2026 Das kann 1\u20133 Minuten dauern.', 'info');
 
         var fileName = 'spiritus/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         var uploadRes = await sb.storage.from('documents').upload(fileName, file, { contentType: file.type });
@@ -645,67 +650,76 @@ export async function spSubmit() {
         }
 
         try {
-            var resp = await fetch('/api/spiritus-transcribe', {
+            var resp = await fetch(baseUrl + '/functions/v1/audio-transcribe', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ((await sb.auth.getSession()).data.session || {}).access_token },
-                body: JSON.stringify({ filePath: fileName, standortId: standortId, callDate: callDate, callType: callType, durationMin: durationMin })
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({
+                    filePath: fileName,
+                    standortId: standortId,
+                    standortName: standortName,
+                    callDate: callDate,
+                    callType: callType,
+                    durationMin: durationMin,
+                    gespraechsKontext: SP.uploadKontext,
+                    lieferantName: lieferantName,
+                    akquiseKontaktName: akquiseName,
+                    akquiseKontaktFirma: akquiseFirma,
+                    akquiseKontaktOrt: akquiseOrt,
+                    thema: thema
+                })
             });
             var result = await resp.json();
             if (!resp.ok) throw new Error(result.error || 'Transkription fehlgeschlagen');
-            transcriptText = result.transcript || '';
+
+            SP.processing = false;
+            _showToast('\u2705 Call transkribiert & analysiert!', 'success');
+            loadSpTranscripts();
+            spTab('timeline');
         } catch(e) {
             SP.processing = false; spRenderUpload();
             _showToast('Transkription fehlgeschlagen: ' + e.message, 'error');
-            return;
         }
     } else {
+        // --- Text-Modus: Direkt an spiritus-analyze ---
         transcriptText = (document.getElementById('spTranscriptText') || {}).value || '';
         if (!transcriptText.trim() || transcriptText.length < 50) {
             _showToast('Bitte Transkript einf\u00fcgen (min. 50 Zeichen).', 'warning'); return;
         }
         SP.processing = true;
         spRenderUpload();
-    }
+        _showToast('\uD83E\uDD16 KI analysiert den Call\u2026', 'info');
 
-    _showToast('\uD83E\uDD16 KI analysiert den Call\u2026', 'info');
+        try {
+            var analyzeResp = await fetch(baseUrl + '/functions/v1/spiritus-analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({
+                    transcript: transcriptText,
+                    standortId: standortId,
+                    standortName: standortName,
+                    callDate: callDate,
+                    callType: callType,
+                    durationMin: durationMin,
+                    gespraechsKontext: SP.uploadKontext,
+                    lieferantName: lieferantName,
+                    akquiseKontaktName: akquiseName,
+                    akquiseKontaktFirma: akquiseFirma,
+                    akquiseKontaktOrt: akquiseOrt,
+                    thema: thema
+                })
+            });
 
-    try {
-        var sb2 = _sb();
-        var sess = await sb2.auth.getSession();
-        var token = (sess.data.session || {}).access_token;
+            var analyzeResult = await analyzeResp.json();
+            if (!analyzeResp.ok) throw new Error(analyzeResult.error || 'Analyse fehlgeschlagen');
 
-        var analyzeResp = await fetch((window.sbUrl ? window.sbUrl() : 'https://lwwagbkxeofahhwebkab.supabase.co') + '/functions/v1/spiritus-analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({
-                transcript: transcriptText,
-                standortId: standortId,
-                standortName: standortName,
-                callDate: callDate,
-                callType: callType,
-                durationMin: durationMin,
-                gespraechsKontext: SP.uploadKontext,
-                lieferantName: lieferantName,
-                akquiseKontaktName: akquiseName,
-                akquiseKontaktFirma: akquiseFirma,
-                akquiseKontaktOrt: akquiseOrt,
-                thema: thema
-            })
-        });
-
-        var analyzeResult = await analyzeResp.json();
-        if (!analyzeResp.ok) throw new Error(analyzeResult.error || 'Analyse fehlgeschlagen');
-
-        SP.processing = false;
-        _showToast('\u2705 Call erfolgreich analysiert!', 'success');
-
-        loadSpTranscripts();
-        spTab('timeline');
-
-    } catch(e) {
-        SP.processing = false;
-        spRenderUpload();
-        _showToast('Analyse fehlgeschlagen: ' + e.message, 'error');
+            SP.processing = false;
+            _showToast('\u2705 Call erfolgreich analysiert!', 'success');
+            loadSpTranscripts();
+            spTab('timeline');
+        } catch(e) {
+            SP.processing = false; spRenderUpload();
+            _showToast('Analyse fehlgeschlagen: ' + e.message, 'error');
+        }
     }
 }
 

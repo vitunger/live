@@ -545,6 +545,13 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
 - Bei Freigabe: checked Massnahmen → `todos`-Tabelle mit `spiritus_transcript_id` + `referenz_typ='spiritus'`
 - Rueckverlinkung: Detail-View zeigt verknuepfte Todos mit Erledigungs-Status
 
+### Audio-Transkription (AssemblyAI)
+- **Edge Function:** `audio-transcribe` – Audio aus Storage → AssemblyAI (Speaker Diarization) → spiritus-analyze Chain
+- **Provider:** AssemblyAI (`best` Modell, ~$0.015/Min, deutsch, Sprechererkennung)
+- **Flow:** Frontend laedt Audio in Supabase Storage → audio-transcribe holt Datei → AssemblyAI transkribiert → Ergebnis an spiritus-analyze → 8-Felder-Protokoll
+- **Supabase Secret:** `ASSEMBLYAI_API_KEY` (AssemblyAI Account noetig)
+- **Veraltete Functions:** `spiritus-transcribe` (v16, Whisper) und `spiritus-structure` (v16) sind durch `audio-transcribe` + `spiritus-analyze` ersetzt
+
 ### Eigene Notizen
 - Freitextfeld `eigene_notizen` auf `spiritus_transcripts`
 - Nicht von KI verarbeitet, nur fuer persoenliche Protokolle
