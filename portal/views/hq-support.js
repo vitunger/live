@@ -427,76 +427,59 @@ export async function hqSupOpenDetail(ticketId) {
         // Absender (Suchfeld)
         html += '<div class="relative flex items-center gap-1">';
         html += '<span class="text-xs text-gray-400">Absender:</span>';
-        html += '<input id="hqSupAbsenderSearch" type="text" value="' + _escH(absenderName) + '" placeholder="Suchen..." autocomplete="off" oninput="hqSupAbsenderFilter()" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white w-32">';
+        html += '<input id="hqSupAbsenderSearch" type="text" value="' + _escH(absenderName) + '" placeholder="Suchen..." autocomplete="off" oninput="hqSupAbsenderFilter()" onkeydown="hqSupAbsenderKeydown(event,\'' + ticketId + '\')" data-orig-name="' + _escH(absenderName) + '" data-orig-id="' + _escH(t.erstellt_von || '') + '" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white w-36">';
         html += '<input type="hidden" id="hqSupAbsenderVal" value="' + _escH(t.erstellt_von || '') + '">';
-        html += '<button onclick="hqSupUpdateAbsender(\'' + ticketId + '\')" class="text-xs px-1.5 py-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300">✓</button>';
         html += '<div id="hqSupAbsenderDrop" class="hidden absolute top-7 left-16 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto w-52">';
         _hqSup.hqUsers.forEach(function(u) {
             var name = ((u.vorname||'') + ' ' + (u.nachname||'')).trim() || u.email || '';
             var badge = u.is_hq ? ' <span style="color:#f97316;font-size:9px">(HQ)</span>' : '';
-            html += '<div onclick="hqSupAbsenderPick(\'' + u.id + '\',\'' + name.replace(/'/g,'') + '\')" class="px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer">' + _escH(name) + badge + '</div>';
+            html += '<div onclick="hqSupAbsenderPick(\'' + u.id + '\',\'' + name.replace(/'/g,'') + '\',\'' + ticketId + '\')" class="px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer flex items-center gap-2">' + _escH(name) + badge + '</div>';
         });
         html += '</div></div>';
         html += '</div>'; // steuerleiste
 
-        // ── BODY: Kommentar-Compose oben (Zoho-Style) + Verlauf darunter ──
+        // ── BODY: Interne Notizen oben, Original + Verlauf + Antwort unten ──
         html += '<div class="flex-1 overflow-y-auto flex flex-col">';
 
-        // Compose-Box OBEN (wie Zoho Desk)
-        html += '<div class="border-b border-gray-200 bg-white flex-shrink-0">';
-        // Tab-Leiste: Antwort / Interne Notiz
-        html += '<div class="flex border-b border-gray-100 px-4">';
-        html += '<button id="hqSupTabReply" onclick="hqSupComposeTab(\'' + ticketId + '\',false)" class="text-xs font-semibold px-4 py-2.5 border-b-2 border-orange-500 text-orange-600 -mb-px">Antwort</button>';
-        html += '<button id="hqSupTabInternal" onclick="hqSupComposeTab(\'' + ticketId + '\',true)" class="text-xs font-semibold px-4 py-2.5 border-b-2 border-transparent text-gray-400 hover:text-gray-600 -mb-px ml-1">🔒 Interne Notiz</button>';
-        html += '</div>';
-        // Composer
-        html += '<div class="p-4">';
-        html += '<div class="flex items-start gap-3">';
-        html += '<div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + userInitials + '</div>';
-        html += '<div class="flex-1">';
-        // Canned Responses
-        if (_hqSup.cannedResponses.length > 0) {
-            html += '<div class="mb-2">';
-            html += '<select id="hqSupCanned" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white w-full">';
-            html += '<option value="">Textbaustein einfügen...</option>';
-            _hqSup.cannedResponses.forEach(function(c) { html += '<option value="' + _escH(c.inhalt) + '">' + _escH(c.titel) + '</option>'; });
-            html += '</select>';
-            html += '</div>';
-        }
-        html += '<textarea id="hqSupKommentarInput" rows="4" id="hqSupKommentarInput" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-colors" placeholder="Antwort schreiben... @Name für Erwähnung"></textarea>';
-        html += '<input type="hidden" id="hqSupInternalCheck" value="false">';
-        html += '<div class="flex items-center justify-between mt-2.5">';
-        html += '<div class="flex items-center gap-3">';
-        html += '<label class="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer hover:text-gray-600"><input type="file" id="hqSupKommentarFile" class="hidden" onchange="var f=this.files[0];this.parentElement.querySelectorAll(\'span\')[1].textContent=f?f.name:\'\'"><span class="text-lg">📎</span><span></span></label>';
-        html += '<button onclick="hqSupKiAntwort(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded hover:bg-purple-100">🤖 KI</button>';
-        if (_hqSup.cannedResponses.length > 0) html += '<button onclick="hqSupInsertCanned()" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Baustein</button>';
-        html += '</div>';
-        // Senden-Button-Gruppe (Zoho-Style: Senden + Dropdown für "Senden & Schließen")
-        html += '<div class="flex items-center">';
-        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="px-4 py-2 bg-orange-500 text-white rounded-l-lg text-sm font-semibold hover:bg-orange-600 transition-colors">Senden</button>';
-        html += '<div class="relative">';
-        html += '<button onclick="hqSupToggleSendMenu()" class="px-2 py-2 bg-orange-500 border-l border-orange-400 text-white rounded-r-lg hover:bg-orange-600 transition-colors text-xs">▾</button>';
-        html += '<div id="hqSupSendMenu" class="hidden absolute bottom-10 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-52 py-1">';
-        html += '<button onclick="hqSupSendAndClose(\'' + ticketId + '\')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-green-500">✓</span> Senden & Schließen</button>';
-        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-blue-500">→</span> Nur senden</button>';
-        html += '</div></div>';
-        html += '</div>'; // senden-gruppe
-        html += '</div>'; // flex justify-between
-        html += '</div>'; // flex-1
-        html += '</div>'; // flex items-start
-        html += '</div>'; // p-4 composer
-        html += '</div>'; // compose-box
+        // Interne Notizen OBEN (nur sichtbar wenn vorhanden)
+        // Compose-Box wurde nach unten verschoben
 
         // Konversations-Verlauf (scrollbar)
+        // ── Interne Notizen (ganz oben, falls vorhanden) ──
+        var interneNotizen = kommentare.filter(function(k) { return k.is_internal; });
+        var oeffentlicheKommentare = kommentare.filter(function(k) { return !k.is_internal; });
+
+        if (interneNotizen.length > 0) {
+            html += '<div class="border-b border-amber-200 bg-amber-50 px-5 py-3 flex-shrink-0">';
+            html += '<p class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">🔒 Interne Notizen (' + interneNotizen.length + ')</p>';
+            interneNotizen.forEach(function(k) {
+                var kd = new Date(k.created_at);
+                var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || 'Unbekannt' : 'Unbekannt';
+                var kInit = kName.split(' ').filter(Boolean).map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0, 2);
+                html += '<div class="mb-2 flex gap-2">';
+                html += '<div class="w-7 h-7 rounded-full bg-amber-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white">' + kInit + '</div>';
+                html += '<div class="flex-1">';
+                html += '<div class="flex items-center gap-2 mb-0.5">';
+                html += '<span class="text-xs font-bold text-amber-800">' + _escH(kName) + '</span>';
+                html += '<span class="text-xs text-amber-500">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+                html += '</div>';
+                html += '<div class="bg-white border border-amber-200 rounded-lg p-2.5">';
+                html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(k.inhalt) + '</p>';
+                html += '</div></div></div>';
+            });
+            html += '</div>';
+        }
+
+        // ── Konversations-Verlauf (scrollbar): Original + öffentliche Antworten ──
         html += '<div class="flex-1 overflow-y-auto p-5 bg-gray-50">';
 
-        // Beschreibung als erste Nachricht (Ersteller)
+        // Original-Ticket als erste Nachricht
         html += '<div class="mb-4 flex gap-3">';
         html += '<div class="w-8 h-8 rounded-full bg-orange-400 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">' + userInitials + '</div>';
         html += '<div class="flex-1">';
         html += '<div class="flex items-center gap-2 mb-1">';
         html += '<span class="text-xs font-bold text-gray-700">' + _escH(absenderName) + '</span>';
-        html += '<span class="text-[10px] text-gray-400">' + d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+        html += '<span class="text-xs text-gray-400">' + d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
         html += '</div>';
         html += '<div class="bg-white border border-gray-200 rounded-lg p-3">';
         html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + _escH(t.beschreibung || '') + '</p>';
@@ -507,6 +490,29 @@ export async function hqSupOpenDetail(ticketId) {
         }
         html += '</div></div></div>';
 
+        // Öffentliche Kommentare (Antworten)
+        if (oeffentlicheKommentare.length > 0) {
+            oeffentlicheKommentare.forEach(function(k) {
+                var kd = new Date(k.created_at);
+                var isHq = k.users && k.users.is_hq;
+                var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || 'Unbekannt' : 'Unbekannt';
+                var kInit = kName.split(' ').filter(Boolean).map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0, 2);
+                var bgColor = isHq ? 'bg-blue-500' : 'bg-orange-400';
+                html += '<div class="mb-3 flex gap-3">';
+                html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + bgColor + '">' + kInit + '</div>';
+                html += '<div class="flex-1">';
+                html += '<div class="flex items-center gap-2 mb-1">';
+                html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + '</span>';
+                if (isHq) html += '<span class="text-xs font-semibold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">HQ</span>';
+                html += '<span class="text-xs text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
+                html += '</div>';
+                html += '<div class="border rounded-lg p-3 bg-white border-gray-200">';
+                var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
+                html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
+                html += '</div></div></div>';
+            });
+        }
+
         // CSAT
         if (t.csat_bewertung) {
             html += '<div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">';
@@ -516,35 +522,7 @@ export async function hqSupOpenDetail(ticketId) {
             html += '</div>';
         }
 
-        // Kommentar-Thread
-        if (kommentare.length > 0) {
-            html += '<div class="mb-2">';
-            html += '<p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">' + kommentare.length + ' Konversation' + (kommentare.length !== 1 ? 'en' : '') + '</p>';
-            kommentare.forEach(function(k) {
-                var kd = new Date(k.created_at);
-                var isHq = k.users && k.users.is_hq;
-                var kName = k.users ? ((k.users.vorname || '') + ' ' + (k.users.nachname || '')).trim() || k.users.name || 'Unbekannt' : 'Unbekannt';
-                var kInit = kName.split(' ').filter(Boolean).map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0, 2);
-                var bgColor = k.is_internal ? 'bg-gray-500' : isHq ? 'bg-blue-500' : 'bg-orange-400';
-                var boxColor = k.is_internal ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200';
-                html += '<div class="mb-3 flex gap-3">';
-                html += '<div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ' + bgColor + '">' + kInit + '</div>';
-                html += '<div class="flex-1">';
-                html += '<div class="flex items-center gap-2 mb-1">';
-                html += '<span class="text-xs font-bold text-gray-700">' + _escH(kName) + '</span>';
-                if (isHq) html += '<span class="text-[9px] font-semibold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">HQ</span>';
-                if (k.is_internal) html += '<span class="text-[9px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">INTERN</span>';
-                html += '<span class="text-[10px] text-gray-400">' + kd.toLocaleDateString('de-DE') + ' ' + kd.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
-                html += '</div>';
-                html += '<div class="border rounded-lg p-3 ' + boxColor + '">';
-                var inhalt = _escH(k.inhalt).replace(/@(\w+)/g, '<strong class="text-blue-600">@$1</strong>');
-                html += '<p class="text-sm text-gray-700 whitespace-pre-wrap">' + inhalt + '</p>';
-                html += '</div></div></div>';
-            });
-            html += '</div>';
-        }
-
-        // Ticket schließen / Wiedereröffnen Button für Partner (wenn geloest)
+        // Ticket geschlossen Banner
         if (t.status === 'geloest') {
             html += '<div class="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">';
             html += '<span class="text-sm text-green-700">Dieses Ticket ist geschlossen.</span>';
@@ -555,11 +533,11 @@ export async function hqSupOpenDetail(ticketId) {
         // Audit-Log
         if (logs.length > 0) {
             html += '<div class="mt-4 border-t border-gray-200 pt-3">';
-            html += '<p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Aktivität</p>';
+            html += '<p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Aktivität</p>';
             logs.forEach(function(l) {
                 var ld = new Date(l.created_at);
                 var lName = l.users ? ((l.users.vorname||'') + ' ' + (l.users.nachname||'')).trim() || l.users.name || '' : 'System';
-                html += '<div class="text-[10px] text-gray-400 mb-0.5 flex gap-1">';
+                html += '<div class="text-xs text-gray-400 mb-0.5 flex gap-1">';
                 html += '<span class="text-gray-300">' + ld.toLocaleDateString('de-DE') + ' ' + ld.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) + '</span>';
                 html += '<span>·</span><span class="text-gray-500">' + _escH(lName) + '</span>';
                 html += '<span>·</span><span>' + _escH(l.aktion);
@@ -570,6 +548,48 @@ export async function hqSupOpenDetail(ticketId) {
         }
 
         html += '</div>'; // verlauf scroll
+
+        // ── Antwort-Box UNTEN (sticky) ──
+        html += '<div class="border-t border-gray-200 bg-white flex-shrink-0">';
+        html += '<div class="flex border-b border-gray-100 px-4">';
+        html += '<button id="hqSupTabReply" onclick="hqSupComposeTab(\'' + ticketId + '\',false)" class="text-xs font-semibold px-4 py-2.5 border-b-2 border-orange-500 text-orange-600 -mb-px">Antwort</button>';
+        html += '<button id="hqSupTabInternal" onclick="hqSupComposeTab(\'' + ticketId + '\',true)" class="text-xs font-semibold px-4 py-2.5 border-b-2 border-transparent text-gray-400 hover:text-gray-600 -mb-px ml-1">🔒 Interne Notiz</button>';
+        html += '</div>';
+        html += '<div class="p-4">';
+        html += '<div class="flex items-start gap-3">';
+        html += '<div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + userInitials + '</div>';
+        html += '<div class="flex-1">';
+        if (_hqSup.cannedResponses.length > 0) {
+            html += '<div class="mb-2">';
+            html += '<select id="hqSupCanned" class="text-xs border border-gray-200 rounded px-2 py-1 bg-white w-full">';
+            html += '<option value="">Textbaustein einfügen...</option>';
+            _hqSup.cannedResponses.forEach(function(c) { html += '<option value="' + _escH(c.inhalt) + '">' + _escH(c.titel) + '</option>'; });
+            html += '</select>';
+            html += '</div>';
+        }
+        html += '<textarea id="hqSupKommentarInput" rows="3" class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-200 transition-colors" placeholder="Antwort schreiben... @Name für Erwähnung"></textarea>';
+        html += '<input type="hidden" id="hqSupInternalCheck" value="false">';
+        html += '<div class="flex items-center justify-between mt-2.5">';
+        html += '<div class="flex items-center gap-3">';
+        html += '<label class="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer hover:text-gray-600"><input type="file" id="hqSupKommentarFile" class="hidden" onchange="var f=this.files[0];this.parentElement.querySelectorAll(\'span\')[1].textContent=f?f.name:\'\'"><span class="text-lg">📎</span><span></span></label>';
+        html += '<button onclick="hqSupKiAntwort(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded hover:bg-purple-100">🤖 KI</button>';
+        if (_hqSup.cannedResponses.length > 0) html += '<button onclick="hqSupInsertCanned()" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Baustein</button>';
+        html += '</div>';
+        html += '<div class="flex items-center">';
+        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="px-4 py-2 bg-orange-500 text-white rounded-l-lg text-sm font-semibold hover:bg-orange-600 transition-colors">Senden</button>';
+        html += '<div class="relative">';
+        html += '<button onclick="hqSupToggleSendMenu()" class="px-2 py-2 bg-orange-500 border-l border-orange-400 text-white rounded-r-lg hover:bg-orange-600 transition-colors text-xs">▾</button>';
+        html += '<div id="hqSupSendMenu" class="hidden absolute bottom-10 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-52 py-1">';
+        html += '<button onclick="hqSupSendAndClose(\'' + ticketId + '\')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-green-500">✓</span> Senden & Schließen</button>';
+        html += '<button onclick="hqSupSendKommentar(\'' + ticketId + '\')" class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-blue-500">→</span> Nur senden</button>';
+        html += '</div></div>';
+        html += '</div>'; // senden
+        html += '</div>'; // justify-between
+        html += '</div>'; // flex-1
+        html += '</div>'; // flex items-start
+        html += '</div>'; // p-4
+        html += '</div>'; // antwort-box
+
         html += '</div>'; // body flex
         html += '</div>'; // modal
 
@@ -951,13 +971,27 @@ export function hqSupAbsenderFilter() {
     drop.classList.toggle('hidden', !any);
 }
 
-export function hqSupAbsenderPick(userId, name) {
+export function hqSupAbsenderPick(userId, name, ticketId) {
     var inp = document.getElementById('hqSupAbsenderSearch');
     var val = document.getElementById('hqSupAbsenderVal');
     var drop = document.getElementById('hqSupAbsenderDrop');
-    if (inp) inp.value = name;
+    if (inp) { inp.value = name; inp.dataset.origName = name; inp.dataset.origId = userId; }
     if (val) val.value = userId;
     if (drop) drop.classList.add('hidden');
+    // Auto-save
+    hqSupUpdateAbsender(ticketId || inp.dataset.ticketId || '');
+}
+
+export function hqSupAbsenderKeydown(event, ticketId) {
+    if (event.key === 'Escape') {
+        var inp = document.getElementById('hqSupAbsenderSearch');
+        var val = document.getElementById('hqSupAbsenderVal');
+        var drop = document.getElementById('hqSupAbsenderDrop');
+        if (inp) inp.value = inp.dataset.origName || '';
+        if (val) val.value = inp ? (inp.dataset.origId || '') : '';
+        if (drop) drop.classList.add('hidden');
+        inp && inp.blur();
+    }
 }
 
 // ========== Abteilung ändern ==========
@@ -1272,7 +1306,7 @@ const _exports = {
     renderHqSupport, hqSupShowTab, hqSupFilterChanged, hqSupOpenDetail, hqSupCloseDetail,
     hqSupUpdateStatus, hqSupUpdateAssignee, hqSupUpdatePrio, hqSupSendKommentar,
     hqSupInsertCanned, hqSupKiAntwort, hqSupDownload,
-    hqSupAbsenderFilter, hqSupAbsenderPick,
+    hqSupAbsenderFilter, hqSupAbsenderPick, hqSupAbsenderKeydown,
     hqSupUpdateAbteilung, hqSupUpdateAbsender,
     hqSupComposeTab, hqSupToggleSendMenu, hqSupToggleMoreMenu,
     hqSupSendAndClose, hqSupReopenTicket, hqSupDeleteTicket,
