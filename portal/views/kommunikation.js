@@ -303,8 +303,18 @@ function kommSidebarItem(view, icon, label, badge) {
 
 function kommSidebarSection(title, key, channels) {
     var open = KOMM.sidebarSections[key];
-    // Count unread channels in this section
-    var unreadCount = channels.filter(function(ch) { return kommIsUnread(ch); }).length;
+    // Trenne Parent-Channels (kein parent_id) und Sub-Channels
+    var parents = channels.filter(function(ch) { return !ch.parent_id; });
+    var subMap = {}; // parent_id → [sub-channels]
+    channels.forEach(function(ch) {
+        if (ch.parent_id) {
+            if (!subMap[ch.parent_id]) subMap[ch.parent_id] = [];
+            subMap[ch.parent_id].push(ch);
+        }
+    });
+
+    var allVisible = parents.concat(channels.filter(function(ch) { return ch.parent_id; }));
+    var unreadCount = allVisible.filter(function(ch) { return kommIsUnread(ch); }).length;
 
     var h = '<div class="mb-1">';
     h += '<div onclick="kommToggleSection(\'' + key + '\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between items-center select-none hover:text-gray-600">';
@@ -314,14 +324,40 @@ function kommSidebarSection(title, key, channels) {
     h += '<span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span></span>';
     h += '</div>';
     if (open) {
-        channels.forEach(function(ch) {
+        parents.forEach(function(ch) {
+            var subs = subMap[ch.id] || [];
+            var hasSubs = subs.length > 0;
             var active = (KOMM.view === 'channel' || KOMM.view === 'group') && KOMM.activeId === ch.id;
             var unread = kommIsUnread(ch);
-            h += '<div onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
-            h += '<span class="text-sm">' + (ch.icon || '💬') + '</span>';
-            h += '<span class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : (unread ? 'font-bold text-gray-800' : 'text-gray-600')) + ' truncate">' + _escH(ch.name) + '</span>';
+            var subOpen = KOMM.sidebarSections['sub_' + ch.id] !== false; // Default offen
+
+            // Parent-Channel
+            h += '<div class="group mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
+            if (hasSubs) {
+                h += '<span onclick="event.stopPropagation();kommToggleSection(\'sub_' + ch.id + '\')" class="text-[9px] text-gray-400 cursor-pointer w-3 flex-shrink-0 ' + (subOpen ? '' : '-rotate-90') + ' transition-transform">▼</span>';
+            }
+            h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="text-sm">' + (ch.icon || '💬') + '</span>';
+            h += '<span onclick="kommGoView(\'channel\',\'' + ch.id + '\',\'' + _escH(ch.name) + '\')" class="flex-1 text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : (unread ? 'font-bold text-gray-800' : 'text-gray-600')) + ' truncate">' + _escH(ch.name) + '</span>';
             if (unread) h += '<span class="w-2.5 h-2.5 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
+            // + Button für HQ um Sub-Channel zu erstellen
+            if (kommIsHQ() && ch.ist_netzwerk) {
+                h += '<span onclick="event.stopPropagation();kommNewSubChannel(\'' + ch.id + '\',\'' + _escH(ch.name).replace(/'/g, "\\'") + '\')" class="text-gray-300 hover:text-[#EF7D00] text-xs cursor-pointer opacity-0 group-hover:opacity-100" title="Unterchannel erstellen">＋</span>';
+            }
             h += '</div>';
+
+            // Sub-Channels (eingerückt)
+            if (hasSubs && subOpen) {
+                subs.forEach(function(sub) {
+                    var subActive = (KOMM.view === 'channel') && KOMM.activeId === sub.id;
+                    var subUnread = kommIsUnread(sub);
+                    h += '<div onclick="kommGoView(\'channel\',\'' + sub.id + '\',\'' + _escH(sub.name) + '\')" class="mx-2 ml-8 px-2.5 py-1 rounded-lg cursor-pointer flex items-center gap-2 ' + (subActive ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
+                    h += '<span class="text-xs text-gray-400">└</span>';
+                    h += '<span class="text-xs">' + (sub.icon || '💬') + '</span>';
+                    h += '<span class="flex-1 text-[11.5px] ' + (subActive ? 'font-bold text-[#EF7D00]' : (subUnread ? 'font-bold text-gray-700' : 'text-gray-500')) + ' truncate">' + _escH(sub.name) + '</span>';
+                    if (subUnread) h += '<span class="w-2 h-2 rounded-full bg-[#EF7D00] flex-shrink-0"></span>';
+                    h += '</div>';
+                });
+            }
         });
     }
     h += '</div>';
@@ -1551,6 +1587,67 @@ window.kommSaveStandortChannel = async function() {
     } catch (e) {
         console.error('Create channel error:', e);
         _showToast('❌ Fehler: ' + (e.message || 'Unbekannt'), 'error');
+    }
+};
+
+// ========== Sub-Channel erstellen ==========
+window.kommNewSubChannel = function(parentId, parentName) {
+    var html = '<div id="kommChannelModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
+    html += '<div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<h3 class="text-base font-bold mb-1">Unterchannel erstellen</h3>';
+    html += '<p class="text-xs text-gray-400 mb-4">Unter: ' + _escH(parentName) + '</p>';
+    html += '<div class="space-y-3">';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommSubChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange focus:border-transparent outline-none" placeholder="z.B. E-Bikes Reparatur"></div>';
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon</label><input id="kommSubChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="💬" maxlength="4"></div>';
+    html += '</div>';
+    html += '<div class="flex justify-end gap-2 mt-5">';
+    html += '<button onclick="document.getElementById(\'kommChannelModal\').remove()" class="px-4 py-2 text-sm text-gray-500">Abbrechen</button>';
+    html += '<button onclick="kommSaveSubChannel(\'' + parentId + '\')" class="px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-bold hover:opacity-90">Erstellen</button>';
+    html += '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('kommSubChName').focus();
+};
+
+window.kommSaveSubChannel = async function(parentId) {
+    var name = (document.getElementById('kommSubChName').value || '').trim();
+    var icon = (document.getElementById('kommSubChIcon').value || '💬').trim();
+    if (!name) { _showToast('Bitte Name eingeben', 'error'); return; }
+
+    // Parent-Channel laden um Netzwerk/Standort-Info zu erben
+    var parent = KOMM.kanaele.find(function(k) { return k.id === parentId; });
+
+    try {
+        var resp = await _sb().from('chat_kanaele').insert({
+            name: name,
+            icon: icon,
+            typ: 'channel',
+            parent_id: parentId,
+            ist_netzwerk: parent ? parent.ist_netzwerk : false,
+            standort_id: parent ? parent.standort_id : null,
+            sichtbar_fuer_rollen: parent ? parent.sichtbar_fuer_rollen : null,
+            erstellt_von: _sbUser() ? _sbUser().id : null
+        }).select().single();
+        if (resp.error) throw resp.error;
+
+        var modal = document.getElementById('kommChannelModal');
+        if (modal) modal.remove();
+        _showToast('✅ Unterchannel "' + name + '" erstellt');
+
+        // Auto-Join: Mitglieder vom Parent-Channel übernehmen
+        var membersResp = await _sb().from('kanal_mitglieder').select('user_id').eq('kanal_id', parentId);
+        if (membersResp.data && membersResp.data.length > 0) {
+            var newMembers = membersResp.data.map(function(m) {
+                return { kanal_id: resp.data.id, user_id: m.user_id, rolle: 'mitglied' };
+            });
+            await _sb().from('kanal_mitglieder').insert(newMembers).select();
+        }
+
+        KOMM.loaded = false;
+        await kommLoadData();
+        renderKomm();
+    } catch(e) {
+        console.error('Sub-channel create error:', e);
+        _showToast('❌ Fehler: ' + (e.message || ''), 'error');
     }
 };
 
