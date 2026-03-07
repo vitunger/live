@@ -481,7 +481,7 @@ export async function loadBillingProducts() {
         h += '<div class="flex items-center gap-2">';
         h += '<span class="font-mono text-[10px] text-gray-400">' + p.key + '</span>';
         h += '<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (typeColors[p.product_type] || 'bg-gray-100 text-gray-600') + '">' + (typeLabels[p.product_type] || p.product_type) + '</span>';
-        if (p.schedule) h += '<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (p.schedule.is_prepayment ? 'bg-red-100 text-red-700' : 'bg-blue-50 text-blue-700') + '">' + p.schedule.name + '</span>';
+        // Schedule badge removed - using billing_day directly
         if (!p.active) h += '<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">Inaktiv</span>';
         h += '</div>';
         h += '<div class="flex items-center gap-2">';
@@ -494,9 +494,9 @@ export async function loadBillingProducts() {
         if (p.is_per_employee) h += '<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold">je Nutzer</span>';
         else if (p.is_per_standort) h += '<span class="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">je Standort</span>';
         else h += '<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-semibold">System</span>';
-        if (p.billing_day) h += '<span>Tag: ' + p.billing_day + '.</span>';
-        if (p.payment_term_days) h += '<span>Frist: ' + p.payment_term_days + ' Tage</span>';
-        h += '<span>' + p.billing_frequency + '</span>';
+        if (p.billing_day) h += '<span>Abr. am ' + p.billing_day + '.</span>';
+        var termLabel = p.payment_term_days === 0 ? 'Sofort' : p.payment_term_days === 14 ? '14 Tage' : p.payment_term_days === 30 ? '30 Tage' : (p.payment_term_days ? p.payment_term_days + ' Tage' : '');
+        if (termLabel) h += '<span>Frist: ' + termLabel + '</span>';
         h += '</div></div>';
     });
     h += '</div>';
