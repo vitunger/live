@@ -700,6 +700,16 @@ sbProfile = resp1.data;
 sbStandort = _sbProfile() ? _sbProfile().standorte : null;
 window.sbProfile = sbProfile;
 window.sbStandort = sbStandort;
+// Fallback: wenn Join kein standorte liefert (RLS), via get_standorte_public nachladen
+if (!sbStandort && _sbProfile() && _sbProfile().standort_id) {
+    try {
+        var _sPublic = await _sb().rpc('get_standorte_public');
+        if (_sPublic.data) {
+            var _sMatch = _sPublic.data.find(function(s){ return s.id === _sbProfile().standort_id; });
+            if (_sMatch) { sbStandort = _sMatch; window.sbStandort = sbStandort; }
+        }
+    } catch(e) { console.warn('[Profile] Standort fallback failed:', e.message); }
+}
 window.sbUser = sbUser;
 var resp2 = await _sb().from('user_rollen').select('rollen(name, label)').eq('user_id', userId);
 if(resp2.error) { console.error('[Roles] Error:', resp2.error.message); }
