@@ -874,13 +874,14 @@ if(SESSION.account_level === 'extern') {
     try { _savedView = localStorage.getItem('vit_lastView'); } catch(e) {}
     
     // Sanitize: Nicht-HQ-User dürfen keine HQ-Views aus localStorage laden
-    if(_savedView && _savedView.indexOf('hq') === 0 && currentRole !== 'hq') {
+    var _isHqUser = currentRole === 'hq' || (sbProfile && sbProfile.is_hq);
+    if(_savedView && _savedView.indexOf('hq') === 0 && !_isHqUser) {
         console.warn('[enterApp] Sanitized saved HQ view for non-HQ user:', _savedView);
         _savedView = null;
         try { localStorage.removeItem('vit_lastView'); } catch(e) {}
     }
     
-    if(currentRole === 'hq') {
+    if(currentRole === 'hq' || (sbProfile && sbProfile.is_hq)) {
         window._vitRestoringView = true; // Flag to prevent showView from overwriting localStorage
         if(typeof window.switchViewMode==='function') window.switchViewMode('hq');
         window._vitRestoringView = false;
@@ -889,7 +890,9 @@ if(SESSION.account_level === 'extern') {
             var _restoreAttempt = 0;
             var _tryRestore = function() {
                 _restoreAttempt++;
+                window._vitRestoringView = true;
                 _showView(_savedView);
+                setTimeout(function() { window._vitRestoringView = false; }, 600);
                 // Also restore Entwicklung sub-tab if applicable
                 if(_savedView === 'entwicklung') {
                     var _savedTab = null;
