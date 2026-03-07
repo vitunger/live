@@ -97,7 +97,8 @@ export async function loadBillingOverview() {
         '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Offen</p><p class="text-xl font-bold text-amber-600">' + _fmtEur(openTotal) + '</p><p class="text-xs text-gray-400">' + openInvoices.length + ' Rechnungen</p></div>' +
         '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">\u00dcberf\u00e4llig</p><p class="text-xl font-bold ' + (overdue.length > 0 ? 'text-red-600' : 'text-green-600') + '">' + _fmtEur(overdueTotal) + '</p><p class="text-xs text-gray-400">' + overdue.length + ' Rechnungen</p></div>' +
         '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt (Monat)</p><p class="text-xl font-bold text-green-600">' + _fmtEur(paidThisMonthTotal) + '</p><p class="text-xs text-gray-400">' + paidThisMonth.length + ' Rechnungen</p></div>' +
-        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Aktion</p><button onclick="startBillingRun()" class="mt-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 w-full">\u26a1 Abrechnungslauf starten</button></div>';
+        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Aktion</p><button onclick="startBillingRun()" class="mt-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 w-full">\u26a1 Manueller Lauf</button><div id="cronStatusArea" class="mt-2"></div></div>';
+    loadCronStatus();
 
     // Table: Open invoices
     if (container) {
@@ -143,6 +144,18 @@ export async function loadBillingOverview() {
 }
 
 // Start billing run for current month
+// Load last cron run status
+async function loadCronStatus() {
+    var el = document.getElementById('cronStatusArea');
+    if (!el) return;
+    var { data: lastRun } = await _sb().from('billing_cron_log').select('*').order('run_date', { ascending: false }).limit(1);
+    if (lastRun && lastRun[0]) {
+        var r = lastRun[0];
+        var statusColor = r.status === 'completed' ? 'green' : r.status === 'failed' ? 'red' : 'yellow';
+        el.innerHTML = '<div class="flex items-center gap-2 text-xs text-gray-500"><span class="w-2 h-2 rounded-full bg-' + statusColor + '-500"></span>Letzter Cron: ' + new Date(r.started_at).toLocaleString('de-DE') + ' \u2013 ' + (r.drafts_created || 0) + ' Drafts, ' + (r.settlements_created || 0) + ' Settlements</div>';
+    }
+}
+
 window.startBillingRun = async function() {
     var now = new Date();
     var month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
@@ -922,6 +935,20 @@ export async function approvalAction(invId, action) {
                 performed_by: _sbProfile() ? _sbProfile().id : null,
                 notes: note || 'Freigegeben'
             });
+            // Auto-push to LexOffice after approval
+            try {
+                var session = await _sb().auth.getSession();
+                var tok = session?.data?.session?.access_token;
+                if (tok) {
+                    await _sb().from('billing_invoices').update({ status: 'sent', finalized_at: new Date().toISOString() }).eq('id', invId);
+                    await fetch(SUPABASE_URL + '/functions/v1/lexoffice-sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok, 'apikey': SUPABASE_ANON_KEY },
+                        body: JSON.stringify({ action: 'sync-invoice', invoice_id: invId })
+                    });
+                    _showToast('\u2705 Rechnung freigegeben und an LexOffice gesendet', 'success');
+                }
+            } catch(lexErr) { console.warn('LexOffice sync failed:', lexErr); _showToast('Freigegeben, aber LexOffice-Sync fehlgeschlagen', 'error'); }
 
         } else if(action === 'reject') {
             var reason = prompt('Grund f\u00fcr Zur\u00fcckweisung:');
