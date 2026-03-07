@@ -49,7 +49,12 @@ var STATUS_COLORS = {offen:'bg-yellow-100 text-yellow-700',in_bearbeitung:'bg-bl
 var PRIO_LABELS = {niedrig:'Niedrig',mittel:'Mittel',kritisch:'Kritisch'};
 var PRIO_COLORS = {niedrig:'bg-gray-100 text-gray-600',mittel:'bg-yellow-100 text-yellow-700',kritisch:'bg-red-100 text-red-700'};
 var KAT_ICONS = {IT:'', Abrechnung:'', Marketing:'', Allgemein:'', Sonstiges:''};
-var ALLE_KATEGORIEN = ['IT','Abrechnung','Marketing','Allgemein','Sonstiges'];
+var ALLE_KATEGORIEN = ['it','sales','marketing','einkauf','support','akademie','hr','gf','allgemein'];
+var KATEGORIE_LABELS = {
+    'it': 'IT & Systeme', 'sales': 'Vertrieb', 'marketing': 'Marketing',
+    'einkauf': 'Einkauf', 'support': 'Support', 'akademie': 'Akademie',
+    'hr': 'Personal (HR)', 'gf': 'Geschäftsführung', 'allgemein': 'Allgemein'
+};
 
 // ========== SLA Berechnung ==========
 function slaInfo(ticket) {
@@ -312,7 +317,7 @@ function renderPartnerTicketsTab() {
     h += '<select id="supFilterKat" onchange="supFilterChanged()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">';
     h += '<option value="">Alle Kategorien</option>';
     _supState.erlaubteKategorien.forEach(function(k) {
-        h += '<option value="' + k + '"' + (_supState.filterKat === k ? ' selected' : '') + '>' + k + '</option>';
+        h += '<option value="' + k + '"' + (_supState.filterKat === k ? ' selected' : '') + '>' + (KATEGORIE_LABELS[k] || k) + '</option>';
     });
     h += '</select>';
     h += '<select id="supFilterStatus" onchange="supFilterChanged()" class="text-sm border border-gray-300 rounded-lg px-3 py-2">';
@@ -344,7 +349,7 @@ function renderPartnerTicketsTab() {
             h += '<span class="text-xs font-mono text-gray-400">' + _escH(t.ticket_nr || '') + '</span>';
             h += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (STATUS_COLORS[t.status] || '') + '">' + (STATUS_LABELS[t.status] || t.status) + '</span>';
             h += '<span class="text-xs font-semibold rounded px-2 py-0.5 ' + (PRIO_COLORS[t.prioritaet] || '') + '">' + (PRIO_LABELS[t.prioritaet] || t.prioritaet) + '</span>';
-            h += '<span class="text-xs rounded px-1.5 py-0.5 bg-gray-100 text-gray-600">' + _escH(t.kategorie || '') + '</span>';
+            h += '<span class="text-xs rounded px-1.5 py-0.5 bg-gray-100 text-gray-600">' + _escH(KATEGORIE_LABELS[t.kategorie] || t.kategorie || '') + '</span>';
             h += slaIcon(sla);
             h += '</div>';
             h += '<p class="font-semibold text-gray-800 text-sm truncate">' + _escH(t.betreff) + '</p>';
@@ -1543,7 +1548,7 @@ export function openNewTicketModal() {
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Kategorie *</label>';
     html += '<select id="supNewKat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">';
     erstellKats.forEach(function(k) {
-        html += '<option value="' + k + '">' + k + '</option>';
+        html += '<option value="' + k + '">' + (KATEGORIE_LABELS[k] || k) + '</option>';
     });
     html += '</select></div>';
     html += '<div><label class="block text-xs font-semibold text-gray-600 mb-1">Prioritaet</label>';
