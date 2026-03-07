@@ -12,7 +12,7 @@
  */
 
 const MODULE_BASE = '/portal';
-const CACHE_BUST = "?v=1772908647";
+const CACHE_BUST = "?v=1772908864";
 // Read-only token for public repo (split to avoid secret scanning)
 window._GH_READ_TOKEN = ['ghp_kfihVZbz','AMZA','OcU3wPG0Pw8QWCF2UM0npLKj'].join('');
 
@@ -155,6 +155,7 @@ const VIEW_MODULES = [
     'views/misc-training.js',
     'views/hq-plz.js',
     'views/some.js',
+    'views/scompler.js',
     'views/hq-komm-settings.js',
 
     // Central render router - MUST be last (listens for vit:view-changed events)

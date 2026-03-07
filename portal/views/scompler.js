@@ -119,17 +119,28 @@
 
     // ── Main Render ──
 
+    var _scRetryCount = 0;
+
     async function renderScompler() {
         var container = document.getElementById('scomplerContent');
-        if (!container) return;
-        var profile = _sbProfile();
-        // Race condition: sbProfile noch nicht geladen → retry
-        if (!profile) {
-            setTimeout(function() { if (window.renderScompler) window.renderScompler(); }, 600);
+        if (!container) {
+            console.warn('[scompler] scomplerContent nicht gefunden');
             return;
         }
+        var profile = _sbProfile();
+        // Race condition: sbProfile noch nicht geladen → retry (max 5x)
+        if (!profile) {
+            _scRetryCount++;
+            if (_scRetryCount <= 5) {
+                setTimeout(function() { if (window.renderScompler) window.renderScompler(); }, 800);
+            } else {
+                container.innerHTML = '<p class="p-8 text-gray-500">Profil konnte nicht geladen werden. Bitte Seite neu laden.</p>';
+            }
+            return;
+        }
+        _scRetryCount = 0;
         if (!profile.is_hq) {
-            container.innerHTML = '<p class="p-8 text-gray-500">Kein Zugriff.</p>';
+            container.innerHTML = '<p class="p-8 text-gray-500">Dieses Modul ist nur fuer HQ-Benutzer verfuegbar.</p>';
             return;
         }
 

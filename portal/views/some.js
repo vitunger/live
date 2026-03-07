@@ -18,10 +18,20 @@ function renderSome() {
     if (typeof window.renderScompler === 'function') {
         window.renderScompler();
     } else {
-        // Fallback while module loads
-        document.addEventListener('vit:modules-ready', function() {
-            if (typeof window.renderScompler === 'function') window.renderScompler();
-        }, { once: true });
+        // Module not loaded yet — retry up to 5x
+        var _retries = 0;
+        var _tryRender = function() {
+            _retries++;
+            if (typeof window.renderScompler === 'function') {
+                window.renderScompler();
+            } else if (_retries < 5) {
+                setTimeout(_tryRender, 500);
+            } else {
+                var el = document.getElementById('scomplerContent');
+                if (el) el.innerHTML = '<p class="p-8 text-gray-500">SOME-Modul konnte nicht geladen werden. Bitte Seite neu laden.</p>';
+            }
+        };
+        setTimeout(_tryRender, 500);
     }
 }
 
