@@ -1212,8 +1212,17 @@ export function kommPinnwandAttach(type) {
 }
 
 // ========== DM/Group/Channel erstellen ==========
-export function kommNewDM() {
+export async function kommNewDM() {
     if (document.getElementById('kommNewDMOverlay')) return;
+
+    // Sicherstellen dass User geladen sind
+    if (!KOMM.allUsers || KOMM.allUsers.length === 0) {
+        try {
+            var resp = await _sb().from('users').select('id, name, vorname, nachname, rolle, standort_id, is_hq, status').eq('status', 'aktiv');
+            KOMM.allUsers = (!resp.error && resp.data) ? resp.data : [];
+        } catch(e) { KOMM.allUsers = []; }
+    }
+
     var el = document.createElement('div');
     el.id = 'kommNewDMOverlay';
     el.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-8';
@@ -1373,8 +1382,13 @@ window.kommSaveStandortChannel = async function() {
 // ========== @Mention Autocomplete ==========
 async function kommLoadUserCache() {
     if (KOMM._userCache) return;
+    // Zuerst versuchen allUsers zu nutzen
+    if (KOMM.allUsers && KOMM.allUsers.length > 0) {
+        KOMM._userCache = KOMM.allUsers;
+        return;
+    }
     try {
-        var resp = await _sb().from('users').select('id, name, vorname, nachname, rolle, is_hq').eq('is_active', true);
+        var resp = await _sb().from('users').select('id, name, vorname, nachname, rolle, is_hq').eq('status', 'aktiv');
         KOMM._userCache = (!resp.error && resp.data) ? resp.data : [];
     } catch(e) { KOMM._userCache = []; }
 }
