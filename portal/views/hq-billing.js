@@ -1619,7 +1619,5 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // [prod] log removed
 
 // === Window Exports (onclick handlers) ===
-window.approvalBulkAction = approvalBulkAction;
-window.generateAllDrafts = generateAllDrafts;
-window.toggleApprovalMode = toggleApprovalMode;
-window.initBillingModule = initBillingModule;
+// Strangler Fig: expose ALL functions to window for onclick handlers
+Object.keys(_exports).forEach(function(k) { window[k] = _exports[k]; });
