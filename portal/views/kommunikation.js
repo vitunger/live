@@ -118,7 +118,7 @@ async function kommLoadData() {
         KOMM.gruppen = sichtbar.filter(function(k) { return k.typ === 'group'; });
 
         // DMs laden
-        var dmResp = await _sb().from('chat_kanaele').select('*, kanal_mitglieder!inner(user_id)')
+        var dmResp = await _sb().from('chat_kanaele').select('*, kanal_mitglieder!inner(user_id, ausgeblendet)')
             .eq('typ', 'dm');
         var dmKanaele = (dmResp.data || []).filter(function(k) {
             return k.kanal_mitglieder && k.kanal_mitglieder.some(function(m) { return m.user_id === uid; });
@@ -200,6 +200,7 @@ export async function renderKomm() {
     h += '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm" style="background:#EF7D00">💬</div>';
     h += '<div class="flex-1 min-w-0"><div class="text-sm font-bold text-gray-800">Kommunikation</div>';
     h += '<div class="text-[10px] text-gray-400">vit:bikes Netzwerk</div></div>';
+    h += '<button onclick="kommShowNotifSettings()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer bg-transparent border-none text-base" title="Einstellungen">⚙️</button>';
     h += '</div>';
 
     // ── Scrollable sidebar content ──
@@ -341,14 +342,21 @@ function kommSidebarDMs() {
     h += '<div onclick="kommToggleSection(\'dms\')" class="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer flex justify-between select-none hover:text-gray-600">';
     h += '💬 Direktnachrichten <span class="text-[9px] transition-transform ' + (open ? '' : '-rotate-90') + '">▼</span></div>';
     if (open) {
-        KOMM.dmList.forEach(function(dm) {
+        // Ausgeblendete DMs filtern
+        var visibleDMs = KOMM.dmList.filter(function(dm) {
+            if (!dm.kanal_mitglieder) return true;
+            var myMembership = dm.kanal_mitglieder.find(function(m) { return m.user_id === uid; });
+            return !myMembership || !myMembership.ausgeblendet;
+        });
+
+        visibleDMs.forEach(function(dm) {
             var active = KOMM.view === 'dm' && KOMM.activeId === dm.id;
             // DM-Partner ermitteln
             var partnerId = (dm.kanal_mitglieder || []).map(function(m) { return m.user_id; }).find(function(id) { return id !== uid; });
             var partner = KOMM.allUsers.find(function(u) { return u.id === partnerId; });
             var name = partner ? kommUserName(partner) : dm.name || 'Chat';
             var initials = kommInitials(name);
-            h += '<div onclick="kommGoView(\'dm\',\'' + dm.id + '\',\'' + _escH(name) + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
+            h += '<div onclick="kommGoView(\'dm\',\'' + dm.id + '\',\'' + _escH(name) + '\')" oncontextmenu="event.preventDefault();kommShowDmMenu(event,\'' + dm.id + '\',\'' + _escH(name).replace(/'/g, "\\'") + '\')" class="mx-2 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-2 ' + (active ? 'bg-orange-50 border-l-[3px] border-l-[#EF7D00]' : 'border-l-[3px] border-transparent hover:bg-gray-50') + '">';
             h += '<div class="relative flex-shrink-0"><div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div></div>';
             h += '<div class="flex-1 min-w-0">';
             h += '<div class="text-[12.5px] ' + (active ? 'font-bold text-[#EF7D00]' : 'text-gray-600') + ' truncate">' + _escH(name) + '</div>';
@@ -435,9 +443,6 @@ function kommRenderInputBar() {
 
     // Send button
     h += '<button onclick="kommSendMessage()" class="w-9 h-9 rounded-lg bg-gray-200 text-white flex items-center justify-center text-base flex-shrink-0" id="kommSendBtn">↑</button>';
-
-    // Notification settings
-    h += '<button onclick="kommShowNotifSettings()" class="w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-sm cursor-pointer flex-shrink-0 hover:bg-gray-50" title="Benachrichtigungen einstellen">🔔</button>';
 
     h += '</div>';
     return h;
@@ -1419,6 +1424,13 @@ export async function kommStartDMWith(userId, userName) {
             });
 
             if (existingDm) {
+                // Chat wieder einblenden falls ausgeblendet
+                await _sb().from('kanal_mitglieder')
+                    .update({ ausgeblendet: false })
+                    .eq('kanal_id', existingDm.kanal_id)
+                    .eq('user_id', uid);
+                KOMM.loaded = false;
+                await kommLoadData();
                 kommGoView('dm', existingDm.kanal_id, userName);
                 return;
             }
@@ -1539,6 +1551,58 @@ window.kommSaveStandortChannel = async function() {
     } catch (e) {
         console.error('Create channel error:', e);
         _showToast('❌ Fehler: ' + (e.message || 'Unbekannt'), 'error');
+    }
+};
+
+// ========== DM ausblenden ==========
+window.kommShowDmMenu = function(event, dmId, dmName) {
+    // Altes Menü entfernen
+    var old = document.getElementById('kommDmMenu');
+    if (old) old.remove();
+
+    var menu = document.createElement('div');
+    menu.id = 'kommDmMenu';
+    menu.className = 'fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px]';
+    menu.style.left = event.clientX + 'px';
+    menu.style.top = event.clientY + 'px';
+
+    menu.innerHTML = '<div onclick="kommHideDm(\'' + dmId + '\')" class="px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 cursor-pointer flex items-center gap-2">👁‍🗨 Chat ausblenden</div>';
+
+    document.body.appendChild(menu);
+
+    // Klick außerhalb schließt Menü
+    setTimeout(function() {
+        document.addEventListener('click', function closeMenu() {
+            var m = document.getElementById('kommDmMenu');
+            if (m) m.remove();
+            document.removeEventListener('click', closeMenu);
+        });
+    }, 50);
+};
+
+window.kommHideDm = async function(dmId) {
+    var uid = _sbUser() ? _sbUser().id : null;
+    if (!uid) return;
+
+    var menu = document.getElementById('kommDmMenu');
+    if (menu) menu.remove();
+
+    try {
+        await _sb().from('kanal_mitglieder')
+            .update({ ausgeblendet: true })
+            .eq('kanal_id', dmId)
+            .eq('user_id', uid);
+        _showToast('Chat ausgeblendet');
+        KOMM.loaded = false;
+        await kommLoadData();
+        if (KOMM.activeId === dmId) {
+            KOMM.view = 'channel';
+            KOMM.activeId = KOMM.kanaele.length > 0 ? KOMM.kanaele[0].id : null;
+            KOMM.activeName = KOMM.kanaele.length > 0 ? KOMM.kanaele[0].name : '';
+        }
+        renderKomm();
+    } catch(e) {
+        _showToast('Fehler', 'error');
     }
 };
 
