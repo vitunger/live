@@ -728,6 +728,41 @@ export function updateMktPerformanceFromAds() { /* stub */ }
 
 // === HQ MARKETING RENDERING (preserved from original) ===
 export function renderHqMarketing() {
+    var el = document.getElementById('hqMarketingContent');
+    if (!el) return;
+    el.innerHTML = `
+        <div class="p-4 md:p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">Marketing – Netzwerk</h2>
+                    <p class="text-xs text-gray-500">Google & Meta Ads Performance aller Standorte</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div id="adsSyncInfoHq" class="flex items-center gap-1"></div>
+                    <select id="adsZeitraumFilterHq" onchange="loadAdsData('hq')" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm">
+                        <option value="7">7 Tage</option>
+                        <option value="30" selected>30 Tage</option>
+                        <option value="90">90 Tage</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="adsKpisHq"></div>
+
+            <!-- Kampagnen-Tabelle -->
+            <div class="vit-card p-5 mb-6">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Aktive Kampagnen</h3>
+                <div id="adsKampagnenHq"></div>
+            </div>
+
+            <!-- Chart Placeholder -->
+            <div class="vit-card p-5">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Performance-Verlauf</h3>
+                <div id="adsChartHq"></div>
+            </div>
+        </div>
+    `;
     if (typeof window.loadAdsData === 'function') window.loadAdsData('hq');
 }
 
