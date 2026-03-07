@@ -304,3 +304,4 @@ window.saveProfile        = saveProfile;
 window.handleProfilePhoto = handleProfilePhoto;
 window.changePassword     = changePassword;
 window.updateProfileThemeButtons = updateProfileThemeButtons;
+window.applyDarkModeInlineStyles = applyDarkModeInlineStyles;
