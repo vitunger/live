@@ -4298,6 +4298,7 @@
                             <button onclick="showBillingTab('invoices')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="invoices">📄 Rechnungen</button>
                             <button onclick="showBillingTab('strategies')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="strategies">🎯 Strategien</button>
                             <button onclick="showBillingTab('products')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="products">📦 Produkte</button>
+                        <button onclick="showBillingTab('standorte')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="standorte">🏪 Standorte</button>
                             <button onclick="showBillingTab('tools')" class="billing-tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-sm text-gray-500 hover:text-gray-700" data-tab="tools">🔧 Tools</button>
                         </nav>
                     </div>
@@ -4385,6 +4386,11 @@
                     <!-- Tab: Products -->
                     <div id="billingTabProducts" class="billing-tab-content" style="display:none;">
                         <div id="billingProductsList" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Tab: Standorte (Kostenübersicht) -->
+                    <div id="billingTabStandorte" class="billing-tab-content" style="display:none;">
+                        <div id="billingStandorteList"></div>
                     </div>
 
                     <!-- Tab: Tools -->
