@@ -59,7 +59,14 @@ async function loadHqData() {
 
         var ticketQuery = _sb().from('support_tickets')
             .select('*, users:erstellt_von(name, vorname, nachname, standort_id), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
+            .eq('zoho_fallback', false)
             .order('created_at', {ascending: false});
+
+        // Abteilungs-Filter: nur eigene Abteilung(en) wenn nicht Admin
+        if (!isAdmin && hqRollen.length > 0) {
+            var abteilungen = hqRollen.filter(function(r) { return r.startsWith('hq_'); }).map(function(r) { return r.replace('hq_', ''); });
+            if (abteilungen.length > 0) ticketQuery = ticketQuery.in('abteilung', abteilungen);
+        }
 
         var [tResp, uResp, cResp, wResp] = await Promise.all([
             ticketQuery,
@@ -453,7 +460,7 @@ export async function hqSupOpenDetail(ticketId) {
         html += '<input type="hidden" id="hqSupInternalCheck" value="false">';
         html += '<div class="flex items-center justify-between mt-2.5">';
         html += '<div class="flex items-center gap-3">';
-        html += '<label class="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer hover:text-gray-600"><input type="file" id="hqSupKommentarFile" class="hidden" onchange="this.parentElement.querySelector('span').textContent=this.files[0]?.name||''"><span class="text-lg">📎</span><span></span></label>';
+        html += '<label class="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer hover:text-gray-600"><input type="file" id="hqSupKommentarFile" class="hidden" onchange="var f=this.files[0];this.parentElement.querySelectorAll(\'span\')[1].textContent=f?f.name:\'\'"><span class="text-lg">📎</span><span></span></label>';
         html += '<button onclick="hqSupKiAntwort(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-purple-50 text-purple-600 border border-purple-200 rounded hover:bg-purple-100">🤖 KI</button>';
         if (_hqSup.cannedResponses.length > 0) html += '<button onclick="hqSupInsertCanned()" class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Baustein</button>';
         html += '</div>';
