@@ -1,12 +1,28 @@
 /**
  * views/some.js - Social Media (SOME) Modul
+ * Delegates to scompler.js (renderScompler)
  * @module views/some
  */
 
 function renderSome() {
-    var el = document.getElementById('hqSomeView');
-    if (!el) return;
-    el.innerHTML = '<div class="p-8 text-center text-gray-400"><p class="text-lg font-semibold mb-2">Social Media</p><p class="text-sm">Modul in Entwicklung</p></div>';
+    // Ensure scomplerContent is inside someContent
+    var someEl = document.getElementById('someContent');
+    if (someEl && !document.getElementById('scomplerContent')) {
+        var div = document.createElement('div');
+        div.id = 'scomplerContent';
+        div.className = 'p-0';
+        someEl.appendChild(div);
+    }
+
+    // Delegate to scompler module
+    if (typeof window.renderScompler === 'function') {
+        window.renderScompler();
+    } else {
+        // Fallback while module loads
+        document.addEventListener('vit:modules-ready', function() {
+            if (typeof window.renderScompler === 'function') window.renderScompler();
+        }, { once: true });
+    }
 }
 
 // Exports
