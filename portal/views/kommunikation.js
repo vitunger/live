@@ -978,7 +978,7 @@ export function kommGoView(view, id, name) {
         if (uid) {
             var now = new Date().toISOString();
             if (KOMM._gelesenMap) KOMM._gelesenMap[id] = now;
-            _sb().rpc('mark_channel_read', { p_kanal_id: id }).then(function(){});
+            _sb().rpc('mark_channel_read', { p_kanal_id: id, p_user_id: uid }).then(function(){});
         }
     }
 
@@ -1112,7 +1112,7 @@ async function kommMarkAsRead() {
     // zuletzt_gelesen via RPC aktualisieren (umgeht RLS-Probleme)
     var now = new Date().toISOString();
     if (KOMM._gelesenMap) KOMM._gelesenMap[KOMM.activeId] = now;
-    _sb().rpc('mark_channel_read', { p_kanal_id: KOMM.activeId }).then(function(res) {
+    _sb().rpc('mark_channel_read', { p_kanal_id: KOMM.activeId, p_user_id: uid }).then(function(res) {
         if (res.error) console.warn('mark_channel_read error:', res.error);
     });
 
