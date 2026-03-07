@@ -142,7 +142,9 @@ function installRedirectInterceptor() {
         // Scroll main content to top on every view change
         try { var _m = document.querySelector('main.main-content-area'); if(_m) _m.scrollTop = 0; } catch(e) {}
         // Access check (skip if auth not yet loaded or during view restoration)
-        if (typeof window.hasAccess === 'function' && window.currentRole && !window._vitRestoringView && !window.hasAccess(v)) {
+        // Also skip if profile shows is_hq=true (fallback for race condition where currentRole not yet set)
+        var _isHqProfile = window.sbProfile && window.sbProfile.is_hq;
+        if (typeof window.hasAccess === 'function' && window.currentRole && !window._vitRestoringView && !_isHqProfile && !window.hasAccess(v)) {
             console.warn('[view-router] Kein Zugriff auf', v, 'mit Rolle', window.currentRole);
             if(window.currentRole === 'hq') { v = 'hqCockpit'; } else { v = 'home'; }
         }
