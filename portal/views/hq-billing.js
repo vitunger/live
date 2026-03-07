@@ -439,6 +439,7 @@ export async function loadBillingProducts() {
         h += '<div class="flex items-center gap-2">';
         h += '<span class="font-bold text-sm">' + (p.default_amount ? _fmtEur(p.default_amount) : p.default_percent ? (p.default_percent * 100).toFixed(1) + '%' : '\u2014') + '</span>';
         h += '<button onclick="editProduct(\'' + p.id + '\')" class="text-xs text-vit-orange hover:underline font-semibold">\u270f\ufe0f</button>';
+        h += ' <button onclick="deleteProduct(\'' + p.id + '\',\'' + _escH(p.name).replace(/'/g,'') + '\')" class="text-xs text-red-400 hover:text-red-600 font-semibold ml-1" title="L\u00f6schen">\u2715</button>';
         h += '</div></div>';
         h += '<div class="flex items-center gap-4 text-xs text-gray-500">';
         h += '<span>' + _escH(p.name) + '</span>';
