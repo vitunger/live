@@ -642,6 +642,12 @@ window.openDokUploadModal = function() {
     console.warn('openDokUploadModal: noch nicht implementiert');
 };
 // Stub: renderHqAuswertung (in _exports referenziert, aber nie definiert)
+function renderHqSupport() {
+    var el = document.getElementById('hqSupportContent');
+    if (!el) return;
+    el.innerHTML = '<div class="p-6 text-center text-gray-400"><p class="text-3xl mb-2">🎫</p><p class="text-sm font-semibold">Support-Übersicht</p><p class="text-xs mt-1">Alle offenen Tickets aller Standorte — kommt bald.</p></div>';
+}
+
 function renderHqAuswertung() {
     var el = document.getElementById('hqAuswertungView') || document.getElementById('view-hq-auswertung');
     if (el) el.innerHTML = '<div class="p-8 text-center text-gray-400">Auswertung wird vorbereitet\u2026</div>';
