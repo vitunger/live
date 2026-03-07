@@ -81,7 +81,7 @@ async function renderSelfHeal() {
   }
 
   el.innerHTML = `
-    <div class="p-4 md:p-6 max-w-5xl mx-auto">
+    <div class="p-4 md:p-6">
       <div class="flex items-center gap-3 mb-6">
         <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-xl">🔧</div>
         <div>
