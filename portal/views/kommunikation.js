@@ -588,19 +588,24 @@ async function kommLoadChat(el) {
                 var threadOpen = KOMM.threadId === m.id;
                 var threadReplies = threadOpen ? (KOMM.threadMessages || []) : replies;
 
-                // Post Card
-                h += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-sm transition-shadow">';
+                // Post Card (deutliche Card mit linker Akzentlinie)
+                h += '<div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">';
+
+                // Linke Akzentlinie + Post Content
+                h += '<div class="border-l-4 ' + (isHq ? 'border-l-[#EF7D00]' : 'border-l-purple-400') + '">';
 
                 // Post Header
-                h += '<div class="px-4 pt-4 pb-2 flex items-center gap-3">';
-                h += '<div class="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
-                h += '<div class="flex-1"><span class="text-[13px] font-bold ' + (isHq ? 'text-[#EF7D00]' : 'text-gray-800') + '">' + _escH(userName) + '</span>';
-                if (isHq) h += ' <span class="text-[9px] font-bold bg-orange-50 text-[#EF7D00] px-1.5 py-0.5 rounded">HQ</span>';
-                h += '<div class="text-[11px] text-gray-400">' + kommTimeFull(m.created_at) + '</div></div>';
-                // Reaktionen
+                h += '<div class="px-4 pt-4 pb-2 flex items-start gap-3">';
+                h += '<div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[12px] font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
+                h += '<div class="flex-1"><div class="flex items-center gap-2"><span class="text-[14px] font-bold ' + (isHq ? 'text-[#EF7D00]' : 'text-gray-900') + '">' + _escH(userName) + '</span>';
+                if (isHq) h += '<span class="text-[9px] font-bold bg-orange-50 text-[#EF7D00] px-1.5 py-0.5 rounded">HQ</span>';
+                h += '</div>';
+                h += '<div class="text-[11px] text-gray-400 mt-0.5">' + kommTimeFull(m.created_at) + '</div></div>';
+
+                // Emoji-Reaktionen oben rechts
                 var msgRx = reactions[m.id] || [];
+                h += '<div class="flex gap-1 items-center">';
                 if (msgRx.length > 0) {
-                    h += '<div class="flex gap-1">';
                     var emojiCounts = {};
                     msgRx.forEach(function(r) {
                         if (!emojiCounts[r.emoji]) emojiCounts[r.emoji] = { count: 0, my: false };
@@ -609,56 +614,59 @@ async function kommLoadChat(el) {
                     });
                     Object.keys(emojiCounts).forEach(function(emoji) {
                         var ec = emojiCounts[emoji];
-                        h += '<button onclick="kommToggleReaction(\'' + m.id + '\',\'' + emoji + '\')" class="px-1.5 py-0.5 rounded text-[11px] font-semibold cursor-pointer ' + (ec.my ? 'bg-orange-50 text-[#EF7D00]' : 'bg-gray-50 text-gray-500') + '">' + emoji + ec.count + '</button>';
+                        h += '<button onclick="kommToggleReaction(\'' + m.id + '\',\'' + emoji + '\')" class="px-1.5 py-0.5 rounded text-[11px] cursor-pointer ' + (ec.my ? 'bg-orange-50 text-[#EF7D00]' : 'bg-gray-100 text-gray-500') + '">' + emoji + ec.count + '</button>';
                     });
-                    h += '</div>';
                 }
+                h += '<button onclick="kommShowEmojiPicker(\'' + m.id + '\')" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[11px] text-gray-400 cursor-pointer hover:bg-gray-50">😊</button>';
+                h += '</div>';
                 h += '</div>';
 
-                // Post Titel (wenn vorhanden)
+                // Post Titel
                 if (m.titel) {
-                    h += '<div class="px-4 pb-1"><h3 class="text-[15px] font-bold text-gray-900">' + _escH(m.titel) + '</h3></div>';
+                    h += '<div class="px-4 pb-1"><h3 class="text-base font-bold text-gray-900">' + _escH(m.titel) + '</h3></div>';
                 }
 
                 // Post Body
-                h += '<div class="px-4 pb-3"><p class="text-[13.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p></div>';
+                h += '<div class="px-4 pb-4"><p class="text-[13.5px] text-gray-700 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p></div>';
 
-                // Trennlinie + Antworten
-                h += '<div class="border-t border-gray-100">';
+                h += '</div>'; // end border-l accent
 
-                // Antworten
-                if (replies.length > 0 || threadOpen) {
-                    var visibleReplies = threadOpen ? threadReplies : replies.slice(-2); // Letzte 2 zeigen wenn zugeklappt
+                // ── Antworten-Bereich (visuell getrennt, grauer Hintergrund) ──
+                if (replies.length > 0) {
+                    h += '<div class="bg-gray-50 border-t border-gray-200">';
+
+                    // "X weitere Antworten" Link
+                    var visibleReplies = threadOpen ? threadReplies : replies.slice(-3);
                     var hiddenCount = replies.length - visibleReplies.length;
-
                     if (hiddenCount > 0 && !threadOpen) {
-                        h += '<div onclick="kommOpenThread(\'' + m.id + '\')" class="px-4 py-2 text-[11px] text-blue-600 font-medium cursor-pointer hover:bg-gray-50">';
-                        h += hiddenCount + ' weitere Antwort' + (hiddenCount > 1 ? 'en' : '') + ' anzeigen</div>';
+                        h += '<div onclick="kommOpenThread(\'' + m.id + '\')" class="px-5 py-2 text-[11px] text-blue-600 font-medium cursor-pointer hover:bg-gray-100 border-b border-gray-200">';
+                        h += '↑ ' + hiddenCount + ' ältere Antwort' + (hiddenCount > 1 ? 'en' : '') + ' anzeigen</div>';
                     }
 
                     visibleReplies.forEach(function(tr) {
                         var trName = tr.users ? kommUserName(tr.users) : 'Unbekannt';
                         var trInit = kommInitials(trName);
                         var trHq = tr.users && tr.users.is_hq;
-                        h += '<div class="px-4 py-2 flex gap-2.5 border-t border-gray-50">';
-                        h += '<div class="w-7 h-7 rounded-md flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold" style="background:' + kommAvatarColor(trInit) + '">' + trInit + '</div>';
+                        h += '<div class="px-5 py-2.5 flex gap-2.5 border-b border-gray-100 last:border-b-0">';
+                        h += '<div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold mt-0.5" style="background:' + kommAvatarColor(trInit) + '">' + trInit + '</div>';
                         h += '<div class="flex-1 min-w-0">';
-                        h += '<span class="text-[12px] font-bold ' + (trHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(trName) + '</span>';
-                        h += ' <span class="text-[10px] text-gray-400">' + kommTimeShort(tr.created_at) + '</span>';
-                        h += '<div class="text-[12.5px] text-gray-700 leading-relaxed whitespace-pre-wrap mt-0.5">' + _escH(tr.nachricht || '') + '</div>';
+                        h += '<span class="text-[12px] font-semibold ' + (trHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(trName) + '</span>';
+                        h += ' <span class="text-[10px] text-gray-400">' + kommTimeFull(tr.created_at) + '</span>';
+                        h += '<div class="text-[13px] text-gray-600 leading-relaxed whitespace-pre-wrap mt-0.5">' + _escH(tr.nachricht || '') + '</div>';
                         h += '</div></div>';
                     });
+
+                    h += '</div>';
                 }
 
-                // Reply-Input (immer sichtbar bei Posts)
-                h += '<div class="px-4 py-2.5 flex items-center gap-2 bg-gray-50">';
+                // Reply-Input (immer sichtbar, wie Teams "Antwort im Thread")
+                h += '<div class="px-4 py-2.5 flex items-center gap-2.5 bg-gray-50 border-t border-gray-200">';
                 var myInit = kommInitials((_sbProfile() || {}).name || 'Du');
-                h += '<div class="w-6 h-6 rounded flex-shrink-0 flex items-center justify-center text-white text-[8px] font-bold" style="background:' + kommAvatarColor(myInit) + '">' + myInit + '</div>';
-                h += '<input class="kommReplyInput flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] outline-none focus:border-[#EF7D00] bg-white" data-post-id="' + m.id + '" placeholder="Antwort schreiben..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommReplyToPost(this)}">';
+                h += '<div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold" style="background:' + kommAvatarColor(myInit) + '">' + myInit + '</div>';
+                h += '<input class="kommReplyInput flex-1 px-3 py-2 rounded-lg border border-gray-200 text-[13px] outline-none focus:border-[#EF7D00] focus:ring-1 focus:ring-[#EF7D00]/20 bg-white" data-post-id="' + m.id + '" placeholder="Antwort im Thread..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommReplyToPost(this)}">';
                 h += '</div>';
 
-                h += '</div>'; // border-t wrapper
-                h += '</div>'; // card
+                h += '</div>'; // end card
             });
 
             h += '</div>';
