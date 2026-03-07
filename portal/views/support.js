@@ -121,7 +121,7 @@ async function loadTickets() {
         var s = _sb();
         var profile = _sbProfile();
         var query = s.from('support_tickets')
-            .select('*, users:erstellt_von(name, vorname, nachname), assignee:assignee_id(name, vorname, nachname)')
+            .select('*, users:erstellt_von(name, vorname, nachname), assignee:support_tickets_assignee_id_fkey(name, vorname, nachname)')
             .order('created_at', {ascending: false});
 
         if (profile && !profile.is_hq && profile.standort_id) {
@@ -173,7 +173,7 @@ async function loadHqTickets() {
         var isAdmin = hqRollen.indexOf('hq_gf') !== -1 || hqRollen.indexOf('hq') !== -1 || hqRollen.indexOf('owner') !== -1;
 
         var query = _sb().from('support_tickets')
-            .select('*, users:erstellt_von(name, vorname, nachname), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
+            .select('*, users:erstellt_von(name, vorname, nachname), assignee:support_tickets_assignee_id_fkey(name, vorname, nachname), standorte:standort_id(name)')
             .eq('zoho_fallback', false)
             .order('created_at', {ascending: false})
             .limit(500);
@@ -841,7 +841,7 @@ async function renderHqStatsTab() {
 // ======================================================================
 export async function openTicketDetail(ticketId) {
     try {
-        var tResp = await _sb().from('support_tickets').select('*, users:erstellt_von(name, vorname, nachname), assignee:assignee_id(name, vorname, nachname)').eq('id', ticketId).single();
+        var tResp = await _sb().from('support_tickets').select('*, users:erstellt_von(name, vorname, nachname), assignee:support_tickets_assignee_id_fkey(name, vorname, nachname)').eq('id', ticketId).single();
         if (tResp.error) throw tResp.error;
         var t = tResp.data;
 
@@ -964,7 +964,7 @@ export function closeTicketDetail() {
 export async function supHqOpenTicket(ticketId) {
     try {
         var [tResp, kResp, aResp, logResp] = await Promise.all([
-            _sb().from('support_tickets').select('*, users:erstellt_von(name, vorname, nachname), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)').eq('id', ticketId).single(),
+            _sb().from('support_tickets').select('*, users:erstellt_von(name, vorname, nachname), assignee:support_tickets_assignee_id_fkey(name, vorname, nachname), standorte:standort_id(name)').eq('id', ticketId).single(),
             _sb().from('support_ticket_kommentare').select('*, users:autor_id(name, vorname, nachname, is_hq)').eq('ticket_id', ticketId).order('created_at', {ascending: true}),
             _sb().from('support_ticket_anhaenge').select('*').eq('ticket_id', ticketId),
             _sb().from('support_ticket_log').select('*, users:user_id(name, vorname, nachname)').eq('ticket_id', ticketId).order('created_at', {ascending: false}).limit(20)
@@ -1967,3 +1967,4 @@ var _exports = {
     supHqZohoSearchFn: supHqZohoSearchFn
 };
 Object.keys(_exports).forEach(function(k) { window[k] = _exports[k]; });
+
