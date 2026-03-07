@@ -34,7 +34,10 @@ var KOMM = {
     recInterval: null,
     mediaRecorder: null,
     audioChunks: [],
-    sidebarSections: { standort: true, hq: false, netzwerk: true, dms: true, gruppen: false }
+    sidebarSections: { standort: true, hq: false, netzwerk: true, dms: true, gruppen: false },
+    threadId: null,       // Wenn gesetzt: Thread-Panel ist offen
+    threadParent: null,   // Die Parent-Nachricht des Threads
+    threadMessages: []    // Antworten im Thread
 };
 
 var KOMM_EMOJIS = ['👍','❤️','🔥','😂','🎉','✅','👀','🙏'];
@@ -259,6 +262,21 @@ export async function renderKomm() {
     h += '</div>'; // content placeholder - filled after mount
     h += kommRenderInputBar();
     h += '</div>'; // end content
+
+    // Thread-Panel (rechts, wenn aktiv)
+    h += '<div id="kommThreadPanel" class="' + (KOMM.threadId ? 'w-80 border-l border-gray-200 bg-white flex flex-col flex-shrink-0' : 'hidden') + '">';
+    if (KOMM.threadId) {
+        h += '<div class="p-3 border-b border-gray-100 flex items-center justify-between">';
+        h += '<div class="text-sm font-bold text-gray-800">💬 Thread</div>';
+        h += '<button onclick="kommCloseThread()" class="text-gray-400 hover:text-gray-600 text-base cursor-pointer bg-transparent border-none">✕</button>';
+        h += '</div>';
+        h += '<div id="kommThreadContent" class="flex-1 overflow-y-auto p-3"></div>';
+        h += '<div class="p-3 border-t border-gray-200 flex gap-2">';
+        h += '<textarea id="kommThreadInput" class="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-[13px] resize-none outline-none focus:border-[#EF7D00]" rows="1" placeholder="Antworten..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();kommSendThreadReply()}"></textarea>';
+        h += '<button onclick="kommSendThreadReply()" class="w-9 h-9 rounded-lg bg-[#EF7D00] text-white flex items-center justify-center text-base flex-shrink-0 cursor-pointer hover:opacity-90">↑</button>';
+        h += '</div>';
+    }
+    h += '</div>';
 
     h += '</div>'; // end flex
 
@@ -486,6 +504,9 @@ async function kommLoadChat(el) {
         h += '<div class="text-center py-2 text-[11px] text-gray-400">— Heute —</div>';
 
         KOMM.messages.forEach(function(m) {
+            // Thread-Antworten nicht im Haupt-Chat zeigen
+            if (m.reply_to) return;
+
             var isOwn = m.user_id === uid;
             var userName = m.users ? kommUserName(m.users) : 'Unbekannt';
             var isHq = m.users && (m.users.is_hq || m.users.rolle === 'hq');
@@ -509,7 +530,7 @@ async function kommLoadChat(el) {
 
             // Reaktionen
             if (msgReactions.length > 0 || true) {
-                h += '<div class="flex gap-1 mt-1 flex-wrap">';
+                h += '<div class="flex gap-1 mt-1 flex-wrap items-center">';
                 // Gruppiere Reaktionen nach Emoji
                 var emojiCounts = {};
                 msgReactions.forEach(function(r) {
@@ -523,6 +544,15 @@ async function kommLoadChat(el) {
                 });
                 // Add reaction button
                 h += '<button onclick="kommShowEmojiPicker(\'' + m.id + '\')" class="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-[12px] text-gray-400 cursor-pointer hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">+</button>';
+
+                // Thread reply button
+                if (KOMM.view === 'channel' || KOMM.view === 'group') {
+                    var rc = m.reply_count || 0;
+                    h += '<button onclick="kommOpenThread(\'' + m.id + '\')" class="ml-2 px-2 py-0.5 rounded-full text-[11px] font-medium cursor-pointer border border-gray-200 text-gray-400 hover:text-[#EF7D00] hover:border-[#EF7D00] ' + (rc > 0 ? '' : 'opacity-0 group-hover:opacity-100') + ' transition-opacity">';
+                    h += rc > 0 ? '💬 ' + rc + ' Antwort' + (rc > 1 ? 'en' : '') : '💬 Antworten';
+                    h += '</button>';
+                }
+
                 h += '</div>';
             }
 
@@ -1509,6 +1539,100 @@ window.kommSaveStandortChannel = async function() {
     } catch (e) {
         console.error('Create channel error:', e);
         _showToast('❌ Fehler: ' + (e.message || 'Unbekannt'), 'error');
+    }
+};
+
+// ========== Thread-System ==========
+window.kommOpenThread = async function(msgId) {
+    KOMM.threadId = msgId;
+    // Parent-Nachricht finden
+    KOMM.threadParent = KOMM.messages.find(function(m) { return m.id === msgId; });
+    renderKomm();
+
+    // Thread-Antworten laden
+    await kommLoadThreadMessages();
+};
+
+window.kommCloseThread = function() {
+    KOMM.threadId = null;
+    KOMM.threadParent = null;
+    KOMM.threadMessages = [];
+    renderKomm();
+};
+
+async function kommLoadThreadMessages() {
+    if (!KOMM.threadId) return;
+    var el = document.getElementById('kommThreadContent');
+    if (!el) return;
+
+    try {
+        var resp = await _sb().from('chat_nachrichten')
+            .select('*, users:user_id(id, name, vorname, nachname, is_hq)')
+            .eq('reply_to', KOMM.threadId)
+            .order('created_at', { ascending: true });
+        KOMM.threadMessages = resp.data || [];
+    } catch(e) { KOMM.threadMessages = []; }
+
+    var h = '';
+
+    // Parent-Nachricht oben anzeigen
+    if (KOMM.threadParent) {
+        var p = KOMM.threadParent;
+        var pName = p.users ? kommUserName(p.users) : 'Unbekannt';
+        var pInit = kommInitials(pName);
+        h += '<div class="flex gap-2 pb-3 mb-3 border-b border-gray-100">';
+        h += '<div class="w-7 h-7 rounded-md flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold" style="background:' + kommAvatarColor(pInit) + '">' + pInit + '</div>';
+        h += '<div class="flex-1 min-w-0"><div class="text-[12px] font-bold text-gray-800">' + _escH(pName) + ' <span class="font-normal text-gray-400">' + kommTimeShort(p.created_at) + '</span></div>';
+        h += '<p class="text-[12px] text-gray-600 mt-0.5 leading-relaxed">' + _escH(p.nachricht || '') + '</p></div></div>';
+
+        if (KOMM.threadMessages.length > 0) {
+            h += '<div class="text-[10px] text-gray-400 font-semibold mb-2">' + KOMM.threadMessages.length + ' Antwort' + (KOMM.threadMessages.length > 1 ? 'en' : '') + '</div>';
+        }
+    }
+
+    // Thread-Antworten
+    KOMM.threadMessages.forEach(function(m) {
+        var userName = m.users ? kommUserName(m.users) : 'Unbekannt';
+        var init = kommInitials(userName);
+        var isHq = m.users && m.users.is_hq;
+        h += '<div class="flex gap-2 py-1.5">';
+        h += '<div class="w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold" style="background:' + kommAvatarColor(init) + '">' + init + '</div>';
+        h += '<div class="flex-1 min-w-0">';
+        h += '<div class="text-[11px]"><span class="font-bold ' + (isHq ? 'text-[#EF7D00]' : 'text-gray-700') + '">' + _escH(userName) + '</span> <span class="text-gray-400">' + kommTimeShort(m.created_at) + '</span></div>';
+        h += '<p class="text-[12px] text-gray-700 mt-0.5 leading-relaxed whitespace-pre-wrap">' + _escH(m.nachricht || '') + '</p>';
+        h += '</div></div>';
+    });
+
+    if (KOMM.threadMessages.length === 0 && KOMM.threadParent) {
+        h += '<div class="text-center py-4 text-xs text-gray-400">Noch keine Antworten. Sei der Erste!</div>';
+    }
+
+    el.innerHTML = h;
+    el.scrollTop = el.scrollHeight;
+}
+
+window.kommSendThreadReply = async function() {
+    var input = document.getElementById('kommThreadInput');
+    if (!input || !input.value.trim() || !KOMM.threadId) return;
+
+    var text = input.value.trim();
+    input.value = '';
+
+    try {
+        var user = _sbUser();
+        var resp = await _sb().from('chat_nachrichten').insert({
+            kanal_id: KOMM.activeId,
+            user_id: user ? user.id : null,
+            nachricht: text,
+            reply_to: KOMM.threadId
+        }).select('*, users:user_id(id, name, vorname, nachname, is_hq)').single();
+
+        if (resp.error) throw resp.error;
+
+        KOMM.threadMessages.push(resp.data);
+        await kommLoadThreadMessages();
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
     }
 };
 
