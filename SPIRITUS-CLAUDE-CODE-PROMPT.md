@@ -662,14 +662,440 @@ Wenn keine Maßnahmen/Todos vorhanden:
 
 ---
 
+## Aufgabe 10: 3CX-Integration (Realtime Call-Trigger + Recording-Ingest)
+
+### Voraussetzungen (von Markus zu klären)
+
+- [ ] Admin-Zugang zum 3CX-Server (selbst gehostet oder über IT-Dienstleister?)
+- [ ] 3CX Version prüfen (v18 oder v20 — Webhook-Plugin-Kompatibilität)
+- [ ] 3CX Webhook-Plugin Lizenz beschaffen (creomate.com)
+- [ ] Extension-Nummern der HQ-Mitarbeiter sammeln
+
+### 10a. Neue Edge Function: `spiritus-ingest-3cx`
+
+```
+verify_jwt: false (externer Webhook)
+Auth: Secret-Header (X-Spiritus-Secret)
+```
+
+Diese Function empfängt ZWEI Arten von 3CX-Webhooks:
+
+**Event 1: Call startet (ringing/dialing)**
+→ Schreibt in `spiritus_live_calls` → Supabase Realtime → Pop-up im Cockpit
+
+**Event 2: Call beendet (incoming/outgoing + MP3-Link)**
+→ Lädt MP3 herunter → Supabase Storage → Ruft `audio-transcribe` auf → Chain zu `spiritus-analyze`
+
+```typescript
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SPIRITUS_SECRET = Deno.env.get("SPIRITUS_3CX_SECRET")!;
+
+Deno.serve(async (req: Request) => {
+  // CORS
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Auth: Secret-Header prüfen
+  const secret = req.headers.get("X-Spiritus-Secret");
+  if (secret !== SPIRITUS_SECRET) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const payload = await req.json();
+  const event = payload.event; // "ringing", "dialing", "incoming", "outgoing"
+
+  // --- Event 1: Call startet → Live-Call Pop-up ---
+  if (event === "ringing" || event === "dialing") {
+    const callerId = payload.callerid;
+    const extension = payload.user;
+
+    // Extension → User + Standort matchen
+    const { data: mapping } = await sb
+      .from("spiritus_3cx_mapping")
+      .select("user_id, standort_id, display_name")
+      .eq("extension_number", extension)
+      .eq("is_active", true)
+      .single();
+
+    // Caller-ID → Standort matchen (Telefonnummer)
+    // TODO: standorte.telefon_3cx Feld nutzen
+    let standortFromCaller = null;
+    if (callerId) {
+      const { data: standort } = await sb
+        .from("standorte")
+        .select("id, name")
+        .eq("telefon_3cx", callerId)
+        .single();
+      standortFromCaller = standort;
+    }
+
+    // In spiritus_live_calls schreiben → Realtime → Pop-up
+    await sb.from("spiritus_live_calls").insert({
+      caller_id: callerId,
+      extension: extension,
+      user_id: mapping?.user_id || null,
+      standort_id: standortFromCaller?.id || mapping?.standort_id || null,
+      source: "3cx",
+      call_direction: event === "dialing" ? "outbound" : "inbound",
+      status: "ringing",
+    });
+
+    return json({ ok: true, event: "call_started" });
+  }
+
+  // --- Event 2: Call beendet + Recording ---
+  if (event === "incoming" || event === "outgoing") {
+    const files = payload.FILES || [];
+    const callId = payload.id;
+    const extension = payload.user;
+
+    // Live-Call Status updaten
+    await sb.from("spiritus_live_calls")
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("extension", extension)
+      .eq("status", "ringing");
+
+    // Prüfen ob Spiritus für diesen Call aktiviert wurde
+    const { data: liveCall } = await sb
+      .from("spiritus_live_calls")
+      .select("*")
+      .eq("extension", extension)
+      .eq("spiritus_aktiv", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!liveCall || !liveCall.spiritus_aktiv) {
+      return json({ ok: true, event: "call_ended_no_spiritus" });
+    }
+
+    // MP3 herunterladen und in Storage speichern
+    if (files.length > 0) {
+      const mp3Url = files[0];
+      const mp3Resp = await fetch(mp3Url);
+      const mp3Bytes = await mp3Resp.arrayBuffer();
+
+      const storagePath = `3cx/${liveCall.standort_id || "unknown"}/${callId}.mp3`;
+      await sb.storage.from("spiritus-media").upload(storagePath, mp3Bytes, {
+        contentType: "audio/mpeg",
+      });
+
+      // Transkription starten (audio-transcribe Edge Function)
+      // TODO: Entweder direkt audio-transcribe aufrufen
+      // oder MP3 → Base64 → audio-transcribe
+      // Dann Ergebnis an spiritus-analyze weiterleiten
+    }
+
+    return json({ ok: true, event: "call_ended_recording_saved" });
+  }
+
+  return json({ ok: true, event: "ignored" });
+});
+```
+
+**Neuer Supabase Secret:** `SPIRITUS_3CX_SECRET` (beliebiger String, wird in 3CX Webhook-Config eingetragen)
+
+### 10b. 3CX Webhook-Konfiguration (auf dem 3CX-Server)
+
+```ini
+# TCXWebAPI.ini
+WEBHOOK_URL = https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/spiritus-ingest-3cx
+RECORDING_FULL_INFO = 1
+POST = 1
+# Custom Header für Auth:
+WEBHOOK_HEADER_1 = X-Spiritus-Secret: {SPIRITUS_3CX_SECRET}
+```
+
+### 10c. Extension-Mapping befüllen
+
+Für jeden HQ-Mitarbeiter der telefoniert:
+
+```sql
+INSERT INTO spiritus_3cx_mapping (standort_id, extension_number, user_id, display_name)
+VALUES
+  (NULL, '100', '{user_id_max}', 'Max Müller'),
+  (NULL, '101', '{user_id_anna}', 'Anna Schmidt'),
+  -- ... weitere HQ-Nebenstellen
+;
+```
+
+### 10d. Neues Feld auf `standorte` für Caller-ID Matching
+
+```sql
+ALTER TABLE standorte ADD COLUMN IF NOT EXISTS telefon_3cx text;
+-- Befüllen mit den Standort-Telefonnummern im 3CX-Format
+```
+
+---
+
+## Aufgabe 11: Teams-Integration (Transkript-Abruf + Call-Events)
+
+### Voraussetzungen (IT-Abteilung)
+
+- [ ] Azure AD App Registration erstellen (Azure Portal → App registrations → New)
+- [ ] API Permissions hinzufügen: `OnlineMeetingTranscript.Read.All`, `CallRecords.Read.All`
+- [ ] Admin Consent erteilen
+- [ ] Application Access Policy per PowerShell erstellen und zuweisen
+- [ ] Teams Admin Center: Transkription in Meeting Policies aktivieren
+- [ ] Client-ID + Client-Secret als Supabase Secrets setzen
+
+### 11a. Azure AD Setup (Anleitung für IT-Abteilung)
+
+```
+1. Azure Portal → Microsoft Entra ID → App registrations → New registration
+   - Name: "vit:bikes Spiritus"
+   - Supported account types: "Single tenant"
+   - Redirect URI: nicht nötig (daemon app)
+
+2. API Permissions → Add permission → Microsoft Graph → Application permissions:
+   - OnlineMeetingTranscript.Read.All
+   - CallRecords.Read.All
+   - User.Read.All (für Teilnehmer-Zuordnung)
+   → Grant admin consent
+
+3. Certificates & secrets → New client secret
+   → Secret-Value kopieren (wird nur einmal angezeigt!)
+
+4. PowerShell (als Teams Admin):
+   Install-Module MicrosoftTeams -Force
+   Connect-MicrosoftTeams
+   New-CsApplicationAccessPolicy -Identity "SpiritusPolicy" -AppIds "{CLIENT_ID}"
+   Grant-CsApplicationAccessPolicy -PolicyName "SpiritusPolicy" -Identity "Global"
+
+5. Teams Admin Center → Meetings → Meeting Policies → Global
+   → Recording & Transcription → Transcription = On
+```
+
+### 11b. Neue Supabase Secrets
+
+```
+TEAMS_TENANT_ID = {Azure Tenant ID}
+TEAMS_CLIENT_ID = {App Registration Client ID}
+TEAMS_CLIENT_SECRET = {App Registration Client Secret}
+```
+
+### 11c. Neue Edge Function: `spiritus-ingest-teams`
+
+```
+verify_jwt: false (Microsoft Graph Webhook)
+Auth: clientState Token-Validierung + Graph Notification Validation
+```
+
+```typescript
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const TENANT_ID = Deno.env.get("TEAMS_TENANT_ID")!;
+const CLIENT_ID = Deno.env.get("TEAMS_CLIENT_ID")!;
+const CLIENT_SECRET = Deno.env.get("TEAMS_CLIENT_SECRET")!;
+
+// Azure AD Token holen (Client Credentials Flow)
+async function getGraphToken(): Promise<string> {
+  const resp = await fetch(
+    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        scope: "https://graph.microsoft.com/.default",
+        grant_type: "client_credentials",
+      }),
+    }
+  );
+  const data = await resp.json();
+  return data.access_token;
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const url = new URL(req.url);
+
+  // --- Graph Subscription Validation (bei Erstregistrierung) ---
+  const validationToken = url.searchParams.get("validationToken");
+  if (validationToken) {
+    return new Response(validationToken, {
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  try {
+    const body = await req.json();
+    const notifications = body.value || [];
+
+    for (const notification of notifications) {
+      // clientState validieren
+      // TODO: Gegen spiritus_teams_config.subscription_id prüfen
+
+      const resourceUrl = notification.resource;
+      // z.B. "users/{userId}/onlineMeetings/{meetingId}/transcripts/{transcriptId}"
+
+      const token = await getGraphToken();
+
+      // Transkript-Metadata holen
+      const metaResp = await fetch(`https://graph.microsoft.com/v1.0/${resourceUrl}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const meta = await metaResp.json();
+
+      // Transkript-Content holen (.vtt mit Speaker Labels!)
+      const contentResp = await fetch(
+        `https://graph.microsoft.com/v1.0/${resourceUrl}/content`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "text/vtt",
+          },
+        }
+      );
+      const vttContent = await contentResp.text();
+
+      // VTT parsen → Rohtext + Sprecher-Segmente
+      const { rohtext, segmente } = parseVTT(vttContent);
+
+      // Meeting-Details holen (Organizer, Titel)
+      // TODO: Meeting-Info aus resourceUrl extrahieren
+
+      // In spiritus_transcripts speichern + spiritus-analyze aufrufen
+      // Teams liefert bereits Transkript → kein audio-transcribe nötig!
+      const analyzeResp = await fetch(
+        `${SUPABASE_URL}/functions/v1/spiritus-analyze`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({
+            transcript: rohtext,
+            callType: "teams_meeting",
+            gespraechsKontext: "partner", // Default, kann später angepasst werden
+            // TODO: Organizer-E-Mail → User → Standort matchen
+          }),
+        }
+      );
+    }
+
+    return new Response(null, { status: 202 });
+  } catch (e: any) {
+    console.error("spiritus-ingest-teams:", e);
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+  }
+});
+
+// VTT-Parser: Extrahiert Text + Sprecher aus .vtt Format
+function parseVTT(vtt: string): { rohtext: string; segmente: any[] } {
+  const lines = vtt.split("\n");
+  const segmente: any[] = [];
+  let rohtext = "";
+  let currentSpeaker = "";
+  let currentStart = 0;
+  let currentEnd = 0;
+
+  for (const line of lines) {
+    // Zeitstempel-Zeile: "00:00:05.200 --> 00:00:08.400"
+    const timeMatch = line.match(/(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})/);
+    if (timeMatch) {
+      currentStart = parseVTTTime(timeMatch[1]);
+      currentEnd = parseVTTTime(timeMatch[2]);
+      continue;
+    }
+    // Sprecher-Zeile: "<v Speaker 1>Text hier"
+    const speakerMatch = line.match(/<v ([^>]+)>(.*)/);
+    if (speakerMatch) {
+      currentSpeaker = speakerMatch[1];
+      const text = speakerMatch[2].replace(/<\/v>/g, "").trim();
+      if (text) {
+        segmente.push({
+          sprecher: currentSpeaker,
+          von_ts: currentStart,
+          bis_ts: currentEnd,
+          text: text,
+        });
+        rohtext += `${currentSpeaker}: ${text}\n`;
+      }
+    }
+  }
+
+  return { rohtext: rohtext.trim(), segmente };
+}
+
+function parseVTTTime(ts: string): number {
+  const parts = ts.split(":");
+  return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
+}
+```
+
+### 11d. Neue Edge Function: `spiritus-teams-cron`
+
+Graph API Subscriptions laufen maximal 3 Tage. Braucht einen täglichen Cron:
+
+```
+verify_jwt: false (Cron)
+Auth: Interner Auth-Guard (wie db-backup)
+Trigger: Supabase Cron (täglich 03:00 UTC)
+```
+
+Aufgaben:
+1. Azure AD Token refreshen
+2. Bestehende Subscriptions prüfen und erneuern
+3. Neue Subscriptions erstellen falls keine aktiv
+
+```sql
+-- Cron einrichten (nach Deploy)
+SELECT cron.schedule(
+  'spiritus-teams-subscription-renewal',
+  '0 3 * * *',
+  $$SELECT net.http_post(
+    url := 'https://lwwagbkxeofahhwebkab.supabase.co/functions/v1/spiritus-teams-cron',
+    headers := '{"Authorization": "Bearer SERVICE_ROLE_KEY"}'::jsonb
+  )$$
+);
+```
+
+---
+
 ## Reihenfolge der Umsetzung
 
-1. **Zuerst DB-Migration** (Aufgabe 1 + 7a + 8a + 9a) — alle ALTER TABLE + CREATE TABLE in EINEM SQL-Script
-2. **Dann Edge Function** (Aufgabe 2 + 7c) — `spiritus-structure` Prompt-Update mit Lernfaktor
-3. **Dann HTML-Bereinigung** (Aufgabe 3) — Doppelte entfernen, Kontext-Filter + Notizfeld hinzufügen
-4. **Dann JS-Erweiterung** (Aufgabe 4 + 7b + 8b + 9b-e) — spiritus.js mit Kontext, Lernfaktor, Notizen, Todo-Flow
-5. **Dann MODUL_DATEN** (Aufgabe 5) — Status aktualisieren
-6. **Zuletzt CLAUDE.md** (Aufgabe 6) — Dokumentation
+### Phase 1: Backend (sofort machbar)
+1. **DB-Migration** (Aufgabe 1 + 7a + 8a + 9a) — alle ALTER TABLE + CREATE TABLE in EINEM SQL-Script
+2. **Edge Function `audio-transcribe`** auf AssemblyAI umbauen (Aufgabe im KI-Modelle-Abschnitt)
+3. **Edge Function `spiritus-analyze`** Prompt verifizieren (ist bereits auf 8-Felder, Aufgabe 2 + 7c)
+
+### Phase 2: Frontend (sofort machbar)
+4. **HTML-Bereinigung** (Aufgabe 3) — Doppelte entfernen, Kontext-Filter + Notizfeld
+5. **JS-Erweiterung** (Aufgabe 4 + 7b + 8b + 9b-e) — Kontext, Lernfaktor, Notizen, Todo-Flow
+6. **MODUL_DATEN** (Aufgabe 5) — Status aktualisieren
+
+### Phase 3: 3CX-Integration (braucht Server-Zugang — mit IT klären)
+7. **Edge Function `spiritus-ingest-3cx`** bauen + deployen (Aufgabe 10)
+8. Supabase Secret `SPIRITUS_3CX_SECRET` setzen
+9. Extension-Mapping befüllen (`spiritus_3cx_mapping`)
+10. `standorte.telefon_3cx` für alle Standorte pflegen
+11. 3CX Webhook-Plugin auf Server installieren + konfigurieren (IT-Dienstleister)
+12. End-to-End Test mit echtem Call
+
+### Phase 4: Teams-Integration (braucht Azure AD Admin — IT-Abteilung)
+13. Azure AD App Registration erstellen (Aufgabe 11a — Anleitung an IT geben)
+14. Supabase Secrets setzen (TEAMS_TENANT_ID, TEAMS_CLIENT_ID, TEAMS_CLIENT_SECRET)
+15. **Edge Function `spiritus-ingest-teams`** bauen + deployen (Aufgabe 11c)
+16. **Edge Function `spiritus-teams-cron`** bauen + deployen (Aufgabe 11d)
+17. Graph API Subscription erstellen
+18. End-to-End Test mit echtem Teams-Call
+
+### Phase 5: Realtime Pop-ups + Dokumentation
+19. Frontend: Supabase Realtime-Subscription auf `spiritus_live_calls` für Call-Trigger Pop-ups
+20. **CLAUDE.md** aktualisieren (Aufgabe 6)
 
 ---
 
