@@ -201,6 +201,7 @@ export async function renderKomm() {
     h += '<div class="flex-1 min-w-0"><div class="text-sm font-bold text-gray-800">Kommunikation</div>';
     h += '<div class="text-[10px] text-gray-400">vit:bikes Netzwerk</div></div>';
     h += '<button onclick="kommShowNotifSettings()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer bg-transparent border-none text-base" title="Einstellungen">⚙️</button>';
+    h += '<button onclick="kommGoView(\'team\',\'team\',\'Team\')" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer bg-transparent border-none text-base ' + (KOMM.view === 'team' ? 'bg-orange-50 text-[#EF7D00]' : '') + '" title="Team-Verzeichnis">👥</button>';
     h += '</div>';
 
     // ── Scrollable sidebar content ──
@@ -208,7 +209,6 @@ export async function renderKomm() {
 
     // Top Nav Items
     h += kommSidebarItem('news', '📢', 'News & Ankuendigungen', 0);
-    h += kommSidebarItem('team', '👥', 'Team', 0);
 
     h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
 
@@ -420,7 +420,8 @@ function kommRenderHeader() {
         h += '<span class="text-xl">📢</span><div class="flex-1"><div class="text-[15px] font-bold">News & Ankuendigungen</div><div class="text-[11px] text-gray-400">Wichtige Infos aus der Zentrale</div></div>';
         if (kommIsHQ()) h += '<button onclick="kommNewNews()" class="px-3.5 py-1.5 rounded-lg bg-[#EF7D00] text-white text-xs font-bold hover:opacity-90">+ Ankuendigung</button>';
     } else if (KOMM.view === 'team') {
-        h += '<span class="text-xl">👥</span><div class="flex-1"><div class="text-[15px] font-bold">Team-Verzeichnis</div><div class="text-[11px] text-gray-400">' + KOMM.allUsers.length + ' Mitarbeiter</div></div>';
+        var teamCount = kommIsHQ() ? KOMM.allUsers.length : KOMM.allUsers.filter(function(u){return !u.is_hq}).length;
+        h += '<span class="text-xl">👥</span><div class="flex-1"><div class="text-[15px] font-bold">Team-Verzeichnis</div><div class="text-[11px] text-gray-400">' + teamCount + ' Mitarbeiter</div></div>';
     } else if (KOMM.view === 'dm') {
         var initials = kommInitials(KOMM.activeName);
         h += '<div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style="background:' + kommAvatarColor(initials) + '">' + initials + '</div>';
@@ -807,9 +808,14 @@ async function kommLoadPinnwand(el) {
 
 // ========== TEAM VIEW ==========
 function kommLoadTeam(el) {
+    var isHQ = kommIsHQ();
+
+    // Filter: Partner sehen nur Partner-Mitarbeiter, HQ sieht alle
+    var visibleUsers = isHQ ? KOMM.allUsers : KOMM.allUsers.filter(function(u) { return !u.is_hq; });
+
     // Gruppiere nach Standort
     var standorte = {};
-    KOMM.allUsers.forEach(function(u) {
+    visibleUsers.forEach(function(u) {
         var sName;
         if (u.is_hq) {
             sName = 'vit:bikes Zentrale (HQ)';
@@ -822,7 +828,7 @@ function kommLoadTeam(el) {
         standorte[sName].push(u);
     });
 
-    var h = '<div class="max-w-[700px] mx-auto py-4 px-4">';
+    var h = '<div class="px-5 py-4">';
 
     // Sortiere: eigener Standort zuerst, dann HQ, dann Rest
     var myStandortName = _sbStandort() ? _sbStandort().name : '';
