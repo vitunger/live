@@ -15,10 +15,10 @@ function _showToast(m,t) { if (typeof window.showToast === 'function') window.sh
 // ══════════════════════════════════════════════════════
 // SHARED: Kategorie- & Inhaltsart-Definitionen
 // ══════════════════════════════════════════════════════
-var KAT_LABELS  = {allgemein:'Allgemein',verkauf:'Verkauf',einkauf:'Einkauf',marketing:'Marketing',zahlen:'Zahlen',team:'Team',it:'IT',werkstatt:'Werkstatt'};
-var KAT_ICONS   = {allgemein:'🏢',verkauf:'💰',einkauf:'🛒',marketing:'📣',zahlen:'📊',team:'👥',it:'🖥️',werkstatt:'🔧'};
-var KAT_COLORS  = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',einkauf:'bg-cyan-100 text-cyan-700',marketing:'bg-orange-100 text-orange-700',zahlen:'bg-green-100 text-green-700',team:'bg-purple-100 text-purple-700',it:'bg-slate-100 text-slate-700',werkstatt:'bg-yellow-100 text-yellow-700'};
-var KAT_ORDER   = ['allgemein','verkauf','einkauf','marketing','zahlen','team','it','werkstatt'];
+var KAT_LABELS  = {allgemein:'Allgemein',verkauf:'Verkauf',einkauf:'Einkauf',marketing:'Marketing',zahlen:'Zahlen',team:'Team',it:'IT',werkstatt:'Werkstatt',hiw:'HIW'};
+var KAT_ICONS   = {allgemein:'🏢',verkauf:'💰',einkauf:'🛒',marketing:'📣',zahlen:'📊',team:'👥',it:'🖥️',werkstatt:'🔧',hiw:'💻'};
+var KAT_COLORS  = {allgemein:'bg-gray-100 text-gray-700',verkauf:'bg-blue-100 text-blue-700',einkauf:'bg-cyan-100 text-cyan-700',marketing:'bg-orange-100 text-orange-700',zahlen:'bg-green-100 text-green-700',team:'bg-purple-100 text-purple-700',it:'bg-slate-100 text-slate-700',werkstatt:'bg-yellow-100 text-yellow-700',hiw:'bg-teal-100 text-teal-700'};
+var KAT_ORDER   = ['allgemein','verkauf','einkauf','marketing','zahlen','team','it','werkstatt','hiw'];
 
 var ART_LABELS  = {anleitung_cockpit:'Anleitung Cockpit',wissen:'Wissen',faq:'FAQ',training:'Training'};
 var ART_ICONS   = {anleitung_cockpit:'📱',wissen:'📚',faq:'❓',training:'🎓'};
