@@ -52,79 +52,110 @@ export async function billingApi(action, params) {
 
 export function initBillingModule() {
     // Hide deprecated tabs
-    var stratTab = document.querySelector('.billing-tab[data-tab="strategies"]');
-    if (stratTab) stratTab.style.display = 'none';
-    var toolsTab = document.querySelector('.billing-tab[data-tab="tools"]');
-    if (toolsTab) toolsTab.style.display = 'none';
-    // Populate month selector
-    var sel = document.getElementById('billingMonthSelect');
-    if (!sel) return;
+    ['strategies', 'tools'].forEach(function(t) {
+        var tab = document.querySelector('.billing-tab[data-tab="' + t + '"]');
+        if (tab) tab.style.display = 'none';
+    });
+    // Hide month selector (replaced by auto-detect)
+    var monthSel = document.getElementById('billingMonthSelect');
+    if (monthSel) monthSel.parentElement.style.display = 'none';
+    // Auto-detect current month
     var now = new Date();
-    sel.innerHTML = '';
-    for (var i = -2; i <= 3; i++) {
-        var d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        var val = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
-        var label = d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-        var opt = document.createElement('option');
-        opt.value = val; opt.textContent = label;
-        if (i === 0) opt.selected = true;
-        sel.appendChild(opt);
-    }
-    currentBillingMonth = sel.value;
-    // Only load if we have a valid session (prevent 401 spam in demo mode)
+    currentBillingMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+    // Only load if we have a valid session
     _sb().auth.getSession().then(function(s) {
         if (s && s.data && s.data.session) loadBillingOverview();
     });
 }
 
 export async function loadBillingOverview() {
-    var sel = document.getElementById('billingMonthSelect');
-    currentBillingMonth = sel ? sel.value : currentBillingMonth;
-    var tbl = document.getElementById('billingOverviewTable');
+    var container = document.getElementById('billingOverviewTable');
     var kpis = document.getElementById('billingKpis');
-    if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></td></tr>';
+    if (container) container.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-vit-orange"></div></td></tr>';
 
-    var result = await billingApi('billing-overview', { month: currentBillingMonth });
-    if (result.error) { if (tbl) tbl.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Fehler: ' + _escH(result.error) + '</td></tr>'; return; }
+    // Load ALL recent invoices (not just one month)
+    var { data: allInvoices, error: invErr } = await _sb().from('billing_invoices')
+        .select('id, standort_id, invoice_type, status, total, subtotal, period_start, period_end, invoice_number, billing_day, is_danger_override, due_date, created_at, finalized_at, paid_at, standort:standorte(name, billing_status)')
+        .order('created_at', { ascending: false }).limit(100);
+    
+    if (invErr) { if (container) container.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Fehler: ' + _escH(invErr.message) + '</td></tr>'; return; }
 
-    billingData.overview = result.standorte || [];
-    var ov = billingData.overview;
+    var invoices = allInvoices || [];
+    var openInvoices = invoices.filter(function(i) { return ['draft','review','approved','finalized','sent'].indexOf(i.status) >= 0; });
+    var recentClosed = invoices.filter(function(i) { return ['paid','credited','void'].indexOf(i.status) >= 0; }).slice(0, 15);
 
     // KPIs
-    var totalInvoiced = ov.reduce(function(s, x) { return s + (x.invoice ? x.invoice.total : 0); }, 0);
-    var drafts = ov.filter(function(x) { return x.invoice && x.invoice.status === 'draft'; }).length;
-    var paid = ov.filter(function(x) { return x.invoice && x.invoice.status === 'paid'; }).length;
-    var noStrategy = ov.filter(function(x) { return !x.strategy || !x.strategy.locked; }).length;
+    var openTotal = openInvoices.reduce(function(s, i) { return s + (i.total || 0); }, 0);
+    var now = new Date();
+    var overdue = openInvoices.filter(function(i) { return i.due_date && new Date(i.due_date) < now && i.status !== 'draft'; });
+    var overdueTotal = overdue.reduce(function(s, i) { return s + (i.total || 0); }, 0);
+    var thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    var paidThisMonth = invoices.filter(function(i) { return i.status === 'paid' && i.paid_at && i.paid_at.substring(0, 7) === thisMonth; });
+    var paidThisMonthTotal = paidThisMonth.reduce(function(s, i) { return s + (i.total || 0); }, 0);
 
     if (kpis) kpis.innerHTML =
-        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Rechnungsvolumen</p><p class="text-xl font-bold text-gray-800">' + _fmtEur(totalInvoiced) + '</p></div>' +
-        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Drafts</p><p class="text-xl font-bold text-yellow-600">' + drafts + '</p></div>' +
-        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt</p><p class="text-xl font-bold text-green-600">' + paid + '</p></div>' +
-        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Strategie fehlt</p><p class="text-xl font-bold ' + (noStrategy > 0 ? 'text-red-500' : 'text-green-600') + '">' + noStrategy + '</p></div>';
+        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Offen</p><p class="text-xl font-bold text-amber-600">' + _fmtEur(openTotal) + '</p><p class="text-xs text-gray-400">' + openInvoices.length + ' Rechnungen</p></div>' +
+        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">\u00dcberf\u00e4llig</p><p class="text-xl font-bold ' + (overdue.length > 0 ? 'text-red-600' : 'text-green-600') + '">' + _fmtEur(overdueTotal) + '</p><p class="text-xs text-gray-400">' + overdue.length + ' Rechnungen</p></div>' +
+        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Bezahlt (Monat)</p><p class="text-xl font-bold text-green-600">' + _fmtEur(paidThisMonthTotal) + '</p><p class="text-xs text-gray-400">' + paidThisMonth.length + ' Rechnungen</p></div>' +
+        '<div class="vit-card p-4"><p class="text-xs text-gray-400 uppercase">Aktion</p><button onclick="startBillingRun()" class="mt-1 px-4 py-2 bg-vit-orange text-white rounded-lg text-sm font-semibold hover:bg-orange-600 w-full">\u26a1 Abrechnungslauf starten</button></div>';
 
-    // Table
-    if (tbl) {
+    // Table: Open invoices
+    if (container) {
         var h = '';
-        ov.sort(function(a, b) { return a.name.localeCompare(b.name); }).forEach(function(st) {
-            var inv = st.invoice;
-            var strat = st.strategy;
-            var acct = st.billing_account;
-            h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="' + (inv ? "showBillingInvoice('" + inv.id + "')" : '') + '">';
-            h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(st.name) + (st.billing_status === 'danger' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white font-bold animate-pulse">VORKASSE</span>' : '') + (st.settlement_interval && st.settlement_interval !== 'semi_annual' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold">' + ({monthly:'mtl.',quarterly:'qtl.'}[st.settlement_interval] || '') + '</span>' : '') + '</p><p class="text-xs text-gray-400">' + _escH(st.inhaber_name || '') + '</p></td>';
-            h += '<td class="p-3 text-center">' + (strat && strat.locked ? '<span class="text-green-600 text-xs font-semibold">✅ Gesperrt</span>' : strat && strat.approved_at ? '<span class="text-blue-600 text-xs">✓ Genehmigt</span>' : '<span class="text-red-500 text-xs">❌ Fehlt</span>') + '</td>';
-            h += '<td class="p-3 text-center">' + (acct && acct.sepa_active ? '<span class="text-green-600 text-xs">✅</span>' : '<span class="text-gray-300 text-xs">—</span>') + '</td>';
-            var allInvs = st.invoices || (inv ? [inv] : []);
-            var totalAllInvs = allInvs.reduce(function(s,i){ return s + (i.total || 0); }, 0);
-            h += '<td class="p-3 text-right">' + (allInvs.length > 0 ? '<span class="font-semibold">' + _fmtEur(totalAllInvs) + '</span>' + (allInvs.length > 1 ? '<br><span class="text-[10px] text-gray-400">' + allInvs.length + ' Rechnungen</span>' : '') : '<span class="text-gray-300">—</span>') + '</td>';
-            h += '<td class="p-3 text-center">' + (inv ? billingStatusBadge(inv.status) : '<span class="text-gray-300 text-xs">Keine</span>') + '</td>';
-            h += '<td class="p-3 text-center">';
-            if (inv) h += '<button onclick="event.stopPropagation();showBillingInvoice(\'' + inv.id + '\')" class="text-xs text-vit-orange hover:underline">Details →</button>';
-            else h += '<span class="text-xs text-gray-400">—</span>';
-            h += '</td></tr>';
-        });
-        tbl.innerHTML = h || '<tr><td colspan="6" class="p-8 text-center text-gray-400">Keine Standorte gefunden</td></tr>';
+        if (openInvoices.length > 0) {
+            h += '<tr><td colspan="6" class="p-3 bg-amber-50 text-xs font-bold text-amber-700 uppercase">Offene Rechnungen (' + openInvoices.length + ')</td></tr>';
+            openInvoices.forEach(function(inv) {
+                var stdName = inv.standort ? inv.standort.name : '\u2014';
+                var isDanger = inv.standort && inv.standort.billing_status === 'danger';
+                var isOverdue = inv.due_date && new Date(inv.due_date) < now && inv.status !== 'draft';
+                h += '<tr class="border-t hover:bg-gray-50 cursor-pointer ' + (isOverdue ? 'bg-red-50' : '') + '" onclick="showBillingInvoice(\'' + inv.id + '\')">';
+                h += '<td class="p-3"><p class="font-semibold text-sm">' + _escH(stdName) + (isDanger ? ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>' : '') + '</p><p class="text-xs text-gray-400">' + (inv.invoice_number || '') + '</p></td>';
+                h += '<td class="p-3 text-xs text-gray-500">' + (inv.period_start || '') + '</td>';
+                h += '<td class="p-3 text-center">' + billingStatusBadge(inv.status) + '</td>';
+                h += '<td class="p-3 text-right font-semibold">' + _fmtEur(inv.total) + '</td>';
+                h += '<td class="p-3 text-xs text-gray-400">' + (inv.due_date ? new Date(inv.due_date).toLocaleDateString('de-DE') : '\u2014') + (isOverdue ? ' <span class="text-red-600 font-bold">\u00fcberf\u00e4llig!</span>' : '') + '</td>';
+                h += '<td class="p-3 text-center"><button onclick="event.stopPropagation();showBillingInvoice(\'' + inv.id + '\')" class="text-xs text-vit-orange hover:underline">Details \u2192</button></td>';
+                h += '</tr>';
+            });
+        }
+        
+        if (recentClosed.length > 0) {
+            h += '<tr><td colspan="6" class="p-3 bg-green-50 text-xs font-bold text-green-700 uppercase mt-4">K\u00fcrzlich abgeschlossen (' + recentClosed.length + ')</td></tr>';
+            recentClosed.forEach(function(inv) {
+                var stdName = inv.standort ? inv.standort.name : '\u2014';
+                h += '<tr class="border-t hover:bg-gray-50 cursor-pointer opacity-70" onclick="showBillingInvoice(\'' + inv.id + '\')">';
+                h += '<td class="p-3"><p class="text-sm">' + _escH(stdName) + '</p><p class="text-xs text-gray-400">' + (inv.invoice_number || '') + '</p></td>';
+                h += '<td class="p-3 text-xs text-gray-500">' + (inv.period_start || '') + '</td>';
+                h += '<td class="p-3 text-center">' + billingStatusBadge(inv.status) + '</td>';
+                h += '<td class="p-3 text-right font-semibold text-gray-500">' + _fmtEur(inv.total) + '</td>';
+                h += '<td class="p-3 text-xs text-gray-400">' + (inv.paid_at ? new Date(inv.paid_at).toLocaleDateString('de-DE') : '\u2014') + '</td>';
+                h += '<td class="p-3 text-center"><button onclick="event.stopPropagation();showBillingInvoice(\'' + inv.id + '\')" class="text-xs text-gray-400 hover:underline">Details \u2192</button></td>';
+                h += '</tr>';
+            });
+        }
+
+        if (invoices.length === 0) {
+            h = '<tr><td colspan="6" class="p-12 text-center"><p class="text-gray-400 text-lg mb-2">Noch keine Rechnungen</p><p class="text-sm text-gray-400">Starte den ersten Abrechnungslauf mit dem Button oben.</p></td></tr>';
+        }
+
+        container.innerHTML = h;
     }
 }
+
+// Start billing run for current month
+window.startBillingRun = async function() {
+    var now = new Date();
+    var month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
+    var monthLabel = now.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    if (!confirm('Abrechnungslauf f\u00fcr ' + monthLabel + ' starten?\n\nEs werden Rechnungsentw\u00fcrfe f\u00fcr alle Standorte mit gesperrter Jahresstrategie erstellt.')) return;
+    var btn = document.querySelector('[onclick="startBillingRun()"]');
+    if (btn) { btn.disabled = true; btn.textContent = '\u23f3 Generiere...'; }
+    var result = await billingApi('generate-monthly-drafts', { month: month });
+    if (btn) { btn.disabled = false; btn.textContent = '\u26a1 Abrechnungslauf starten'; }
+    if (result.error) { _showToast('Fehler: ' + result.error, 'error'); return; }
+    _showToast('\u2705 ' + (result.created || 0) + ' Rechnungen erstellt, ' + (result.skipped || 0) + ' \u00fcbersprungen', 'success');
+    loadBillingOverview();
+};
 
 export async function generateMonthlyDrafts() {
     if (!confirm('Monats-Drafts für ' + currentBillingMonth + ' generieren?\n\nDies erstellt Rechnungsentwürfe für alle Standorte mit gesperrter Jahresstrategie.')) return;
