@@ -166,14 +166,18 @@ async function loadFeedbackHints(sb: any, kontext: string): Promise<string> {
   try {
     const { data, error } = await sb
       .from('spiritus_ki_feedback')
-      .select('feedback_text, created_at')
+      .select('feld, ki_original, user_final, created_at')
       .eq('gespraechs_kontext', kontext)
       .order('created_at', { ascending: false })
       .limit(10);
 
     if (error || !data || data.length === 0) return '';
 
-    const hints = data.map((f: any, i: number) => `${i + 1}. ${f.feedback_text}`).join('\n');
+    const hints = data.map((f: any, i: number) => {
+      const orig = typeof f.ki_original === 'string' ? f.ki_original : JSON.stringify(f.ki_original);
+      const final_ = typeof f.user_final === 'string' ? f.user_final : JSON.stringify(f.user_final);
+      return `${i + 1}. Feld "${f.feld}": KI schrieb ${orig}, User korrigierte zu ${final_}`;
+    }).join('\n');
     return `\n\nLERNHINWEISE (aus frueherem Feedback zu ${kontext}-Gespraechen - beruecksichtige diese bei deiner Analyse):\n${hints}`;
   } catch (e) {
     console.error('Feedback-Hints laden fehlgeschlagen:', e);
@@ -317,12 +321,11 @@ export default async function handler(req: Request): Promise<Response> {
         standort_id:              standortId,
         standort_name:            standortName,
         call_date:                callDate,
-        call_type:                callType || 'Sonstiges',
+        call_type:                callType || 'beratung',
         duration_min:             durationMin || null,
         transcript_text:          transcript.slice(0, 50000),
         summary:                  extracted.summary || '',
         sentiment_level:          extracted.sentiment?.level || 'neutral',
-        call_themen:              extracted.tags || [],
         status:                   'review',
         // 8-Feld-Protokoll
         protokoll_anlass:         protokollAnlass,
@@ -356,11 +359,9 @@ export default async function handler(req: Request): Promise<Response> {
     (protokollSituation || []).forEach((s: string) => {
       extractions.push({
         transcript_id: transcriptId,
-        standort_id:   standortId,
         kategorie:     'problem',
         content:       s,
         confidence:    0.85,
-        keywords:      [],
         approved:      true,
       });
     });
@@ -370,11 +371,9 @@ export default async function handler(req: Request): Promise<Response> {
       const content = typeof m === 'string' ? m : (m.massnahme || JSON.stringify(m));
       extractions.push({
         transcript_id: transcriptId,
-        standort_id:   standortId,
         kategorie:     'massnahme',
         content:       content,
         confidence:    0.85,
-        keywords:      [],
         approved:      true,
       });
     });
@@ -383,7 +382,6 @@ export default async function handler(req: Request): Promise<Response> {
     if (extracted.sentiment) {
       extractions.push({
         transcript_id: transcriptId,
-        standort_id:   standortId,
         kategorie:     'sentiment',
         content:       extracted.sentiment.begruendung || '',
         confidence:    extracted.sentiment.confidence || 0.8,

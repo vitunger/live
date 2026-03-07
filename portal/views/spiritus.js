@@ -19,7 +19,7 @@ var SP = {
     filterStandort: '',
     filterStatus: '',
     filterKontext: 'alle',
-    uploadMode: 'audio',
+    uploadMode: 'text',
     uploadKontext: 'partner',
     processing: false,
     kiOriginals: {},
@@ -490,14 +490,14 @@ function spRenderUpload() {
     html += '<input id="spUpDuration" type="number" min="1" max="180" placeholder="z.B. 30" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Call-Typ</label>';
     html += '<select id="spUpType" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white">';
-    html += '<option>Check-in</option><option>Onboarding</option><option>Problem-Call</option><option>Strategiegespr\u00e4ch</option><option>Verhandlung</option><option>Sonstiges</option>';
+    html += '<option value="beratung">Beratung</option><option value="review">Review</option><option value="onboarding">Onboarding</option><option value="support">Support</option><option value="strategie">Strategie</option>';
     html += '</select></div>';
     html += '</div>';
 
-    // Mode toggle
+    // Mode toggle (Audio deaktiviert - Transkriptions-API noch nicht implementiert)
     html += '<div class="flex gap-2 mb-5">';
-    html += '<button onclick="spSetMode(\'audio\')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition cursor-pointer ' + (SP.uploadMode === 'audio' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">\uD83C\uDFB5 Audio-Datei</button>';
-    html += '<button onclick="spSetMode(\'text\')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition cursor-pointer ' + (SP.uploadMode === 'text'  ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200') + '">\uD83D\uDCDD Transkript-Text</button>';
+    html += '<button disabled title="Audio-Transkription kommt bald" class="flex-1 py-2 rounded-lg text-sm font-semibold bg-gray-50 text-gray-400 cursor-not-allowed">\uD83C\uDFB5 Audio-Datei (bald)</button>';
+    html += '<button onclick="spSetMode(\'text\')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition cursor-pointer bg-orange-500 text-white">\uD83D\uDCDD Transkript-Text</button>';
     html += '</div>';
 
     // Upload area
