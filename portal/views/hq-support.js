@@ -848,11 +848,9 @@ export async function hqSupSendAndClose(ticketId) {
         await _sb().from('support_tickets').update({ status: 'geloest', geloest_at: new Date().toISOString() }).eq('id', ticketId);
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'status_geaendert', alt_wert: 'offen', neu_wert: 'geloest' });
         _showToast('Gesendet & Ticket geschlossen', 'success');
-        var ov = document.getElementById('hqSupDetailOverlay');
-        if (ov) ov.remove();
+        hqSupCloseDetail();
         _hqSup.loaded = false;
-        await loadHqData();
-        renderHqSupport();
+        loadHqData().then(function() { renderHqSupport(); });
     } catch(err) { _showToast('Fehler beim Schließen: ' + (err.message||err), 'error'); }
 }
 
@@ -863,11 +861,11 @@ export async function hqSupReopenTicket(ticketId) {
         await _sb().from('support_tickets').update({ status: 'offen', wiedereroeffnet_at: new Date().toISOString() }).eq('id', ticketId);
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'wiedergeoeffnet', neu_wert: 'offen' });
         _showToast('Ticket wieder geöffnet', 'success');
-        var ov = document.getElementById('hqSupDetailOverlay');
-        if (ov) ov.remove();
+        hqSupCloseDetail();
         _hqSup.loaded = false;
         await loadHqData();
         renderHqSupport();
+        await hqSupOpenDetail(ticketId);
     } catch(err) { _showToast('Fehler: ' + (err.message||err), 'error'); }
 }
 
@@ -879,11 +877,9 @@ export async function hqSupDeleteTicket(ticketId) {
         await _sb().from('support_ticket_log').delete().eq('ticket_id', ticketId);
         await _sb().from('support_tickets').delete().eq('id', ticketId);
         _showToast('Ticket gelöscht', 'success');
-        var ov = document.getElementById('hqSupDetailOverlay');
-        if (ov) ov.remove();
+        hqSupCloseDetail();
         _hqSup.loaded = false;
-        await loadHqData();
-        renderHqSupport();
+        loadHqData().then(function() { renderHqSupport(); });
     } catch(err) { _showToast('Fehler beim Löschen: ' + (err.message||err), 'error'); }
 }
 
@@ -967,11 +963,9 @@ export async function hqSupUpdateAbteilung(ticketId) {
         await _sb().from('support_tickets').update({ abteilung: val }).eq('id', ticketId);
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'abteilung_geaendert', alt_wert: ticket ? ticket.abteilung : '', neu_wert: val });
         _showToast('Abteilung: ' + val, 'success');
-        var ov = document.getElementById('hqSupDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _hqSup.loaded = false;
-        await loadHqData();
-        renderHqSupport();
+        loadHqData().then(function() { renderHqSupport(); });
     } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
 }
 
@@ -986,11 +980,9 @@ export async function hqSupUpdateAbsender(ticketId) {
         var name = u ? ((u.vorname||'') + ' ' + (u.nachname||'')).trim() : val;
         await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'absender_geaendert', neu_wert: name });
         _showToast('Absender: ' + name, 'success');
-        var ov = document.getElementById('hqSupDetailOverlay');
-        if (ov) ov.remove();
+        // Hintergrund-Update (Modal bleibt offen)
         _hqSup.loaded = false;
-        await loadHqData();
-        renderHqSupport();
+        loadHqData().then(function() { renderHqSupport(); });
     } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
 }
 
