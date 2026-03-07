@@ -614,6 +614,18 @@ async function kommLoadChat(el) {
                     });
                 }
                 h += '<button onclick="kommShowEmojiPicker(\'' + m.id + '\')" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[11px] text-gray-400 cursor-pointer hover:bg-gray-50">😊</button>';
+                // Quote button (alle Posts)
+                h += '<button onclick="kommQuotePost(\'' + m.id + '\')" title="Zitieren" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[11px] text-gray-400 cursor-pointer hover:bg-gray-50">💬</button>';
+                // Edit/Delete menu (nur eigene Posts oder HQ)
+                var isOwnPost = m.user_id === uid;
+                if (isOwnPost || kommIsHQ()) {
+                    h += '<div class="relative inline-block">';
+                    h += '<button onclick="kommTogglePostMenu(event,\'' + m.id + '\')" title="Mehr" class="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-[13px] text-gray-400 cursor-pointer hover:bg-gray-50">⋯</button>';
+                    h += '<div id="postMenu_' + m.id + '" class="hidden absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[130px]">';
+                    if (isOwnPost) h += '<button onclick="kommEditPost(\'' + m.id + '\')" class="w-full text-left px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-2">✏️ Bearbeiten</button>';
+                    h += '<button onclick="kommDeletePost(\'' + m.id + '\')" class="w-full text-left px-4 py-2 text-[13px] text-red-600 hover:bg-red-50 flex items-center gap-2">🗑 Löschen</button>';
+                    h += '</div></div>';
+                }
                 h += '</div>';
                 h += '</div>';
 
@@ -2253,6 +2265,69 @@ window.kommInsertMention = function(userId, displayName) {
     if (dd) dd.classList.add('hidden');
 };
 
+// ─── Post Menü Toggle ────────────────────────────────────────────────────────
+window.kommTogglePostMenu = function(e, postId) {
+    e.stopPropagation();
+    document.querySelectorAll('[id^="postMenu_"]').forEach(function(el) {
+        if (el.id !== 'postMenu_' + postId) el.classList.add('hidden');
+    });
+    var menu = document.getElementById('postMenu_' + postId);
+    if (menu) menu.classList.toggle('hidden');
+    setTimeout(function() {
+        document.addEventListener('click', function closeMenu() {
+            if (menu) menu.classList.add('hidden');
+            document.removeEventListener('click', closeMenu);
+        });
+    }, 10);
+};
+
+// ─── Post Löschen ────────────────────────────────────────────────────────────
+window.kommDeletePost = async function(postId) {
+    if (!confirm('Beitrag wirklich löschen?')) return;
+    var menu = document.getElementById('postMenu_' + postId);
+    if (menu) menu.classList.add('hidden');
+    var r = await _sb().from('kanal_nachrichten').delete().eq('id', postId);
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    KOMM.messages = KOMM.messages.filter(function(m) { return m.id !== postId; });
+    _showToast('Beitrag gelöscht', 'success');
+    if (window.loadChat) window.loadChat();
+};
+
+// ─── Post Bearbeiten ─────────────────────────────────────────────────────────
+window.kommEditPost = async function(postId) {
+    var menu = document.getElementById('postMenu_' + postId);
+    if (menu) menu.classList.add('hidden');
+    var msg = KOMM.messages.find(function(m) { return m.id === postId; });
+    if (!msg) return;
+    var newText = prompt('Nachricht bearbeiten:', msg.nachricht || '');
+    if (newText === null) return;
+    newText = newText.trim();
+    if (!newText) return;
+    var r = await _sb().from('kanal_nachrichten').update({
+        nachricht: newText, updated_at: new Date().toISOString()
+    }).eq('id', postId);
+    if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
+    msg.nachricht = newText;
+    _showToast('Beitrag aktualisiert', 'success');
+    if (window.loadChat) window.loadChat();
+};
+
+// ─── Post Zitieren ───────────────────────────────────────────────────────────
+window.kommQuotePost = function(postId) {
+    var msg = KOMM.messages.find(function(m) { return m.id === postId; });
+    if (!msg) return;
+    var userName = msg.users ? kommUserName(msg.users) : 'Unbekannt';
+    var text = (msg.nachricht || '').substring(0, 200);
+    var quoteText = '> ' + userName + ': ' + text + '\n';
+    var replyInput = document.querySelector('.kommReplyInput[data-post-id="' + postId + '"]');
+    if (replyInput) {
+        replyInput.value = quoteText;
+        replyInput.focus();
+        replyInput.setSelectionRange(quoteText.length, quoteText.length);
+        _showToast('Zitat eingefügt – Antwort ergänzen', 'info');
+    }
+};
+
 // ========== Strangler Fig: window.* registration ==========
 const _exports = {
     renderKomm, showKommTab, loadKommSidebar, openKommConv, kommSendMessage,
@@ -2266,3 +2341,4 @@ const _exports = {
     filterCommunity, showForumDetail, submitForumPost, submitForumComment, showBrettDetail, submitBrettPost
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
+
