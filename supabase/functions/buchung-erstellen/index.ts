@@ -9,8 +9,29 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get('authorization') || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: 'Nicht authentifiziert' }), {
+      status: 401, headers: { ...CORS, 'Content-Type': 'application/json' }
+    })
+  }
 
   try {
     const sb = createClient(

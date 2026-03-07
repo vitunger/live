@@ -275,10 +275,31 @@ async function publishYouTube(post: Record<string, unknown>): Promise<string> {
   return result.id || "youtube_processing";
 }
 
+async function verifyJwt(req: Request): Promise<{ user_id: string } | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
+  const sb = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  );
+  const { data: { user }, error } = await sb.auth.getUser(token);
+  if (error || !user) return null;
+  return { user_id: user.id };
+}
+
 // ── Main Handler ──
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+
+  const auth = await verifyJwt(req);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
+      status: 401, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const { action, post_id } = await req.json();
