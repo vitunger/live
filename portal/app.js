@@ -155,6 +155,7 @@ const VIEW_MODULES = [
     'views/scompler.js',
     'views/hq-komm-settings.js',
 
+    'views/dev-selfheal.js',
     // Central render router - MUST be last (listens for vit:view-changed events)
     'views/view-router.js',
     
@@ -204,7 +205,7 @@ async function loadModules() {
 
 // ── Boot ──
 loadModules();
-/* pro deploy 1772542590 */
+/* pro deploy 1772886209 */
 
 
 
