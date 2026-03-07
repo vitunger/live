@@ -452,7 +452,7 @@ async function kommLoadChat(el) {
 
         var uid = _sbUser() ? _sbUser().id : null;
         var isDm = KOMM.view === 'dm';
-        var h = '<div class="max-w-[800px] mx-auto px-4 py-4">';
+        var h = '<div class="px-5 py-4">';
 
         // KI-Zusammenfassung Button (nur Channels)
         if (KOMM.view === 'channel' && KOMM.messages.length > 5) {
