@@ -34,7 +34,7 @@ var KOMM = {
     recInterval: null,
     mediaRecorder: null,
     audioChunks: [],
-    sidebarSections: { standort: true, hq: true, netzwerk: true, dms: true, gruppen: false }
+    sidebarSections: { standort: true, hq: false, netzwerk: true, dms: true, gruppen: false }
 };
 
 var KOMM_EMOJIS = ['👍','❤️','🔥','😂','🎉','✅','👀','🙏'];
@@ -204,7 +204,6 @@ export async function renderKomm() {
 
     // Top Nav Items
     h += kommSidebarItem('news', '📢', 'News & Ankuendigungen', 0);
-    h += kommSidebarItem('pinnwand', '📌', 'Pinnwand', 0);
     h += kommSidebarItem('team', '👥', 'Team', 0);
 
     h += '<div class="h-px bg-gray-100 mx-3 my-1"></div>';
@@ -373,8 +372,6 @@ function kommRenderHeader() {
     if (KOMM.view === 'news') {
         h += '<span class="text-xl">📢</span><div class="flex-1"><div class="text-[15px] font-bold">News & Ankuendigungen</div><div class="text-[11px] text-gray-400">Wichtige Infos aus der Zentrale</div></div>';
         if (kommIsHQ()) h += '<button onclick="kommNewNews()" class="px-3.5 py-1.5 rounded-lg bg-[#EF7D00] text-white text-xs font-bold hover:opacity-90">+ Ankuendigung</button>';
-    } else if (KOMM.view === 'pinnwand') {
-        h += '<span class="text-xl">📌</span><div class="flex-1"><div class="text-[15px] font-bold">Pinnwand</div><div class="text-[11px] text-gray-400">Social Feed — Erfolge, Fragen & Fotos</div></div>';
     } else if (KOMM.view === 'team') {
         h += '<span class="text-xl">👥</span><div class="flex-1"><div class="text-[15px] font-bold">Team-Verzeichnis</div><div class="text-[11px] text-gray-400">' + KOMM.allUsers.length + ' Mitarbeiter</div></div>';
     } else if (KOMM.view === 'dm') {
@@ -437,8 +434,6 @@ async function kommLoadContent() {
         await kommLoadChat(el);
     } else if (KOMM.view === 'news') {
         await kommLoadNews(el);
-    } else if (KOMM.view === 'pinnwand') {
-        await kommLoadPinnwand(el);
     } else if (KOMM.view === 'team') {
         kommLoadTeam(el);
     }
