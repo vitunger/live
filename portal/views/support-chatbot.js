@@ -236,6 +236,13 @@ window.addEventListener('vit:modules-ready', function() {
     setTimeout(initChatbot, 1500);
 });
 
+// Chatbot ausblenden wenn Kommunikation aktiv, sonst einblenden
+window.addEventListener('vit:view-changed', function(e) {
+    var widget = document.getElementById('supChatWidget');
+    if (!widget) return;
+    widget.style.display = (e.detail && e.detail.view === 'kommunikation') ? 'none' : '';
+});
+
 // ========== Strangler Fig: window.* registration ==========
 const _exports = {
     supChatToggle, supChatSend, supChatQuick, supChatCreateTicket
