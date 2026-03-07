@@ -719,3 +719,5 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 window.addWidget = addWidget;
 window.showDashboardTab = showDashboardTab;
 window.toggleDashboardEdit = toggleDashboardEdit;
+window.loadDashboardWidgets = loadDashboardWidgets;
+window.quickToggleTodo = quickToggleTodo;
