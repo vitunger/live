@@ -687,10 +687,22 @@ window.toggleUserProduct = async function(userId, productId, checked, assignId) 
         var r = await billingApi('assign-product-to-user', { user_id: userId, standort_id: usr?.standort_id, product_id: productId, assignment_type: 'user' });
         if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
         _showToast('Produkt zugewiesen', 'success');
+        // Trigger cost confirmation email
+        var { data: prod } = await _sb().from('billing_products').select('name, default_amount').eq('id', productId).single();
+        if (typeof sendCostConfirmation === 'function' && usr?.standort_id) {
+            sendCostConfirmation(usr.standort_id, 'product_assigned', 
+                (prod?.name || 'Produkt') + ' zugewiesen an Mitarbeiter',
+                { items: [{ name: prod?.name, cost: prod?.default_amount }] });
+        }
     } else if (assignId) {
         var r = await billingApi('remove-product-assignment', { assignment_id: assignId });
         if (r.error) { _showToast('Fehler: ' + r.error, 'error'); return; }
         _showToast('Produkt entfernt', 'success');
+        // Trigger cost confirmation email
+        if (typeof sendCostConfirmation === 'function') {
+            var { data: u2 } = await _sb().from('users').select('standort_id').eq('id', userId).single();
+            if (u2?.standort_id) sendCostConfirmation(u2.standort_id, 'product_removed', 'Produkt entfernt von Mitarbeiter', {});
+        }
     }
 };
 
