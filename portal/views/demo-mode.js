@@ -2,6 +2,9 @@
 // GF/Standort-Perspektive mit realistischen Fake-Daten
 // Standort: vit:bikes Grafrath | Inhaber: Sandra Engelmann
 
+// Global: prevent ReferenceError before demo mode is activated
+if (typeof DEMO_ACTIVE === 'undefined') var DEMO_ACTIVE = false;
+
 // Safe Helpers
 function _sb()       { return window.sb; }
 function _sbUser()   { return window.sbUser; }
