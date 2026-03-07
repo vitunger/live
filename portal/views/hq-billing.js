@@ -1659,7 +1659,7 @@ export async function loadBillingStandorte() {
         var isDanger = st.billing_status === 'danger';
         var hasLex = !!st.lexoffice_contact_id;
 
-        h += '<tr class="border-t hover:bg-gray-50">';
+        h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="toggleStandortDetail(\'' + st.id + '\',this)">';
         h += '<td class="p-3"><span class="font-semibold">' + _escH(st.name) + '</span>';
         if (isDanger) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>';
         if (!strat) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-yellow-100 text-yellow-700">keine Strategie</span>';
@@ -1700,6 +1700,110 @@ export async function loadBillingStandorte() {
     var kpi = document.getElementById('standorteTotalKpi');
     if (kpi) kpi.textContent = 'Gesamtvolumen: ' + _fmtEur(totalMonthly) + ' / Monat \u2248 ' + _fmtEur(totalMonthly * 12) + ' / Jahr';
 }
+
+
+// Show/hide Mitarbeiter detail row
+window.toggleStandortDetail = async function(stdId, row) {
+    var existingDetail = document.getElementById('stdDetail-' + stdId);
+    if (existingDetail) { existingDetail.remove(); return; }
+    
+    // Load users + their product assignments
+    var { data: users } = await _sb().from('users').select('id, name, email, is_active').eq('standort_id', stdId).eq('is_active', true).order('name');
+    var { data: assigns } = await _sb().from('billing_user_product_assignments').select('id, user_id, standort_id, assignment_type, cost_override, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('is_active', true);
+    var { data: confirmations } = await _sb().from('billing_cost_confirmations').select('id, status, change_description, confirmed_at, created_at').eq('standort_id', stdId).order('created_at', { ascending: false }).limit(5);
+    
+    var h = '<tr id="stdDetail-' + stdId + '"><td colspan="7" class="p-0">';
+    h += '<div class="bg-gray-50 border-t-2 border-vit-orange p-4">';
+    
+    // Mitarbeiter + deren Produkte
+    h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Mitarbeiter & Produkte</h4>';
+    if ((users || []).length > 0) {
+        h += '<table class="w-full text-xs mb-4"><thead class="text-gray-400"><tr><th class="text-left p-1.5">Mitarbeiter</th><th class="text-left p-1.5">Produkte</th><th class="text-right p-1.5">Kosten/Mt.</th></tr></thead><tbody>';
+        (users || []).forEach(function(u) {
+            var userAssigns = (assigns || []).filter(function(a) { return a.user_id === u.id && a.assignment_type === 'user'; });
+            var userCost = userAssigns.reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
+            h += '<tr class="border-t border-gray-200">';
+            h += '<td class="p-1.5 font-semibold">' + _escH(u.name) + '</td>';
+            h += '<td class="p-1.5">';
+            if (userAssigns.length > 0) {
+                userAssigns.forEach(function(a) {
+                    h += '<span class="inline-block text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 mr-1 mb-0.5">' + (a.product ? a.product.name : '?') + ' ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac</span>';
+                });
+            } else {
+                h += '<span class="text-gray-300">\u2014</span>';
+            }
+            h += '</td>';
+            h += '<td class="p-1.5 text-right font-semibold">' + (userCost > 0 ? _fmtEur(userCost) : '\u2014') + '</td>';
+            h += '</tr>';
+        });
+        h += '</tbody></table>';
+    } else {
+        h += '<p class="text-xs text-gray-400 mb-4">Keine Mitarbeiter zugeordnet</p>';
+    }
+    
+    // Standort-Produkte (nicht user-bezogen)
+    var stdAssigns = (assigns || []).filter(function(a) { return a.assignment_type === 'standort'; });
+    if (stdAssigns.length > 0) {
+        h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Standort-Produkte</h4>';
+        h += '<div class="flex flex-wrap gap-1 mb-4">';
+        stdAssigns.forEach(function(a) {
+            h += '<span class="text-[10px] px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200">' + (a.product ? a.product.name : '?') + ' ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac</span>';
+        });
+        h += '</div>';
+    }
+    
+    // Kostenbestätigungen
+    if ((confirmations || []).length > 0) {
+        h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Kostenbest\u00e4tigungen</h4>';
+        h += '<div class="space-y-1">';
+        (confirmations || []).forEach(function(c) {
+            var statusIcon = c.status === 'confirmed' ? '\u2705' : c.status === 'pending' ? '\u23f3' : c.status === 'expired' ? '\u274c' : '\u2014';
+            h += '<div class="flex items-center justify-between text-[10px] p-1.5 rounded bg-white">';
+            h += '<span>' + statusIcon + ' ' + _escH(c.change_description) + '</span>';
+            h += '<span class="text-gray-400">' + (c.confirmed_at ? new Date(c.confirmed_at).toLocaleDateString('de-DE') : new Date(c.created_at).toLocaleDateString('de-DE') + ' (offen)') + '</span>';
+            h += '</div>';
+        });
+        h += '</div>';
+    }
+    
+    h += '</div></td></tr>';
+    row.insertAdjacentHTML('afterend', h);
+};
+
+// Send cost confirmation email after product changes
+window.sendCostConfirmation = async function(stdId, changeType, changeDescription, changeDetails) {
+    // Get standort GF email
+    var { data: std } = await _sb().from('standorte').select('id, name, inhaber_name').eq('id', stdId).single();
+    var { data: gfUsers } = await _sb().from('users').select('email').eq('standort_id', stdId).eq('is_active', true);
+    // Find GF email (first user or inhaber)
+    var gfEmail = (gfUsers && gfUsers[0]) ? gfUsers[0].email : null;
+    if (!gfEmail) { console.warn('No GF email for standort', stdId); return; }
+    
+    // Calculate new monthly total
+    var { data: assigns } = await _sb().from('billing_user_product_assignments').select('cost_override, product:billing_products(default_amount)').eq('standort_id', stdId).eq('is_active', true);
+    var toolsCost = (assigns || []).reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
+    var newTotal = 800 + toolsCost; // Grundgebühr + Tools
+    
+    var session = await _sb().auth.getSession();
+    var token = session?.data?.session?.access_token;
+    if (!token) return;
+    
+    await fetch(SUPABASE_URL + '/functions/v1/billing-confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+            action: 'create-confirmation',
+            standort_id: stdId,
+            change_type: changeType,
+            change_description: changeDescription,
+            change_details: changeDetails,
+            email_to: gfEmail,
+            new_monthly_total: newTotal,
+            triggered_by: _sbProfile() ? _sbProfile().id : null
+        })
+    });
+    _showToast('Kostenbest\u00e4tigung an ' + gfEmail + ' gesendet', 'success');
+};
 
 // Strangler Fig
 const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements,loadBillingStandorte};
@@ -1766,7 +1870,7 @@ export async function loadBillingStandorte() {
         var isDanger = st.billing_status === 'danger';
         var hasLex = !!st.lexoffice_contact_id;
 
-        h += '<tr class="border-t hover:bg-gray-50">';
+        h += '<tr class="border-t hover:bg-gray-50 cursor-pointer" onclick="toggleStandortDetail(\'' + st.id + '\',this)">';
         h += '<td class="p-3"><span class="font-semibold">' + _escH(st.name) + '</span>';
         if (isDanger) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-red-500 text-white font-bold">VK</span>';
         if (!strat) h += ' <span class="text-[10px] px-1 py-0.5 rounded-full bg-yellow-100 text-yellow-700">keine Strategie</span>';
@@ -1807,6 +1911,110 @@ export async function loadBillingStandorte() {
     var kpi = document.getElementById('standorteTotalKpi');
     if (kpi) kpi.textContent = 'Gesamtvolumen: ' + _fmtEur(totalMonthly) + ' / Monat \u2248 ' + _fmtEur(totalMonthly * 12) + ' / Jahr';
 }
+
+
+// Show/hide Mitarbeiter detail row
+window.toggleStandortDetail = async function(stdId, row) {
+    var existingDetail = document.getElementById('stdDetail-' + stdId);
+    if (existingDetail) { existingDetail.remove(); return; }
+    
+    // Load users + their product assignments
+    var { data: users } = await _sb().from('users').select('id, name, email, is_active').eq('standort_id', stdId).eq('is_active', true).order('name');
+    var { data: assigns } = await _sb().from('billing_user_product_assignments').select('id, user_id, standort_id, assignment_type, cost_override, product:billing_products(name, default_amount)').eq('standort_id', stdId).eq('is_active', true);
+    var { data: confirmations } = await _sb().from('billing_cost_confirmations').select('id, status, change_description, confirmed_at, created_at').eq('standort_id', stdId).order('created_at', { ascending: false }).limit(5);
+    
+    var h = '<tr id="stdDetail-' + stdId + '"><td colspan="7" class="p-0">';
+    h += '<div class="bg-gray-50 border-t-2 border-vit-orange p-4">';
+    
+    // Mitarbeiter + deren Produkte
+    h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Mitarbeiter & Produkte</h4>';
+    if ((users || []).length > 0) {
+        h += '<table class="w-full text-xs mb-4"><thead class="text-gray-400"><tr><th class="text-left p-1.5">Mitarbeiter</th><th class="text-left p-1.5">Produkte</th><th class="text-right p-1.5">Kosten/Mt.</th></tr></thead><tbody>';
+        (users || []).forEach(function(u) {
+            var userAssigns = (assigns || []).filter(function(a) { return a.user_id === u.id && a.assignment_type === 'user'; });
+            var userCost = userAssigns.reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
+            h += '<tr class="border-t border-gray-200">';
+            h += '<td class="p-1.5 font-semibold">' + _escH(u.name) + '</td>';
+            h += '<td class="p-1.5">';
+            if (userAssigns.length > 0) {
+                userAssigns.forEach(function(a) {
+                    h += '<span class="inline-block text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 mr-1 mb-0.5">' + (a.product ? a.product.name : '?') + ' ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac</span>';
+                });
+            } else {
+                h += '<span class="text-gray-300">\u2014</span>';
+            }
+            h += '</td>';
+            h += '<td class="p-1.5 text-right font-semibold">' + (userCost > 0 ? _fmtEur(userCost) : '\u2014') + '</td>';
+            h += '</tr>';
+        });
+        h += '</tbody></table>';
+    } else {
+        h += '<p class="text-xs text-gray-400 mb-4">Keine Mitarbeiter zugeordnet</p>';
+    }
+    
+    // Standort-Produkte (nicht user-bezogen)
+    var stdAssigns = (assigns || []).filter(function(a) { return a.assignment_type === 'standort'; });
+    if (stdAssigns.length > 0) {
+        h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Standort-Produkte</h4>';
+        h += '<div class="flex flex-wrap gap-1 mb-4">';
+        stdAssigns.forEach(function(a) {
+            h += '<span class="text-[10px] px-2 py-1 rounded bg-green-50 text-green-700 border border-green-200">' + (a.product ? a.product.name : '?') + ' ' + Number(a.cost_override || (a.product ? a.product.default_amount : 0)).toLocaleString('de-DE') + ' \u20ac</span>';
+        });
+        h += '</div>';
+    }
+    
+    // Kostenbestätigungen
+    if ((confirmations || []).length > 0) {
+        h += '<h4 class="text-xs font-bold text-gray-600 uppercase mb-2">Kostenbest\u00e4tigungen</h4>';
+        h += '<div class="space-y-1">';
+        (confirmations || []).forEach(function(c) {
+            var statusIcon = c.status === 'confirmed' ? '\u2705' : c.status === 'pending' ? '\u23f3' : c.status === 'expired' ? '\u274c' : '\u2014';
+            h += '<div class="flex items-center justify-between text-[10px] p-1.5 rounded bg-white">';
+            h += '<span>' + statusIcon + ' ' + _escH(c.change_description) + '</span>';
+            h += '<span class="text-gray-400">' + (c.confirmed_at ? new Date(c.confirmed_at).toLocaleDateString('de-DE') : new Date(c.created_at).toLocaleDateString('de-DE') + ' (offen)') + '</span>';
+            h += '</div>';
+        });
+        h += '</div>';
+    }
+    
+    h += '</div></td></tr>';
+    row.insertAdjacentHTML('afterend', h);
+};
+
+// Send cost confirmation email after product changes
+window.sendCostConfirmation = async function(stdId, changeType, changeDescription, changeDetails) {
+    // Get standort GF email
+    var { data: std } = await _sb().from('standorte').select('id, name, inhaber_name').eq('id', stdId).single();
+    var { data: gfUsers } = await _sb().from('users').select('email').eq('standort_id', stdId).eq('is_active', true);
+    // Find GF email (first user or inhaber)
+    var gfEmail = (gfUsers && gfUsers[0]) ? gfUsers[0].email : null;
+    if (!gfEmail) { console.warn('No GF email for standort', stdId); return; }
+    
+    // Calculate new monthly total
+    var { data: assigns } = await _sb().from('billing_user_product_assignments').select('cost_override, product:billing_products(default_amount)').eq('standort_id', stdId).eq('is_active', true);
+    var toolsCost = (assigns || []).reduce(function(s, a) { return s + Number(a.cost_override || (a.product ? a.product.default_amount : 0) || 0); }, 0);
+    var newTotal = 800 + toolsCost; // Grundgebühr + Tools
+    
+    var session = await _sb().auth.getSession();
+    var token = session?.data?.session?.access_token;
+    if (!token) return;
+    
+    await fetch(SUPABASE_URL + '/functions/v1/billing-confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+            action: 'create-confirmation',
+            standort_id: stdId,
+            change_type: changeType,
+            change_description: changeDescription,
+            change_details: changeDetails,
+            email_to: gfEmail,
+            new_monthly_total: newTotal,
+            triggered_by: _sbProfile() ? _sbProfile().id : null
+        })
+    });
+    _showToast('Kostenbest\u00e4tigung an ' + gfEmail + ' gesendet', 'success');
+};
 
 // Strangler Fig: expose ALL functions to window for onclick handlers
 Object.keys(_exports).forEach(function(k) { window[k] = _exports[k]; });
