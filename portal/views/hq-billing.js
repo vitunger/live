@@ -51,9 +51,11 @@ export async function billingApi(action, params) {
 }
 
 export function initBillingModule() {
-    // Hide deprecated Strategien tab
+    // Hide deprecated tabs
     var stratTab = document.querySelector('.billing-tab[data-tab="strategies"]');
     if (stratTab) stratTab.style.display = 'none';
+    var toolsTab = document.querySelector('.billing-tab[data-tab="tools"]');
+    if (toolsTab) toolsTab.style.display = 'none';
     // Populate month selector
     var sel = document.getElementById('billingMonthSelect');
     if (!sel) return;
@@ -440,6 +442,9 @@ export async function loadBillingProducts() {
         h += '</div></div>';
         h += '<div class="flex items-center gap-4 text-xs text-gray-500">';
         h += '<span>' + _escH(p.name) + '</span>';
+        if (p.is_per_employee) h += '<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold">je Nutzer</span>';
+        else if (p.is_per_standort) h += '<span class="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-semibold">je Standort</span>';
+        else h += '<span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-semibold">System</span>';
         if (p.billing_day) h += '<span>Tag: ' + p.billing_day + '.</span>';
         if (p.payment_term_days) h += '<span>Frist: ' + p.payment_term_days + ' Tage</span>';
         h += '<span>' + p.billing_frequency + '</span>';
@@ -1501,6 +1506,15 @@ export async function generateSettlements(year, month) {
     loadBillingOverview();
 }
 window.generateSettlements = generateSettlements;
+
+window.deleteProduct = async function(productId, productName) {
+    if (!confirm('Produkt "' + productName + '" wirklich löschen?\n\nDas Produkt wird für neue Zuweisungen und Rechnungen nicht mehr verfügbar sein. Bestehende Rechnungen bleiben erhalten.')) return;
+    var { error } = await _sb().from('billing_products').update({ deleted_at: new Date().toISOString(), active: false }).eq('id', productId);
+    if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
+    _showToast('Produkt gelöscht', 'success');
+    loadBillingProducts();
+};
+
 
 // Strangler Fig
 const _exports = {fmtEur,fmtDate,billingStatusBadge,billingApi,initBillingModule,loadBillingOverview,generateMonthlyDrafts,showQuarterlySettlementDialog,generateQuarterlySettlement,finalizeAllReady,showBillingInvoice,finalizeInvoice,markInvoicePaid,editLineItem,removeLineItem,addManualLineItem,showBillingTab,loadAllInvoices,loadAllStrategies,approveStrategy,lockStrategy,loadBillingProducts,loadBillingTools,toggleApprovalMode,updateApprovalModeUI,approvalBulkAction,loadApprovalQueue,approvalAction,generateAllDrafts,showStBillingTab,initStandortBilling,loadStandortInvoices,showStandortInvoiceDetail,loadStandortStrategy,submitStandortStrategy,loadStandortCosts,downloadInvoicePdf,loadStandortPayments,loadBillingSchedules,generateSettlements};
