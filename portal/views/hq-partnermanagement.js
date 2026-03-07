@@ -113,7 +113,6 @@ function pmRenderUebersicht(el) {
     html += '<div class="text-xs text-gray-500">';
     if (p.inhaber_name) html += _escH(p.inhaber_name) + ' &middot; ';
     if (p.region) html += _escH(p.region);
-    if (p.is_premium) html += ' &middot; <span class="text-orange-500 font-semibold">Premium</span>';
     html += '</div></div></div>';
 
     // Indikatoren
@@ -311,7 +310,6 @@ function pmRenderStammdaten(el) {
   html += pmInfoRow('Inhaber', s.inhaber_name);
   html += pmInfoRow('Region', s.region);
   html += pmInfoRow('Status', s.status);
-  html += pmInfoRow('Premium', s.is_premium ? 'Ja' : 'Nein');
   html += pmInfoRow('Billing', s.billing_status);
   html += '</div>';
 
