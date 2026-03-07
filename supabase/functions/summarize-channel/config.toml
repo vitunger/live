@@ -1,0 +1,2 @@
+[functions.summarize-channel]
+verify_jwt = false

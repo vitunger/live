@@ -1,7 +1,7 @@
 # CLAUDE.md – vit:bikes Partner Portal
 
 > Technische Arbeitsanweisung fuer KI-Agenten (Claude, Claude Code, Windsurf, Cursor).
-> Letzte Aktualisierung: 06.03.2026 (KI-Kosten Dashboard in Entwicklung-Tab integriert)
+> Letzte Aktualisierung: 07.03.2026 (Kommunikation v4.0 – Quiply-Ersatz)
 > **KI-Kosten Dashboard (HQ-only):** Modul `views/nutzung.js` zeigt KI-API-Kosten als eigener Tab "⚡ KI-Kosten" im Entwicklung-Modul (neben dem bestehenden "📊 Nutzung"-Tab fuer Portal-Nutzung). Container: `entwKiKostenContent`. Tabelle `api_usage_log` protokolliert jeden externen KI-API-Call (Anthropic + OpenAI). Edge Functions `dev-ki-analyse` + `spiritus-analyze` loggen automatisch. Edge Function `anthropic-usage` (JWT-secured) holt Live-Daten von der Anthropic Admin API. Edge Function `cockpit-costs` (JWT-secured) sammelt Betriebskosten aller Provider: Vercel Billing API (Secret: VERCEL_TOKEN + VERCEL_TEAM_ID), Supabase (Fixkosten $25/Mo Pro Plan), Anthropic Admin API, Resend. Liefert Gesamtkosten, pro-Nutzer-Kosten, Provider-Breakdown. Neue Tabelle `cockpit_savings` (RLS: HQ-only) fuer manuell eingetragene eingesparte Tool-Kosten (Name + EUR/Monat). Dashboard zeigt Kosten vs. Einsparungen Gegenuberstellung (Usage + Cost Report). Erfordert Supabase Secret `ANTHROPIC_ADMIN_KEY` (Admin API Key aus console.anthropic.com). **WICHTIG: Jede neue Edge Function, die eine KI-API (Anthropic, OpenAI, etc.) aufruft, MUSS nach jedem Call in `api_usage_log` loggen (provider, model, input_tokens, output_tokens, duration_ms, success).** Aufruf: `showEntwicklungTab('ki_kosten')` → `renderApiNutzung('entwKiKostenContent')`. Tab `nutzung` bleibt fuer Portal-Nutzung (`renderEntwNutzung`).
 > Verkaufsmodul 9 Fixes deployed: (1) Verkaeufer-Ranking dynamisch aus DB in Auswertung, (2) Monatsziel dynamisch aus jahresplaene statt hardcoded, (3) Verkaeufer-Dropdown dynamisch statt hardcoded Sandra/Thomas/Dirk/Max, (4) Plan-Spalte + Diff% + Plan-Linie im Auswertungs-Chart, (5) openVerkaufEntryModal korrekt in plan-ist.js (verifiziert), (6) Tab-Reihenfolge: Pipeline=default (JS an HTML angeglichen), (7) _escH Helper sauber definiert als Fallback, (8) online-Feld konsistent behandelt, (9) Error-States bei DB-Fehlern
 > KI Release-Vorschlag verbessert: liest jetzt Git-Commits (14 Tage via GitHub API), vollständige CLAUDE.md und Submissions als Kontext. Neue Edge Function `dev-ki-analyse` im Repo (supabase/functions/dev-ki-analyse/index.ts) mit modes: release_notes + prioritize.
@@ -404,3 +404,52 @@ CREATE INDEX IF NOT EXISTS idx_scompler_posts_platform_post_id ON scompler_posts
 npx supabase functions deploy social-publish --project-ref lwwagbkxeofahhwebkab --no-verify-jwt
 npx supabase functions deploy social-import --project-ref lwwagbkxeofahhwebkab --no-verify-jwt
 ```
+
+## Kommunikation v4.0 – Quiply-Ersatz (Maerz 2026)
+
+### Architektur
+- **Modul:** `portal/views/kommunikation.js` (1306 Zeilen, komplett dynamisch gerendert)
+- **Alte HTML in index.html entfernt** – kommunikationView + forumView sind leere Container
+- **View-Router:** `kommunikation` → `showKommTab('chat')` → mapped intern zu `'channel'`
+- **Realtime:** `_sb().channel(...)` Subscription fuer Live-Chat-Nachrichten
+
+### 7 Views
+| View | Funktion | Beschreibung |
+|------|----------|-------------|
+| `channel` | Standort/Netzwerk-Kanaele | Teams-Style Chat mit Sidebar |
+| `dm` | Direktnachrichten | 1:1 Chat zwischen Usern |
+| `group` | Gruppen-Chat | Mehrere Teilnehmer |
+| `news` | Ankuendigungen | HQ-News mit Pflicht-Lesebestaetigung |
+| `pinnwand` | Social Feed | Posts mit Likes + Kommentare |
+| `team` | Team-Verzeichnis | Gruppiert nach Standort, DM-Button |
+| `admin` | Kanal-Verwaltung | HQ-only: Channels erstellen, Rechte-Tabelle |
+
+### Neue DB-Tabellen
+| Tabelle | Zweck |
+|---------|-------|
+| `komm_reactions` | Emoji-Reaktionen auf Nachrichten |
+| `komm_attachments` | Datei-Anhaenge (Bilder, PDFs, Audio) |
+| `pinnwand_posts` | Pinnwand-Beitraege mit Likes |
+| `pinnwand_kommentare` | Kommentare zu Pinnwand-Posts |
+
+### Erweiterte Tabellen
+- `chat_kanaele`: +typ, +icon, +ist_netzwerk, +letzte_nachricht_at, +letzte_nachricht_vorschau, +sichtbar_fuer_rollen
+- `chat_nachrichten`: +reply_to, +bearbeitet_at, +hat_attachment, +gelesen_von
+- `ankuendigungen`: +ist_pflicht, +pinned, +hat_attachment, +kommentar_count, +likes_count
+
+### Storage
+- Bucket `komm-attachments` (privat, 10MB Limit, RLS fuer authentifizierte User)
+
+### Edge Functions
+- `summarize-channel` – KI-Zusammenfassung der letzten 50 Nachrichten eines Kanals (Claude Sonnet)
+
+### Seed-Daten
+7 Netzwerk-Kanaele: News vit:bikes Gesamt, NEWS Lizenzpartner, Marketing, Werkstatt Gesamt, Verkauf, TeileBoerse, IT - Info Channel, Content Channel
+
+### Features
+- Emoji-Reaktionen (Toggle-Pattern via `komm_reactions`)
+- Datei-Upload via Supabase Storage
+- Sprachnachrichten via MediaRecorder API (WebM/Opus, max 5 Min)
+- Pflicht-Lesebestaetigung fuer HQ-Ankuendigungen
+- KI-Zusammenfassung pro Kanal
+- Legacy-Compat Exports: `showKommTab, loadKommSidebar, openKommConv, kommSendMessage, filterKommSidebar, filterCommunity, showForumDetail, submitForumPost, submitForumComment, showBrettDetail, submitBrettPost`
