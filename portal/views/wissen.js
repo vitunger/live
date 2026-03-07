@@ -90,6 +90,9 @@ export async function renderWissenGlobal() {
     var alleArtikel = await _ladeWissenArtikel();
     await _ladeGelesenStatus();
 
+    // Bereich-Filter aktualisieren (dynamisch aus DB)
+    if (typeof window.renderWissenBereichFilter === 'function') window.renderWissenBereichFilter();
+
     // Filter: Kategorie
     var items = alleArtikel;
     if (currentWissenBereich !== 'all') {
@@ -603,14 +606,14 @@ window.filterHqWissen = function() { renderHqWissen(); };
 // ══════════════════════════════════════════════════════
 // Event Hooks + Cross-Modul Integration
 // ══════════════════════════════════════════════════════
+// Register view-changed listener (works even if vit:modules-ready already fired)
+document.addEventListener('vit:view-changed', function(e) {
+    if (e && e.detail && e.detail.view === 'wissen') {
+        renderWissenGlobal();
+    }
+});
+
 window.addEventListener('vit:modules-ready', function() {
-    // Partner Wissen-View
-    document.addEventListener('vit:view-changed', function(e) {
-        if (e && e.detail && e.detail.view === 'wissen') {
-            if (typeof window.renderWissenBereichFilter === 'function') window.renderWissenBereichFilter();
-            renderWissenGlobal();
-        }
-    });
 
     // Cross-Modul: Wrap showVerkaufTab
     if (typeof window.showVerkaufTab === 'function') {
