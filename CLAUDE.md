@@ -585,3 +585,8 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
   - Scope-Badges in Produkte-Tab: "je Nutzer" (lila), "je Standort" (grün), "System" (grau)
 - **Soft-Delete für Produkte:** `billing_products.deleted_at` – Produkt wird deaktiviert aber für historische Rechnungen erhalten
 - **Tools-Tab entfernt** aus HQ-Billing (ersetzt durch Zuweisungen in Kommandozentrale)
+- **Billing Übersicht umgebaut (März 2026):** Kein Monats-Dropdown mehr. Stattdessen:
+  - "Abrechnungslauf starten"-Button (nimmt automatisch aktuellen Monat)
+  - KPIs: Offenes Volumen, Überfällig, Bezahlt (Monat)
+  - Tabelle: Offene Rechnungen (gelb) + kürzlich abgeschlossene (grün)
+  - Direkt-Query auf billing_invoices statt billing-overview Edge Function Action
