@@ -50,11 +50,27 @@ function slaInfo(ticket) {
 // ========== Daten laden ==========
 async function loadHqData() {
     try {
+        // HQ-Rollen des eingeloggten Users laden für Abteilungs-Filter
+        var profile = window.sbProfile || {};
+        var rollenResp = await _sb().from('user_rollen').select('rolle_id, rollen:rolle_id(name)').eq('user_id', profile.id || '');
+        var hqRollen = (rollenResp.data || []).map(function(r) { return r.rollen ? r.rollen.name : ''; }).filter(Boolean);
+        _hqSup.hqUserRollen = hqRollen;
+        var isAdmin = hqRollen.indexOf('hq_gf') !== -1 || hqRollen.indexOf('hq') !== -1 || hqRollen.indexOf('owner') !== -1;
+
+        var ticketQuery = _sb().from('support_tickets')
+            .select('*, users:erstellt_von(name, vorname, nachname, standort_id), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
+            .eq('zoho_fallback', false)
+            .order('created_at', {ascending: false});
+
+        // Abteilungs-Filter: nur eigene Abteilung(en) wenn nicht Admin
+        if (!isAdmin && hqRollen.length > 0) {
+            var abteilungen = hqRollen.filter(function(r) { return r.startsWith('hq_'); }).map(function(r) { return r.replace('hq_', ''); });
+            if (abteilungen.length > 0) ticketQuery = ticketQuery.in('abteilung', abteilungen);
+        }
+
         var [tResp, uResp, cResp, wResp] = await Promise.all([
-            _sb().from('support_tickets')
-                .select('*, users:erstellt_von(name, vorname, nachname, standort_id), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
-                .order('created_at', {ascending: false}),
-            _sb().from('users').select('id, name, vorname, nachname').eq('is_hq', true).eq('status', 'aktiv'),
+            ticketQuery,
+            _sb().from('users').select('id, email, name, vorname, nachname').eq('is_hq', true).eq('status', 'aktiv'),
             _sb().from('support_canned_responses').select('*'),
             _sb().from('support_wissensartikel').select('*').order('created_at', {ascending: false})
         ]);
@@ -398,6 +414,28 @@ export async function hqSupOpenDetail(ticketId) {
         html += '<button onclick="hqSupUpdatePrio(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
         html += '</div>';
 
+        // Abteilung
+        html += '<div class="flex items-center gap-1">';
+        html += '<label class="text-xs text-gray-500">Abt.:</label>';
+        html += '<select id="hqSupDetailAbteilung" class="text-xs border border-gray-300 rounded px-2 py-1">';
+        html += '<option value="gf"' + (t.abteilung === "gf" ? ' selected' : '') + '>Geschäftsführung</option>';html += '<option value="sales"' + (t.abteilung === "sales" ? ' selected' : '') + '>Sales</option>';html += '<option value="marketing"' + (t.abteilung === "marketing" ? ' selected' : '') + '>Marketing</option>';html += '<option value="einkauf"' + (t.abteilung === "einkauf" ? ' selected' : '') + '>Einkauf</option>';html += '<option value="support"' + (t.abteilung === "support" ? ' selected' : '') + '>Support</option>';html += '<option value="akademie"' + (t.abteilung === "akademie" ? ' selected' : '') + '>Akademie</option>';html += '<option value="hr"' + (t.abteilung === "hr" ? ' selected' : '') + '>HR</option>';html += '<option value="it"' + (t.abteilung === "it" ? ' selected' : '') + '>IT</option>';
+        html += '</select>';
+        html += '<button onclick="hqSupUpdateAbteilung(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Setzen</button>';
+        html += '</div>';
+
+        // Absender
+        html += '<div class="flex items-center gap-1">';
+        html += '<label class="text-xs text-gray-500">Absender:</label>';
+        html += '<select id="hqSupDetailAbsender" class="text-xs border border-gray-300 rounded px-2 py-1 max-w-[180px]">';
+        html += '<option value="">Unbekannt</option>';
+        _hqSup.hqUsers.forEach(function(u) {
+            var name = ((u.vorname || '') + ' ' + (u.nachname || '')).trim() || u.name || '';
+            html += '<option value="' + u.id + '"' + (t.erstellt_von === u.id ? ' selected' : '') + '>' + _escH(name) + '</option>';
+        });
+        html += '</select>';
+        html += '<button onclick="hqSupUpdateAbsender(\'' + ticketId + '\')" class="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">OK</button>';
+        html += '</div>';
+
         // KI-Antwort
         html += '<button onclick="hqSupKiAntwort(\'' + ticketId + '\')" class="text-xs px-3 py-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 ml-auto">🤖 KI-Antwort</button>';
         html += '</div>';
@@ -698,6 +736,43 @@ export function hqSupInsertCanned() {
     }
 }
 
+// ========== Abteilung ändern ==========
+export async function hqSupUpdateAbteilung(ticketId) {
+    var val = (document.getElementById('hqSupDetailAbteilung') || {}).value;
+    if (!val) return;
+    try {
+        var user = _sbUser();
+        var ticket = _hqSup.tickets.find(function(t) { return t.id === ticketId; });
+        await _sb().from('support_tickets').update({ abteilung: val }).eq('id', ticketId);
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'abteilung_geaendert', alt_wert: ticket ? ticket.abteilung : '', neu_wert: val });
+        _showToast('Abteilung: ' + val, 'success');
+        var ov = document.getElementById('hqSupDetailOverlay');
+        if (ov) ov.remove();
+        _hqSup.loaded = false;
+        await loadHqData();
+        renderHqSupport();
+    } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
+}
+
+// ========== Absender ändern ==========
+export async function hqSupUpdateAbsender(ticketId) {
+    var val = (document.getElementById('hqSupDetailAbsender') || {}).value || null;
+    if (!val) return;
+    try {
+        var user = _sbUser();
+        await _sb().from('support_tickets').update({ erstellt_von: val, zoho_fallback: false }).eq('id', ticketId);
+        var u = _hqSup.hqUsers.find(function(u) { return u.id === val; });
+        var name = u ? ((u.vorname||'') + ' ' + (u.nachname||'')).trim() : val;
+        await _sb().from('support_ticket_log').insert({ ticket_id: ticketId, user_id: user ? user.id : null, aktion: 'absender_geaendert', neu_wert: name });
+        _showToast('Absender: ' + name, 'success');
+        var ov = document.getElementById('hqSupDetailOverlay');
+        if (ov) ov.remove();
+        _hqSup.loaded = false;
+        await loadHqData();
+        renderHqSupport();
+    } catch(err) { _showToast('Fehler: ' + (err.message || err), 'error'); }
+}
+
 // ========== KI-Antwort ==========
 export async function hqSupKiAntwort(ticketId) {
     try {
@@ -977,6 +1052,7 @@ const _exports = {
     renderHqSupport, hqSupShowTab, hqSupFilterChanged, hqSupOpenDetail, hqSupCloseDetail,
     hqSupUpdateStatus, hqSupUpdateAssignee, hqSupUpdatePrio, hqSupSendKommentar,
     hqSupInsertCanned, hqSupKiAntwort, hqSupDownload,
+    hqSupUpdateAbteilung, hqSupUpdateAbsender,
     hqSupCreateTicket, hqSupSubmitNewTicket,
     hqSupArtikelStatus, hqSupNewArtikel, hqSupSaveArtikel, hqSupEditArtikel, hqSupUpdateArtikel
 };
