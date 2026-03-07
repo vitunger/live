@@ -35,7 +35,7 @@ export function showVerkaufTab(tabName) {
     if(tabName==='pipeline') mountReactPipeline();
     if(tabName==='woche') { loadMonthGoal(); loadWeekFromDb(); }
     if(tabName==='auswertung') renderJahresTabelle();
-    if(tabName==='vkWissen') loadVerkaufWissen();
+    // vkWissen: handled by wissen.js cross-modul hook
 }
 
 // ── Legacy redirect: showNewLeadModal → React quickCreate ──
@@ -459,50 +459,7 @@ function renderSellerRanking(sellerData) {
 }
 
 // ── Verkauf Wissen Tab (from wissen_artikel DB) ────
-var wissenLoaded = false;
-export async function loadVerkaufWissen() {
-    var el = document.getElementById('vkTabVkWissen');
-    if(!el || wissenLoaded) return;
-    wissenLoaded = true;
-    el.innerHTML = '<div class="text-center py-8 text-gray-400"><p class="text-lg mb-2">\u2615</p><p class="text-sm">Lade Wissen...</p></div>';
-    try {
-        var resp = await _sb().from('wissen_artikel').select('id, titel, inhalt, kategorie, tags, gepinnt, views, created_at')
-            .eq('kategorie', 'verkauf').order('gepinnt', { ascending: false }).order('created_at', { ascending: false });
-        if(resp.error) throw resp.error;
-        var articles = resp.data || [];
-        if(articles.length === 0) {
-            el.innerHTML = '<div class="text-center py-12 text-gray-400"><p class="text-4xl mb-2">\uD83D\uDCDA</p><p>Noch keine Wissensartikel f\u00fcr den Verkauf.</p></div>';
-            return;
-        }
-        var html = '<div class="space-y-4">';
-        articles.forEach(function(a) {
-            var pinBadge = a.gepinnt ? '<span class="text-[10px] px-2 py-0.5 bg-orange-100 text-vit-orange rounded-full font-bold ml-2">\uD83D\uDCCC Angepinnt</span>' : '';
-            var date = new Date(a.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' });
-            html += '<div class="vit-card overflow-hidden">';
-            html += '<div class="p-4 cursor-pointer hover:bg-gray-50 transition" onclick="var c=this.nextElementSibling;c.style.display=c.style.display===\'none\'?\'block\':\'none\'">';
-            html += '<div class="flex items-center justify-between">';
-            html += '<div class="flex items-center"><span class="text-lg mr-3">\uD83D\uDCDA</span><h3 class="font-semibold text-gray-800 text-sm">'+_escH(a.titel)+'</h3>'+pinBadge+'</div>';
-            html += '<span class="text-xs text-gray-400">'+date+'</span>';
-            html += '</div>';
-            if(a.tags && a.tags.length) {
-                html += '<div class="flex gap-1 mt-2">';
-                a.tags.forEach(function(t) { html += '<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">'+_escH(t)+'</span>'; });
-                html += '</div>';
-            }
-            html += '</div>';
-            html += '<div style="display:none" class="px-4 pb-4 border-t border-gray-100 pt-3">';
-            html += '<div class="prose prose-sm max-w-none">'+a.inhalt+'</div>';
-            html += '</div>';
-            html += '</div>';
-        });
-        html += '</div>';
-        el.innerHTML = html;
-    } catch(e) {
-        console.warn('[Verkauf] Wissen load error:', e);
-        el.innerHTML = '<div class="text-center py-8 text-red-400"><p>\u26A0\uFE0F Fehler beim Laden der Wissensartikel.</p></div>';
-    }
-}
 
 // ── Strangler Fig: Window Exports ──────────────────
-const _exports = {showNewLeadModal,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb,loadMonthGoal,loadVerkaufWissen};
+const _exports = {showNewLeadModal,renderJahresTabelle,showVerkaufTab,changeWeek,getMonday,getKW,loadWeekFromDb,renderWeekViewFromDb,loadMonthGoal};
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
