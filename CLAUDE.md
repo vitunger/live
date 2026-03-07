@@ -590,3 +590,18 @@ Default: `wissen`. Werden als Sub-Tabs in Cross-Modul-Ansichten angezeigt.
   - KPIs: Offenes Volumen, Überfällig, Bezahlt (Monat)
   - Tabelle: Offene Rechnungen (gelb) + kürzlich abgeschlossene (grün)
   - Direkt-Query auf billing_invoices statt billing-overview Edge Function Action
+
+### Billing Automatisierung (März 2026)
+- **Edge Function `billing-cron` (verify_jwt: false, eigener Auth-Guard):**
+  - Wird täglich aufgerufen (Supabase Cron / externer Trigger)
+  - Prüft für jeden Standort + Schedule: Ist heute Abrechnungstag? → Erstellt Draft automatisch
+  - Prüft Settlement-Intervall pro Standort: Ist heute Settlement-Tag? → Erstellt Settlement-Draft
+  - Protokolliert in `billing_cron_log` (run_date, drafts_created, settlements_created, errors)
+  - Demo-Standorte werden ausgeschlossen
+- **LexOffice-Kontakt-Matching im Standort-Detail-Modal:**
+  - "Vorschlag suchen": Sucht in LexOffice nach dem Standort-Namen, zeigt Treffer zum Verknüpfen
+  - "Neu erstellen": Erstellt einen neuen Kontakt in LexOffice aus Standort-Daten
+  - "Manuell eingeben": Kontakt-ID direkt eintragen
+  - `standorte.lexoffice_contact_id` + `lexoffice_contact_name` direkt auf der Tabelle
+- **Auto-Push nach Freigabe:** Wenn eine Rechnung approved wird, wird sie automatisch an LexOffice gesendet
+- **Billing Übersicht:** "Manueller Lauf"-Button + Cron-Status-Anzeige (letzter Lauf, Ergebnis)
