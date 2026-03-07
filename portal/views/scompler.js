@@ -123,7 +123,12 @@
         var container = document.getElementById('scomplerContent');
         if (!container) return;
         var profile = _sbProfile();
-        if (!profile || !profile.is_hq) {
+        // Race condition: sbProfile noch nicht geladen → retry
+        if (!profile) {
+            setTimeout(function() { if (window.renderScompler) window.renderScompler(); }, 600);
+            return;
+        }
+        if (!profile.is_hq) {
             container.innerHTML = '<p class="p-8 text-gray-500">Kein Zugriff.</p>';
             return;
         }
