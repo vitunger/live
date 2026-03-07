@@ -55,6 +55,7 @@ var MODUL_DATEN = {
         {name:'HQ Abrechnung', view:'hqBillingView', status:'beta', typ:'hq', version:'1.0.0', details:'Monats-Drafts, Quartals-Settlement, Strategien, Produkte, Tools – Full Stack mit Supabase Edge Function', kiPrio:2, aufwand:'XL', kiTodo:'Stripe/LexOffice-Integration, PDF-Export, automatischer SEPA-Einzug.'},
         {name:'Standort Buchhaltung', view:'standortBillingView', status:'beta', typ:'standort', version:'1.0.0', details:'Rechnungsübersicht, Jahresstrategie einreichen, Kostenaufschlüsselung mit Formeln', kiPrio:3, aufwand:'L', kiTodo:'PDF-Download, Zahlungsstatus-Tracking.'},
         {name:'WaWi Belege (Tab in Buchhaltung)', view:'standortBillingView', status:'beta', typ:'standort', version:'1.1.0', details:'PDF-Upload & Parser für Angebote/Aufträge/Rechnungen, Belegübersicht mit Filtern, Umsatz-Dashboard, Leasing-Auswertung, Beleg-Detailansicht. Jetzt als Tab im Buchhaltungs-Modul. Pipeline: Browser-seitiges PDF-Parsing via pdf.js', kiPrio:2, aufwand:'M', kiTodo:'Email-Ingestion (IMAP), Multi-Page PDF Tests, WooCommerce Stock-Sync.'},
+        {name:'HQ Buchungssystem', view:'hqBuchungenView', status:'beta', typ:'hq', version:'1.0.0', details:'Termin-Buchungsverwaltung für alle Standorte: Buchungsübersicht, Kalenderansicht, Ressourcenverwaltung', kiPrio:23, aufwand:'M', kiTodo:'Buchungsstatistiken, Auslastungsberichte, Standort-übergreifende Kalenderansicht.'},
         {name:'HQ Einstellungen', view:'hqEinstellungenView', status:'live', typ:'hq', version:'1.2.0', details:'Module aktivieren/deaktivieren, Rollen-Matrix, User-Freigabe – alles DB', kiPrio:36, aufwand:'S', kiTodo:'Branding-Einstellungen. Core funktioniert bereits.'}
     ],
     widgets: [
@@ -474,3 +475,4 @@ Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 // === Window Exports (onclick handlers) ===
 window.filterModulStatus = filterModulStatus;
 window.showDevTab = showDevTab;
+
