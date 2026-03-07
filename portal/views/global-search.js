@@ -41,7 +41,7 @@ function _showToast(m,t){ if(window.showToast) window.showToast(m,t||'info'); }
 },
 { table: 'users', fields: ['vorname','nachname','email'], icon: '👤', label: 'Mitarbeiter',
   format: r => ((r.vorname||'')+' '+(r.nachname||'')).trim(),
-  sub: r => r.email || '',
+  sub: r => (r.email || '') + ' → Kommandozentrale › Mitarbeiter',
   action: r => {
     showView('mitarbeiter');
     // Open detail modal after view loads – use HQ or Partner modal depending on context
