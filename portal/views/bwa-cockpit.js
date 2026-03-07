@@ -147,9 +147,8 @@ async function updateBwaDeadlineWidget() {
     if(submitted && rating !== 'missing') {
         // Already submitted
         titleEl.textContent = 'BWA für ' + moName + ' eingereicht';
-        subEl.textContent = 'Eingereicht am ' + submitted.split('-').reverse().join('.');
-        badgeEl.innerHTML = ratingBadge(rating, true);
-        badgeEl.style.display = '';
+        if(subEl) subEl.textContent = 'Eingereicht am ' + submitted.split('-').reverse().join('.');
+        if(badgeEl) { badgeEl.innerHTML = ratingBadge(rating, true); badgeEl.style.display = ''; }
         if(ctaEl) ctaEl.style.display = 'none';
         if(daysEl) daysEl.textContent = '✓';
         if(daysEl) daysEl.style.color = '#16a34a';
@@ -164,14 +163,14 @@ async function updateBwaDeadlineWidget() {
     } else {
         // Not submitted
         if(ctaEl) ctaEl.style.display = '';
-        badgeEl.style.display = 'none';
+        if(badgeEl) badgeEl.style.display = 'none';
         setBenchmarkLock(true);
         var kpiReport = document.getElementById('bwaKpiReport');
         if(kpiReport) kpiReport.style.display = 'none';
 
         if(days > 0) {
             titleEl.textContent = 'Noch ' + days + ' Tage bis zur BWA-Deadline';
-            subEl.textContent = 'BWA für ' + moName + ' · Frist: 15. ' + MO_NAMES[bwaMo.m+1 > 11 ? 0 : bwaMo.m+1];
+            if(subEl) subEl.textContent = 'BWA für ' + moName + ' · Frist: 15. ' + MO_NAMES[bwaMo.m+1 > 11 ? 0 : bwaMo.m+1];
             if(daysEl) daysEl.textContent = days;
             if(daysEl) daysEl.style.color = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
             if(ringEl) ringEl.style.stroke = days <= 3 ? '#dc2626' : days <= 7 ? '#ca8a04' : '#EF7D00';
@@ -180,14 +179,14 @@ async function updateBwaDeadlineWidget() {
 
             // CTA subtext
             if(days > 7) {
-                ctaEl.textContent = '🥇 Frühabgabe = Gold-Status!';
+                if(ctaEl) ctaEl.textContent = '🥇 Frühabgabe = Gold-Status!';
             } else {
-                ctaEl.textContent = '📤 BWA jetzt einreichen';
+                if(ctaEl) ctaEl.textContent = '📤 BWA jetzt einreichen';
             }
         } else {
             var overdueDays = Math.abs(days);
             titleEl.textContent = 'BWA ist seit ' + overdueDays + ' Tag' + (overdueDays>1?'en':'') + ' überfällig';
-            subEl.textContent = 'BWA für ' + moName + ' · Deadline war der 15.';
+            if(subEl) subEl.textContent = 'BWA für ' + moName + ' · Deadline war der 15.';
             if(daysEl) daysEl.textContent = '!';
             if(daysEl) daysEl.style.color = '#dc2626';
             if(daysEl) daysEl.style.fontSize = '24px';
