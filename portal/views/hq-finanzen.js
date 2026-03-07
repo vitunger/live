@@ -247,12 +247,17 @@ function renderHqFinKpis() {
 
     var zeitraumLabel = sel === 'ytd' ? 'YTD' : _hqFinMonatLabels[sel-1];
 
-    // BWA count
-    var mitBwa = hqFinStandorte.filter(function(s) { return s.bwaMonate > 0; }).length;
+    // BWA count — for the selected month or last completed month
     var currentMonth0 = new Date().getMonth();
+    var bwaCheckMonth = (sel !== 'ytd' && !isPrevYear) ? parseInt(sel) : (currentMonth0 > 0 ? currentMonth0 : 12);
+    var bwaCheckYear = (sel !== 'ytd' && !isPrevYear) ? new Date().getFullYear() : (currentMonth0 > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1);
+    var mitBwa = hqFinStandorte.filter(function(s) {
+        if (sel === 'ytd') return s.bwaMonate > 0;
+        return s.bwaMonateDetail.some(function(b) { return b.monat == bwaCheckMonth && b.jahr == bwaCheckYear; });
+    }).length;
     var lastCompletedMonth = currentMonth0 > 0 ? currentMonth0 - 1 : 11;
     var lastCompletedYear = currentMonth0 > 0 ? new Date().getFullYear() : new Date().getFullYear() - 1;
-    var monatName = _hqFinMonatLabels[lastCompletedMonth] || '?';
+    var monatName = (sel !== 'ytd' && !isPrevYear) ? _hqFinMonatLabels[bwaCheckMonth - 1] : _hqFinMonatLabels[lastCompletedMonth];
     var mitDaten = hqFinStandorte.filter(function(s) { return s.datenquelle !== 'keine'; }).length;
 
     el.innerHTML = selHtml
