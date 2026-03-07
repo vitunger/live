@@ -98,6 +98,24 @@ window.addEventListener('resize', function() {
         try { if(localStorage.getItem('vit-sidebar-collapsed') === '1') sb.classList.add('collapsed'); } catch(e){}
     }
 });
+
+// Touch device: tap on collapsed sidebar header area expands it
+(function() {
+    var sb = document.getElementById('sidebarNav');
+    if(!sb) return;
+    sb.addEventListener('click', function(e) {
+        if(!sb.classList.contains('collapsed')) return;
+        // If clicked on a sidebar-item icon (not the collapse button), expand
+        var item = e.target.closest('.sidebar-item');
+        var colBtn = e.target.closest('.sidebar-collapse-btn');
+        if(item && !colBtn && window.innerWidth > 768) {
+            e.preventDefault();
+            e.stopPropagation();
+            sb.classList.remove('collapsed');
+            try { localStorage.setItem('vit-sidebar-collapsed', '0'); } catch(ex){}
+        }
+    }, true);
+})();
 export function closeMobileSidebar() {
     var sidebar = document.getElementById('sidebarNav');
     var overlay = document.getElementById('sidebarOverlay');
