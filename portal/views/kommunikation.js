@@ -251,13 +251,6 @@ export async function renderKomm() {
     h += kommSidebarGruppen();
 
     h += '</div>'; // end scrollable sidebar content
-
-    // Benachrichtigungs-Einstellungen unten fixiert
-    h += '<div class="border-t border-gray-100 p-2">';
-    h += '<div onclick="kommShowNotifSettings()" class="px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2 hover:bg-gray-50 text-gray-400 text-xs">';
-    h += '<span>🔔</span><span>Benachrichtigungen einstellen</span></div>';
-    h += '</div>';
-
     h += '</div>'; // end sidebar
 
     // ── CONTENT ──
@@ -271,6 +264,10 @@ export async function renderKomm() {
     h += '</div>'; // end flex
 
     container.innerHTML = h;
+
+    // Chatbot ausblenden im Kommunikationsmodul (überlappt Input-Bar)
+    var chatbot = document.getElementById('supChatWidget');
+    if (chatbot) chatbot.style.display = 'none';
 
     // Content async laden
     await kommLoadContent();
@@ -423,6 +420,9 @@ function kommRenderInputBar() {
 
     // Send button
     h += '<button onclick="kommSendMessage()" class="w-9 h-9 rounded-lg bg-gray-200 text-white flex items-center justify-center text-base flex-shrink-0" id="kommSendBtn">↑</button>';
+
+    // Notification settings
+    h += '<button onclick="kommShowNotifSettings()" class="w-9 h-9 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-sm cursor-pointer flex-shrink-0 hover:bg-gray-50" title="Benachrichtigungen einstellen">🔔</button>';
 
     h += '</div>';
     return h;
