@@ -179,6 +179,34 @@ window.handleSupabaseError = function(error, context) {
     return false;
 };
 
+// ═══ GLOBAL FETCH INTERCEPTOR ═══
+// Catches 401/403 from Supabase API automatically — no per-view patching needed.
+var _sessionExpiredHandled = false;
+(function() {
+    var _origFetch = window.fetch;
+    window.fetch = function(url, opts) {
+        return _origFetch.apply(this, arguments).then(function(resp) {
+            if ((resp.status === 401 || resp.status === 403) &&
+                typeof url === 'string' && url.indexOf('.supabase.co') !== -1 &&
+                !window.DEMO_ACTIVE && !window._impActive && !_sessionExpiredHandled) {
+                _sessionExpiredHandled = true;
+                console.warn('[Session] Auth-Fehler bei', url.split('/').pop());
+                sb.auth.getSession().then(function(r) {
+                    if (!r.data.session) {
+                        if (typeof window.showToast === 'function') window.showToast('Sitzung abgelaufen \u2013 bitte erneut anmelden.', 'warning');
+                        if (typeof window.handleLogout === 'function') window.handleLogout();
+                    }
+                    setTimeout(function() { _sessionExpiredHandled = false; }, 5000);
+                }).catch(function() {
+                    if (typeof window.handleLogout === 'function') window.handleLogout();
+                    setTimeout(function() { _sessionExpiredHandled = false; }, 5000);
+                });
+            }
+            return resp;
+        });
+    };
+})();
+
 // Auto-login: wait for all modules to be ready, then check session
 window.addEventListener('vit:modules-ready', function() {
     if(typeof window.checkSession === 'function') {

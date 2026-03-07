@@ -1968,3 +1968,13 @@ var _exports = {
 };
 Object.keys(_exports).forEach(function(k) { window[k] = _exports[k]; });
 
+// Realtime-Cleanup bei Logout
+window.addEventListener('vit:logout', function() {
+    if (_supState.realtimeSub) {
+        try { _sb().removeChannel(_supState.realtimeSub); } catch(e) {}
+        _supState.realtimeSub = null;
+    }
+    _supState.tickets = [];
+    _supState.loaded = false;
+});
+

@@ -1129,10 +1129,11 @@ var fbctx = document.getElementById('fbContextPrompt'); if(fbctx) fbctx.style.di
 var bwaW = document.getElementById('bwaDeadlineWidget'); if(bwaW) bwaW.style.display = 'none';
 var bwaE = document.getElementById('bwaEskalationBanner'); if(bwaE) bwaE.style.display = 'none';
 var bwaV = document.getElementById('bwaValidationBanner'); if(bwaV) { bwaV.style.display = 'none'; bwaV.className = 'hidden'; }
-// Remove any open modals/overlays
-['neuerMaContainer','editEmpContainer','editMaContainer','regContainer','neuerStdContainer'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+// Remove any open modals/overlays (hardcoded + generic)
+['neuerMaContainer','editEmpContainer','editMaContainer','regContainer','neuerStdContainer','changePwContainer'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+document.querySelectorAll('[id$="Overlay"], [id$="Modal"]').forEach(function(el) { try { el.remove(); } catch(e) {} });
 // 10) Clear session-specific localStorage keys
-['vit_lastView','vit:lastView','vit_lastEntwicklungTab','vit:lastEntwTab','vit:lastIdeenTab','vit_impact_checks','vit_onb_phase'].forEach(function(k) { try { localStorage.removeItem(k); } catch(e) {} });
+['vit_lastView','vit:lastView','vit_lastEntwicklungTab','vit:lastEntwTab','vit:lastIdeenTab','vit_impact_checks','vit_onb_phase','vit:lastMarketingTab','vit_selected_standort','vit-sidebar-collapsed'].forEach(function(k) { try { localStorage.removeItem(k); } catch(e) {} });
 }
 
 export async function checkSession() {

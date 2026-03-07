@@ -2342,3 +2342,14 @@ const _exports = {
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
+// Realtime-Cleanup bei Logout
+window.addEventListener('vit:logout', function() {
+    if (KOMM.realtimeSub) {
+        try { _sb().removeChannel(KOMM.realtimeSub); } catch(e) {}
+        KOMM.realtimeSub = null;
+    }
+    KOMM.activeId = null;
+    KOMM.activeType = null;
+    KOMM.messages = [];
+});
+

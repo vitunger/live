@@ -353,3 +353,11 @@ const _exports = {
 };
 Object.entries(_exports).forEach(([k, fn]) => { window[k] = fn; });
 
+// Realtime-Cleanup bei Logout
+window.addEventListener('vit:logout', function() {
+    if (notifRealtimeChannel) {
+        try { _sb().removeChannel(notifRealtimeChannel); } catch(e) {}
+        notifRealtimeChannel = null;
+    }
+});
+
