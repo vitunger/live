@@ -11,6 +11,9 @@ function _escH(s) { var d=document.createElement('div'); d.textContent=s; return
 
 var usagePeriod = 'current';
 
+// Globale User-Counts für Auto-Multiplikation im Modal (wird beim Render befüllt)
+var _smUserCounts = { hq: 18, partner: 16, standorte: 10 };
+
 window.renderApiNutzung = async function renderApiNutzung(containerId) {
     var container = document.getElementById(containerId || 'entwKiKostenContent');
     if (!container) return;
@@ -28,6 +31,18 @@ window.renderApiNutzung = async function renderApiNutzung(containerId) {
         var allSavings = (results[1].status === 'fulfilled' && results[1].value.data) ? results[1].value.data : [];
         var userCount = (results[2].status === 'fulfilled') ? (results[2].value.count || 1) : 1;
         var logData = (results[3].status === 'fulfilled' && results[3].value.data) ? results[3].value.data : [];
+
+        // Echte User-Counts für Modal-Kalkulation laden
+        try {
+            var ur = await _sb().from('users').select('is_hq,standort_id').eq('status','aktiv');
+            if (ur.data) {
+                var hqU = ur.data.filter(function(u){ return u.is_hq; });
+                var pU  = ur.data.filter(function(u){ return !u.is_hq && u.standort_id; });
+                _smUserCounts.hq = hqU.length || 18;
+                _smUserCounts.partner = pU.length || 16;
+                _smUserCounts.standorte = new Set(pU.map(function(u){ return u.standort_id; })).size || 10;
+            }
+        } catch(e) {}
 
         // Split: echte Einsparungen vs. laufende Cockpit-Kosten aus DB
         var savings = allSavings.filter(function(s){ return !s.typ || s.typ === 'einsparung'; });
