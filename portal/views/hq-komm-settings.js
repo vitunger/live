@@ -41,7 +41,7 @@ export async function renderKommSettings() {
         h += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
         h += '<td class="p-3 font-semibold text-gray-800">' + (c.icon || '💬') + ' ' + _escH(c.name) + '</td>';
         h += '<td class="p-3 text-xs text-gray-500">' + _escH(c.beschreibung || '—') + '</td>';
-        h += '<td class="p-3"><span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-semibold">' + (c.sichtbar_fuer_rollen ? c.sichtbar_fuer_rollen.join(', ') : 'Alle') + '</span></td>';
+        h += '<td class="p-3"><span class="text-[10px] px-2 py-0.5 rounded-full font-semibold ' + (c.sichtbar_fuer_rollen && c.sichtbar_fuer_rollen.length > 0 ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600') + '">' + (c.sichtbar_fuer_rollen && c.sichtbar_fuer_rollen.length > 0 ? c.sichtbar_fuer_rollen.join(', ') : 'Alle') + '</span></td>';
         h += '<td class="p-3 text-right">';
         h += '<button onclick="kommEditChannelDialog(\'' + c.id + '\')" class="text-xs text-gray-400 hover:text-vit-orange bg-transparent border-none cursor-pointer mr-2" title="Bearbeiten">✏️</button>';
         h += '<button onclick="kommDeleteChannelConfirm(\'' + c.id + '\',\'' + _escH(c.name).replace(/'/g, "\\'") + '\')" class="text-xs text-gray-400 hover:text-red-500 bg-transparent border-none cursor-pointer" title="Löschen">🗑</button>';
@@ -119,6 +119,7 @@ window.kommNewChannelDialog = function(isNetzwerk) {
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange focus:border-transparent outline-none" placeholder="z.B. Marketing Netzwerk"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon (Emoji)</label><input id="kommChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="💬" maxlength="4"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Beschreibung</label><textarea id="kommChDesc" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none" placeholder="Wofür ist dieser Channel?"></textarea></div>';
+    html += _kommRollenCheckboxes([]);
     html += '</div>';
     html += '<div class="flex justify-end gap-2 mt-5">';
     html += '<button onclick="document.getElementById(\'kommChannelModal\').remove()" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>';
@@ -134,6 +135,8 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
     var desc = (document.getElementById('kommChDesc').value || '').trim();
     if (!name) { _showToast('Bitte Channel-Name eingeben', 'error'); return; }
 
+    var rollen = _getSelectedRollen();
+
     try {
         var data = {
             name: name,
@@ -142,7 +145,8 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
             ist_netzwerk: isNetzwerk,
             typ: 'channel',
             ist_privat: false,
-            erstellt_von: _sbUser() ? _sbUser().id : null
+            erstellt_von: _sbUser() ? _sbUser().id : null,
+            sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null
         };
         var resp = await _sb().from('chat_kanaele').insert(data).select().single();
         if (resp.error) throw resp.error;
@@ -157,17 +161,40 @@ window.kommSaveNewChannel = async function(isNetzwerk) {
 };
 
 // === Channel bearbeiten Dialog ===
-window.kommEditChannelDialog = function(channelId) {
+window.kommEditChannelDialog = async function(channelId) {
     var ch = _kommChannels.find(function(c) { return c.id === channelId; });
     if (!ch) return;
 
+    // Lade Extra-Zugang User
+    var extraResp = await _sb().from('kanal_extra_zugang').select('user_id, users:user_id(name, vorname, nachname)').eq('kanal_id', channelId);
+    var extraUsers = (!extraResp.error && extraResp.data) ? extraResp.data : [];
+
     var html = '<div id="kommChannelModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.remove()">';
-    html += '<div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl" onclick="event.stopPropagation()">';
+    html += '<div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">';
     html += '<h3 class="text-base font-bold mb-4">✏️ Channel bearbeiten</h3>';
     html += '<div class="space-y-3">';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Name *</label><input id="kommChName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-vit-orange focus:border-transparent outline-none" value="' + _escH(ch.name) + '"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Icon (Emoji)</label><input id="kommChIcon" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none" value="' + _escH(ch.icon || '💬') + '" maxlength="4"></div>';
     html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Beschreibung</label><textarea id="kommChDesc" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none outline-none">' + _escH(ch.beschreibung || '') + '</textarea></div>';
+
+    // Rollen-Checkboxen
+    html += _kommRollenCheckboxes(ch.sichtbar_fuer_rollen || []);
+
+    // Extra-Zugang: Einzelne User
+    html += '<div><label class="text-xs font-semibold text-gray-600 block mb-1">➕ Zusätzlicher Zugang (einzelne User)</label>';
+    html += '<div id="kommExtraUsers" class="space-y-1 mb-2">';
+    extraUsers.forEach(function(eu) {
+        var u = eu.users || {};
+        var uName = u.vorname && u.nachname ? u.vorname + ' ' + u.nachname : (u.name || 'Unbekannt');
+        html += '<div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5 text-xs">';
+        html += '<span class="font-medium">' + _escH(uName) + '</span>';
+        html += '<button onclick="kommRemoveExtraUser(\'' + channelId + '\',\'' + eu.user_id + '\',this)" class="text-red-400 hover:text-red-600 text-xs cursor-pointer bg-transparent border-none">✕</button>';
+        html += '</div>';
+    });
+    html += '</div>';
+    html += '<div class="flex gap-2"><input id="kommExtraUserSearch" class="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-xs outline-none" placeholder="Name eingeben..."><button onclick="kommAddExtraUserSearch(\'' + channelId + '\')" class="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-200 cursor-pointer border-none">Hinzufügen</button></div>';
+    html += '</div>';
+
     html += '</div>';
     html += '<div class="flex justify-end gap-2 mt-5">';
     html += '<button onclick="document.getElementById(\'kommChannelModal\').remove()" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Abbrechen</button>';
@@ -182,8 +209,15 @@ window.kommSaveEditChannel = async function(channelId) {
     var desc = (document.getElementById('kommChDesc').value || '').trim();
     if (!name) { _showToast('Bitte Channel-Name eingeben', 'error'); return; }
 
+    var rollen = _getSelectedRollen();
+
     try {
-        var resp = await _sb().from('chat_kanaele').update({ name: name, icon: icon, beschreibung: desc }).eq('id', channelId);
+        var resp = await _sb().from('chat_kanaele').update({
+            name: name,
+            icon: icon,
+            beschreibung: desc,
+            sichtbar_fuer_rollen: rollen.length > 0 ? rollen : null
+        }).eq('id', channelId);
         if (resp.error) throw resp.error;
         var modal = document.getElementById('kommChannelModal');
         if (modal) modal.remove();
@@ -217,6 +251,83 @@ async function kommDeleteChannel(channelId) {
         _showToast('❌ Fehler beim Löschen', 'error');
     }
 }
+
+// Rollen-Checkboxen Helper
+function _kommRollenCheckboxes(selected) {
+    var rollen = [
+        { key: 'inhaber', label: '👔 GF / Inhaber', ebene: 'partner' },
+        { key: 'verkauf', label: '🛒 Verkauf', ebene: 'partner' },
+        { key: 'werkstatt', label: '🔧 Werkstatt', ebene: 'partner' },
+        { key: 'buchhaltung', label: '📊 Buchhaltung', ebene: 'partner' },
+        { key: 'hq', label: '🏢 HQ (alle HQ-Rollen)', ebene: 'hq' }
+    ];
+    var h = '<div><label class="text-xs font-semibold text-gray-600 block mb-1">Sichtbar für Rollen</label>';
+    h += '<p class="text-[10px] text-gray-400 mb-2">Leer = alle sehen den Channel. Ausgewählt = nur diese Rollen.</p>';
+    h += '<div class="space-y-1">';
+    rollen.forEach(function(r) {
+        var checked = selected && selected.indexOf(r.key) >= 0;
+        h += '<label class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs ' + (checked ? 'bg-orange-50 border border-orange-200' : 'border border-gray-100 hover:bg-gray-50') + '">';
+        h += '<input type="checkbox" class="kommRolleCheck accent-[#EF7D00]" value="' + r.key + '"' + (checked ? ' checked' : '') + '>';
+        h += '<span class="font-medium">' + r.label + '</span></label>';
+    });
+    h += '</div></div>';
+    return h;
+}
+
+function _getSelectedRollen() {
+    var checks = document.querySelectorAll('.kommRolleCheck:checked');
+    var rollen = [];
+    checks.forEach(function(c) { rollen.push(c.value); });
+    return rollen;
+}
+
+// Extra-Zugang: User hinzufügen
+window.kommAddExtraUserSearch = async function(channelId) {
+    var input = document.getElementById('kommExtraUserSearch');
+    if (!input || !input.value.trim()) { _showToast('Name eingeben', 'error'); return; }
+
+    var query = input.value.trim().toLowerCase();
+    var resp = await _sb().from('users').select('id, name, vorname, nachname').eq('status', 'aktiv');
+    var users = (resp.data || []).filter(function(u) {
+        var full = ((u.vorname || '') + ' ' + (u.nachname || '') + ' ' + (u.name || '')).toLowerCase();
+        return full.indexOf(query) >= 0;
+    });
+
+    if (users.length === 0) { _showToast('Kein User gefunden', 'error'); return; }
+
+    var user = users[0]; // Ersten Match nehmen
+    try {
+        await _sb().from('kanal_extra_zugang').upsert({
+            kanal_id: channelId,
+            user_id: user.id,
+            erstellt_von: _sbUser() ? _sbUser().id : null
+        }, { onConflict: 'kanal_id,user_id' });
+
+        var uName = user.vorname && user.nachname ? user.vorname + ' ' + user.nachname : (user.name || 'User');
+        var container = document.getElementById('kommExtraUsers');
+        if (container) {
+            var div = document.createElement('div');
+            div.className = 'flex items-center justify-between bg-gray-50 rounded-lg px-3 py-1.5 text-xs';
+            div.innerHTML = '<span class="font-medium">' + _escH(uName) + '</span><button onclick="kommRemoveExtraUser(\'' + channelId + '\',\'' + user.id + '\',this)" class="text-red-400 hover:text-red-600 text-xs cursor-pointer bg-transparent border-none">✕</button>';
+            container.appendChild(div);
+        }
+        input.value = '';
+        _showToast('✅ ' + uName + ' hinzugefügt');
+    } catch(e) {
+        _showToast('❌ Fehler', 'error');
+    }
+};
+
+// Extra-Zugang: User entfernen
+window.kommRemoveExtraUser = async function(channelId, userId, btn) {
+    try {
+        await _sb().from('kanal_extra_zugang').delete().eq('kanal_id', channelId).eq('user_id', userId);
+        if (btn && btn.parentElement) btn.parentElement.remove();
+        _showToast('✅ Zugang entfernt');
+    } catch(e) {
+        _showToast('❌ Fehler', 'error');
+    }
+};
 
 // Window exports
 window.renderKommSettings = renderKommSettings;
