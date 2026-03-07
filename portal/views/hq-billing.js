@@ -868,6 +868,7 @@ export async function loadApprovalQueue() {
                 h += '<button onclick="approvalAction(\''+inv.id+'\',\'validate\')" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100">\ud83d\udd0d Pr\u00fcfen</button>';
                 h += '<button onclick="approvalAction(\''+inv.id+'\',\'approve\')" class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-100">\u2705 Freigeben</button>';
                 h += '<button onclick="approvalAction(\''+inv.id+'\',\'reject\')" class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-100">\u274c Zur\u00fcckweisen</button>';
+                h += '<button onclick="deleteDraftInvoice(\''+inv.id+'\',\''+_escH(inv.invoice_number||'').replace(/'/g,'')+'\')" class="px-3 py-1.5 bg-gray-50 text-gray-500 rounded-lg text-xs font-semibold hover:bg-red-50 hover:text-red-600">\ud83d\uddd1\ufe0f L\u00f6schen</button>';
             }
             if(inv.status==='review') {
                 h += '<button onclick="approvalAction(\''+inv.id+'\',\'approve\')" class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-100">\u2705 Freigeben</button>';
@@ -1575,6 +1576,30 @@ window.deleteProduct = async function(productId, productName) {
     if (error) { _showToast('Fehler: ' + error.message, 'error'); return; }
     _showToast('Produkt gelöscht', 'success');
     loadBillingProducts();
+};
+
+
+window.deleteDraftInvoice = async function(invoiceId, invoiceNumber) {
+    if (!confirm('Rechnung ' + invoiceNumber + ' wirklich l\u00f6schen?\n\nDie Rechnung und alle Positionen werden unwiderruflich entfernt.')) return;
+    try {
+        // Check status first
+        var { data: inv } = await _sb().from('billing_invoices').select('status').eq('id', invoiceId).single();
+        if (!inv || inv.status !== 'draft') { _showToast('Nur Entw\u00fcrfe k\u00f6nnen gel\u00f6scht werden.', 'error'); return; }
+        // Delete line items first (FK constraint)
+        await _sb().from('billing_invoice_line_items').delete().eq('invoice_id', invoiceId);
+        // Delete audit log entries
+        await _sb().from('billing_audit_log').delete().eq('invoice_id', invoiceId);
+        // Delete the invoice
+        var { error } = await _sb().from('billing_invoices').delete().eq('id', invoiceId);
+        if (error) throw error;
+        _showToast('Rechnung ' + invoiceNumber + ' gel\u00f6scht', 'success');
+        // Reload the current view
+        if (typeof loadApprovalQueue === 'function') loadApprovalQueue();
+        if (typeof loadBillingOverview === 'function') loadBillingOverview();
+        _showView('hqBilling');
+    } catch(err) {
+        _showToast('Fehler: ' + (err.message || err), 'error');
+    }
 };
 
 
