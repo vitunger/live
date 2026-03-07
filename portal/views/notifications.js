@@ -339,6 +339,19 @@ export async function createReleaseNotification(titel, version) {
             return;
         }
         console.log('createReleaseNotification: ' + data + ' User benachrichtigt');
+        // Push an alle aktiven User (nicht nur HQ)
+        try {
+            var { data: allUsers } = await sb.from('users').select('id').eq('status', 'aktiv');
+            if (allUsers && allUsers.length > 0) {
+                await triggerPush(
+                    allUsers.map(function(u) { return u.id; }),
+                    '\uD83D\uDCE3 Neues Release' + (version ? ' v' + version : ''),
+                    titel || 'Ein neues Release wurde veroeffentlicht.',
+                    '/portal',
+                    'release_published'
+                );
+            }
+        } catch(pushErr) { console.warn('Release Push failed:', pushErr); }
     } catch(err) { console.warn('createReleaseNotification:', err); }
 }
 
