@@ -1113,6 +1113,16 @@ export function kommShowEmojiPicker(msgId) {
 async function kommMarkAsRead() {
     var uid = _sbUser() ? _sbUser().id : null;
     if (!uid || !KOMM.activeId) return;
+
+    // zuletzt_gelesen auf kanal_mitglieder aktualisieren (für alle Channel-Typen)
+    var now = new Date().toISOString();
+    if (KOMM._gelesenMap) KOMM._gelesenMap[KOMM.activeId] = now;
+    _sb().from('kanal_mitglieder')
+        .update({ zuletzt_gelesen: now })
+        .eq('kanal_id', KOMM.activeId)
+        .eq('user_id', uid)
+        .then(function(){});
+
     // Fuer DMs: gelesen_von aktualisieren
     if (KOMM.view === 'dm') {
         var unread = KOMM.messages.filter(function(m) {
