@@ -144,12 +144,12 @@ function renderDashboard(container, cache, savings, dbCosts, userCount, logData)
     html += '</div></div>';
 
     // KPIs: Cockpit-Kosten | HQ-Ersparnis | Standort-Ersparnis | Jährlich
-    // Standort spart = Summe aller Tools mit nutzer_typ partner/beide (das zahlt jeder Standort)
-    var perStandortSavings = displayPartnerSavings;
+    var standortCount = _smUserCounts.standorte || 1;
+    var perStandortSavings = displayPartnerSavings; // Summe aller Standort-Tools
     html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">';
     html += kpi('Cockpit-Kosten', '\u20AC' + (totalRunning * factor).toFixed(0), perPeriod, 'text-red-500');
     html += kpi('HQ spart', '\u20AC' + displayHqSavings.toFixed(0), hqSavings.length + ' Tools', 'text-blue-600');
-    html += kpi('Standort spart', '\u20AC' + perStandortSavings.toFixed(0), 'pro Standort' + perPeriod, 'text-purple-600');
+    html += kpi('Standorte sparen', '\u20AC' + perStandortSavings.toFixed(0), partnerSavings.length + ' Tools', 'text-purple-600');
     var yearBilanz = bilanz * (isMonthly ? 12 : 12 / Math.max(allMonths.length, 1));
     html += kpi('Jährlich', '\u20AC' + (yearBilanz >= 0 ? '+' : '') + yearBilanz.toFixed(0), yearBilanz >= 0 ? 'Ersparnis' : 'Mehrkosten', yearBilanz >= 0 ? 'text-green-600' : 'text-red-500');
     html += '</div>';
@@ -317,91 +317,117 @@ function renderLogSection(logData) {
 window.openSavingModal = function() {
     var existing = document.getElementById('savingModal');
     if (existing) existing.remove();
-
     var modal = document.createElement('div');
     modal.id = 'savingModal';
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
     modal.innerHTML = `
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSavingModal()"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 z-10 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-5">
                 <h2 class="text-base font-bold text-gray-800">Tool eintragen</h2>
                 <button onclick="closeSavingModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
             </div>
-
             <div class="space-y-4">
+
                 <!-- Tool-Name -->
                 <div>
                     <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Tool-Name *</label>
-                    <input id="sm_name" type="text" placeholder="z.B. Slack, HubSpot, Deskly..."
+                    <input id="sm_name" type="text" placeholder="z.B. Todoist, Slack, HubSpot..."
                         class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
                 </div>
 
-                <!-- Art des Eintrags -->
+                <!-- Art: Einsparung vs. Laufende Kosten -->
                 <div>
                     <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Art des Eintrags</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="setSavingArt('einsparung')" id="sm_art_einsparung"
                             class="sm-art-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center">
-                            ✅ Einsparung<br><span class="font-normal text-gray-400">wird ersetzt</span>
+                            \u2705 Einsparung<br><span class="font-normal text-gray-400">wird ersetzt</span>
                         </button>
                         <button onclick="setSavingArt('laufende_kosten')" id="sm_art_laufende_kosten"
                             class="sm-art-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center">
-                            💸 Laufende Kosten<br><span class="font-normal text-gray-400">neu hinzu</span>
+                            \uD83D\uDCB8 Laufende Kosten<br><span class="font-normal text-gray-400">neu hinzu</span>
                         </button>
                     </div>
                     <input type="hidden" id="sm_typ" value="einsparung">
                 </div>
 
-                <!-- Wer spart / nutzt (nur bei Einsparung) -->
+                <!-- Wer spart? (nur bei Einsparung) -->
                 <div id="sm_nutzer_section">
                     <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Wer spart?</label>
                     <div class="grid grid-cols-3 gap-2">
                         <button onclick="setSavingTyp('hq')" id="sm_typ_hq"
                             class="sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center">
-                            🏢<br>Nur HQ
+                            \uD83C\uDFE2<br>Nur HQ
                         </button>
                         <button onclick="setSavingTyp('partner')" id="sm_typ_partner"
                             class="sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center">
-                            🏪<br>Standort
+                            \uD83C\uDFEA<br>Standort
                         </button>
                         <button onclick="setSavingTyp('beide')" id="sm_typ_beide"
                             class="sm-typ-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center">
-                            🌐<br>Beide
+                            \uD83C\uDF10<br>Beide
                         </button>
                     </div>
                     <input type="hidden" id="sm_nutzer_typ" value="beide">
                 </div>
 
-                <!-- Betrag + Rhythmus -->
+                <!-- Betrag -->
                 <div>
-                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Kosten</label>
-                    <div class="flex gap-2">
-                        <div class="relative flex-1">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
-                            <input id="sm_betrag" type="number" min="0" step="0.01" placeholder="0,00"
-                                oninput="updateSavingCalc()"
-                                class="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
-                        </div>
-                        <select id="sm_rhythmus" onchange="updateSavingCalc()"
-                            class="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange bg-white">
-                            <option value="monatlich">/ Monat</option>
-                            <option value="jaehrlich">/ Jahr</option>
-                        </select>
-                    </div>
-                    <div id="sm_calc" class="mt-2 text-xs text-gray-400 text-right hidden">
-                        = <span id="sm_calc_val" class="font-semibold text-green-600"></span> / Monat
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block" id="sm_betrag_label">Betrag *</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">\u20AC</span>
+                        <input id="sm_betrag" type="number" min="0" step="0.01" placeholder="0,00"
+                            oninput="updateSavingCalc()"
+                            class="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
                     </div>
                 </div>
 
-                <!-- Nutzer-Anzahl -->
+                <!-- Abrechnungsmodell: kombiniertes Dropdown -->
                 <div>
-                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Anzahl Nutzer <span class="font-normal text-gray-400">(optional)</span></label>
-                    <div class="flex gap-2 items-center">
-                        <input id="sm_nutzer_anzahl" type="number" min="1" step="1" placeholder="z.B. 5"
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Abrechnungsmodell</label>
+                    <select id="sm_abrmodell" onchange="updateSavingCalc()"
+                        class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange bg-white">
+                        <option value="monatlich_pro_nutzer">pro Monat / pro Nutzer</option>
+                        <option value="monatlich_pro_standort">pro Monat / pro Standort</option>
+                        <option value="jaehrlich_pro_nutzer">pro Jahr / pro Nutzer</option>
+                        <option value="jaehrlich_pro_standort">pro Jahr / pro Standort</option>
+                        <option value="monatlich_fix">pro Monat / fix</option>
+                        <option value="jaehrlich_fix">pro Jahr / fix</option>
+                    </select>
+                </div>
+
+                <!-- Manuelle Anzahl (optional) -->
+                <div id="sm_anzahl_section">
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block" id="sm_anzahl_label">Anzahl <span class="font-normal text-gray-400">(leer = automatisch)</span></label>
+                    <div class="flex gap-3 items-center">
+                        <input id="sm_nutzer_anzahl" type="number" min="0" step="1" placeholder="leer = auto"
                             oninput="updateSavingCalc()"
-                            class="w-28 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
-                        <span class="text-xs text-gray-400">Nutzer × Betrag = Gesamtkosten</span>
+                            class="w-32 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
+                        <span class="text-xs text-blue-500 font-medium" id="sm_auto_hint"></span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1" id="sm_auto_info"></p>
+                </div>
+
+                <!-- Grundgebühr (optional) -->
+                <div id="sm_grundgebuehr_section" class="hidden">
+                    <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Grundgebühr <span class="font-normal text-gray-400">(optional, zusätzlich zum Nutzerpreis)</span></label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">\u20AC</span>
+                        <input id="sm_grundgebuehr" type="number" min="0" step="0.01" placeholder="0,00"
+                            oninput="updateSavingCalc()"
+                            class="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:border-vit-orange">
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">Pauschale pro Standort/HQ, zusätzlich zum Nutzerpreis</p>
+                </div>
+
+                <!-- Kalkulations-Vorschau -->
+                <div id="sm_calc" class="hidden bg-blue-50 rounded-xl p-3 border border-blue-100">
+                    <p class="text-[10px] text-blue-500 uppercase font-bold mb-1">Berechnung</p>
+                    <div id="sm_calc_lines" class="text-xs text-gray-700 space-y-0.5"></div>
+                    <div class="border-t border-blue-200 mt-2 pt-2 flex justify-between">
+                        <span class="text-xs font-bold text-gray-700">Gesamt/Monat</span>
+                        <span class="text-sm font-bold text-green-600" id="sm_calc_total"></span>
                     </div>
                 </div>
 
@@ -415,11 +441,12 @@ window.openSavingModal = function() {
 
             <div class="flex gap-3 mt-6">
                 <button onclick="closeSavingModal()" class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">Abbrechen</button>
-                <button onclick="saveSavingModal()" class="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600 transition">✓ Speichern</button>
+                <button onclick="saveSavingModal()" class="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-xl text-sm font-bold hover:bg-green-600 transition">\u2713 Speichern</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    updateSavingCalc();
 };
 
 window.closeSavingModal = function() {
@@ -433,14 +460,12 @@ window.setSavingArt = function(art) {
     ['einsparung','laufende_kosten'].forEach(function(a) {
         var btn = document.getElementById('sm_art_' + a);
         if (!btn) return;
-        if (a === art) {
-            btn.className = 'sm-art-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center';
-        } else {
-            btn.className = 'sm-art-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center';
-        }
+        btn.className = a === art
+            ? 'sm-art-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center'
+            : 'sm-art-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center';
     });
-    // Wer-spart-Sektion nur bei Einsparungen zeigen
     if (nutzerSection) nutzerSection.style.display = art === 'einsparung' ? '' : 'none';
+    updateSavingCalc();
 };
 
 window.setSavingTyp = function(typ) {
@@ -448,47 +473,134 @@ window.setSavingTyp = function(typ) {
     ['hq','partner','beide'].forEach(function(t) {
         var btn = document.getElementById('sm_typ_' + t);
         if (!btn) return;
-        if (t === typ) {
-            btn.className = 'sm-typ-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center';
-        } else {
-            btn.className = 'sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center';
-        }
+        btn.className = t === typ
+            ? 'sm-typ-btn px-3 py-2 rounded-xl border-2 border-orange-400 bg-orange-50 text-xs font-semibold text-vit-orange text-center'
+            : 'sm-typ-btn px-3 py-2 rounded-xl border-2 border-gray-200 text-xs font-semibold text-gray-600 hover:border-vit-orange transition text-center';
     });
+    updateSavingCalc();
 };
 
+// Parst das kombinierte Dropdown in rhythmus + preismodell
+function parseSavingAbrmodell() {
+    var v = (document.getElementById('sm_abrmodell') || {}).value || 'monatlich_pro_nutzer';
+    var parts = v.split('_');
+    // jaehrlich_pro_nutzer → ['jaehrlich','pro','nutzer']
+    // monatlich_fix → ['monatlich','fix']
+    var rhythmus = parts[0]; // monatlich | jaehrlich
+    var pm = parts.slice(1).join('_'); // fix | pro_nutzer | pro_standort
+    return { rhythmus: rhythmus, pm: pm };
+}
+
 window.updateSavingCalc = function() {
-    var betrag = parseFloat(document.getElementById('sm_betrag').value) || 0;
-    var rhythmus = document.getElementById('sm_rhythmus').value;
-    var nutzer = parseInt(document.getElementById('sm_nutzer_anzahl').value) || 1;
+    var betrag = parseFloat((document.getElementById('sm_betrag') || {}).value) || 0;
+    var nutzer_typ = (document.getElementById('sm_nutzer_typ') || {}).value || 'beide';
+    var manualAnzahl = parseInt((document.getElementById('sm_nutzer_anzahl') || {}).value) || 0;
+    var grundgebuehr = parseFloat((document.getElementById('sm_grundgebuehr') || {}).value) || 0;
+    var parsed = parseSavingAbrmodell();
+    var rhythmus = parsed.rhythmus;
+    var pm = parsed.pm;
+
     var calcEl = document.getElementById('sm_calc');
-    var calcVal = document.getElementById('sm_calc_val');
-    var monthly = rhythmus === 'jaehrlich' ? betrag / 12 : betrag;
-    var total = monthly * nutzer;
-    if (betrag > 0 && (rhythmus === 'jaehrlich' || nutzer > 1)) {
-        var parts = [];
-        if (rhythmus === 'jaehrlich') parts.push('\u20AC' + (betrag/12).toFixed(2) + '/Mo');
-        if (nutzer > 1) parts.push('\u00D7 ' + nutzer + ' Nutzer');
-        parts.push('= \u20AC' + total.toFixed(2) + '/Mo gesamt');
-        calcVal.textContent = parts.join('  ');
-        calcEl.classList.remove('hidden');
-    } else {
-        calcEl.classList.add('hidden');
+    var calcLines = document.getElementById('sm_calc_lines');
+    var calcTotal = document.getElementById('sm_calc_total');
+    var anzahlSection = document.getElementById('sm_anzahl_section');
+    var grundSection = document.getElementById('sm_grundgebuehr_section');
+    var anzahlLabel = document.getElementById('sm_anzahl_label');
+    var autoHint = document.getElementById('sm_auto_hint');
+    var autoInfo = document.getElementById('sm_auto_info');
+    if (!calcEl) return;
+
+    // Anzahl-Sektion + Grundgebühr je nach Modell
+    if (pm === 'fix') {
+        if (anzahlSection) anzahlSection.style.display = 'none';
+        if (grundSection) grundSection.classList.add('hidden');
+    } else if (pm === 'pro_nutzer') {
+        if (anzahlSection) anzahlSection.style.display = '';
+        if (grundSection) grundSection.classList.remove('hidden');
+        if (anzahlLabel) anzahlLabel.firstChild.textContent = 'Anzahl Nutzer\u00A0';
+    } else if (pm === 'pro_standort') {
+        if (anzahlSection) anzahlSection.style.display = '';
+        if (grundSection) grundSection.classList.add('hidden');
+        if (anzahlLabel) anzahlLabel.firstChild.textContent = 'Anzahl Standorte\u00A0';
     }
+
+    // Auto-Counts bestimmen
+    var autoCount = 1;
+    var autoLabel = '';
+    if (pm === 'pro_nutzer') {
+        if (nutzer_typ === 'hq') { autoCount = _smUserCounts.hq; autoLabel = _smUserCounts.hq + ' HQ-Nutzer'; }
+        else if (nutzer_typ === 'partner') { autoCount = _smUserCounts.partner; autoLabel = _smUserCounts.partner + ' Standort-Nutzer'; }
+        else { autoCount = _smUserCounts.hq + _smUserCounts.partner; autoLabel = (_smUserCounts.hq + _smUserCounts.partner) + ' Nutzer gesamt'; }
+    } else if (pm === 'pro_standort') {
+        autoCount = _smUserCounts.standorte;
+        autoLabel = _smUserCounts.standorte + ' aktive Standorte';
+    }
+    var effAnzahl = (pm !== 'fix' && manualAnzahl > 0) ? manualAnzahl : autoCount;
+    if (autoHint) autoHint.textContent = (pm !== 'fix' && manualAnzahl === 0) ? '\u2192 auto: ' + autoCount : '';
+    if (autoInfo) autoInfo.textContent = (pm !== 'fix' && manualAnzahl === 0 && autoLabel) ? 'Automatisch: ' + autoLabel : '';
+
+    if (betrag <= 0) { calcEl.classList.add('hidden'); return; }
+
+    // Berechnung
+    var monthly_betrag = rhythmus === 'jaehrlich' ? betrag / 12 : betrag;
+    var monthly_grund = rhythmus === 'jaehrlich' ? grundgebuehr / 12 : grundgebuehr;
+    var lines = [];
+    var total = 0;
+
+    var periodenText = rhythmus === 'jaehrlich' ? '/Jahr \u00F7 12' : '/Mo';
+
+    if (pm === 'fix') {
+        total = monthly_betrag;
+        if (rhythmus === 'jaehrlich') lines.push('\u20AC' + betrag.toFixed(2) + '/Jahr \u00F7 12 = \u20AC' + monthly_betrag.toFixed(2) + '/Mo');
+    } else if (pm === 'pro_nutzer') {
+        var nutzerKosten = monthly_betrag * effAnzahl;
+        var grundKosten = monthly_grund * effAnzahl;
+        total = nutzerKosten + grundKosten;
+        lines.push('\u20AC' + betrag.toFixed(2) + periodenText + '/Nutzer \u00D7 ' + effAnzahl + ' Nutzer = \u20AC' + nutzerKosten.toFixed(2));
+        if (grundgebuehr > 0) lines.push('+ Grundgeb\u00FChr \u20AC' + grundgebuehr.toFixed(2) + periodenText + ' \u00D7 ' + effAnzahl + ' = \u20AC' + grundKosten.toFixed(2));
+    } else if (pm === 'pro_standort') {
+        total = monthly_betrag * effAnzahl;
+        lines.push('\u20AC' + betrag.toFixed(2) + periodenText + '/Standort \u00D7 ' + effAnzahl + ' Standorte = \u20AC' + total.toFixed(2));
+    }
+
+    if (calcLines) calcLines.innerHTML = lines.map(function(l){ return '<p>' + l + '</p>'; }).join('');
+    if (calcTotal) calcTotal.textContent = '\u20AC' + total.toFixed(2) + '/Mo';
+    calcEl.classList.remove('hidden');
 };
 
 window.saveSavingModal = async function() {
     var name = document.getElementById('sm_name').value.trim();
     var betrag = parseFloat(document.getElementById('sm_betrag').value) || 0;
-    var rhythmus = document.getElementById('sm_rhythmus').value;
     var typ = document.getElementById('sm_typ').value;
     var nutzer_typ = document.getElementById('sm_nutzer_typ').value;
+    var manualAnzahl = parseInt(document.getElementById('sm_nutzer_anzahl').value) || 0;
+    var grundgebuehr = parseFloat((document.getElementById('sm_grundgebuehr') || {}).value) || 0;
     var notiz = document.getElementById('sm_notiz').value.trim();
+    var parsed = parseSavingAbrmodell();
+    var rhythmus = parsed.rhythmus;
+    var pm = parsed.pm;
 
     if (!name) { _showToast('Tool-Name eingeben', 'error'); return; }
     if (!betrag) { _showToast('Betrag eingeben', 'error'); return; }
 
-    var nutzer_anzahl = parseInt(document.getElementById('sm_nutzer_anzahl').value) || 1;
-    var kosten_pro_monat = (rhythmus === 'jaehrlich' ? betrag / 12 : betrag) * nutzer_anzahl;
+    // Auto-Anzahl
+    var autoCount = 1;
+    if (pm === 'pro_nutzer') {
+        if (nutzer_typ === 'hq') autoCount = _smUserCounts.hq;
+        else if (nutzer_typ === 'partner') autoCount = _smUserCounts.partner;
+        else autoCount = _smUserCounts.hq + _smUserCounts.partner;
+    } else if (pm === 'pro_standort') {
+        autoCount = _smUserCounts.standorte;
+    }
+    var effAnzahl = (pm !== 'fix' && manualAnzahl > 0) ? manualAnzahl : (pm === 'fix' ? 1 : autoCount);
+
+    var monthly_betrag = rhythmus === 'jaehrlich' ? betrag / 12 : betrag;
+    var monthly_grund = rhythmus === 'jaehrlich' ? grundgebuehr / 12 : grundgebuehr;
+
+    var kosten_pro_monat;
+    if (pm === 'fix') kosten_pro_monat = monthly_betrag;
+    else if (pm === 'pro_nutzer') kosten_pro_monat = (monthly_betrag + monthly_grund) * effAnzahl;
+    else if (pm === 'pro_standort') kosten_pro_monat = monthly_betrag * effAnzahl;
 
     var payload = {
         name: name,
@@ -498,28 +610,31 @@ window.saveSavingModal = async function() {
         nutzer_typ: typ === 'laufende_kosten' ? 'hq' : nutzer_typ,
         abrechnungsrhythmus: rhythmus,
         original_betrag: betrag,
-        anzahl_nutzer: nutzer_anzahl,
-        typ: typ
+        anzahl_nutzer: effAnzahl,
+        kosten_pro_nutzer: monthly_betrag,
+        typ: typ,
+        preismodell: pm,
+        grundgebuehr: grundgebuehr || 0,
+        anzahl_standorte: pm === 'pro_standort' ? effAnzahl : 0
     };
 
     var r = await _sb().from('cockpit_savings').insert(payload);
     if (r.error) {
         if (r.error.code === '42703') {
-            // Fallback ohne neue Spalten
             var fallback = { name: payload.name, kosten_pro_monat: payload.kosten_pro_monat, notizen: payload.notizen, kategorie: payload.kategorie };
             r = await _sb().from('cockpit_savings').insert(fallback);
         }
         if (r.error) { _showToast('Fehler: ' + r.error.message, 'error'); return; }
     }
 
-    _showToast(name + ' hinzugefügt!', 'success');
+    _showToast(name + ' hinzugef\u00FCgt!', 'success');
     closeSavingModal();
     window.renderApiNutzung();
 };
 
 // CRUD
 window.deleteSaving = async function(id) {
-    if(!confirm('Eintrag löschen?'))return;
+    if(!confirm('Eintrag l\u00F6schen?'))return;
     await _sb().from('cockpit_savings').delete().eq('id',id);
     _showToast('Entfernt','success');
     window.renderApiNutzung();
