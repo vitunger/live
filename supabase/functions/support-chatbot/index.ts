@@ -12,6 +12,78 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const SUPABASE_URL  = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+// ─── PII STRIPPING (DSGVO Art. 5(1)(c) Datenminimierung) ──────────────────
+// Entfernt/ersetzt personenbezogene Daten vor dem API-Call an Anthropic.
+// Mapping wird zurueckgegeben, damit Ergebnisse ggf. re-mapped werden koennen.
+interface PiiMapping { [placeholder: string]: string; }
+
+function stripPii(text: string): { cleaned: string; mapping: PiiMapping } {
+  const mapping: PiiMapping = {};
+  let counter = { person: 0, email: 0, phone: 0, iban: 0, tax: 0, address: 0 };
+
+  let cleaned = text;
+
+  // E-Mail-Adressen
+  cleaned = cleaned.replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, (match) => {
+    counter.email++;
+    const ph = `[EMAIL_${counter.email}]`;
+    mapping[ph] = match;
+    return ph;
+  });
+
+  // IBAN (DE + international)
+  cleaned = cleaned.replace(/[A-Z]{2}\d{2}[\s]?\d{4}[\s]?\d{4}[\s]?\d{4}[\s]?\d{4}[\s]?\d{0,2}/g, (match) => {
+    counter.iban++;
+    const ph = `[IBAN_${counter.iban}]`;
+    mapping[ph] = match;
+    return ph;
+  });
+
+  // Steuernummern (DE Format: XX/XXX/XXXXX oder XXX/XXX/XXXXX)
+  cleaned = cleaned.replace(/\d{2,3}\/\d{3}\/\d{4,5}/g, (match) => {
+    counter.tax++;
+    const ph = `[STEUERNR_${counter.tax}]`;
+    mapping[ph] = match;
+    return ph;
+  });
+
+  // USt-IdNr (DE + EU)
+  cleaned = cleaned.replace(/[A-Z]{2}\d{9,12}/g, (match) => {
+    counter.tax++;
+    const ph = `[USTID_${counter.tax}]`;
+    mapping[ph] = match;
+    return ph;
+  });
+
+  // Telefonnummern (DE Formate)
+  cleaned = cleaned.replace(/(?:\+49|0049|0)[\s\-]?\(?\d{2,5}\)?[\s\-]?\d{3,}[\s\-]?\d{0,}/g, (match) => {
+    if (match.replace(/\D/g, "").length >= 7) {
+      counter.phone++;
+      const ph = `[TELEFON_${counter.phone}]`;
+      mapping[ph] = match;
+      return ph;
+    }
+    return match;
+  });
+
+  // PLZ + Ort (5-stellige PLZ gefolgt von Wort)
+  cleaned = cleaned.replace(/(\d{5})\s+([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+)?)/g, (match) => {
+    counter.address++;
+    const ph = `[ORT_${counter.address}]`;
+    mapping[ph] = match;
+    return ph;
+  });
+
+  // Straßen mit Hausnummer (z.B. "Musterstr. 12a" oder "Am Markt 5")
+  cleaned = cleaned.replace(/([A-ZÄÖÜ][a-zäöüß]+(?:str\.|straße|weg|platz|gasse|allee|ring|damm))\s+\d+[a-z]?/gi, (match) => {
+    counter.address++;
+    const ph = `[STRASSE_${counter.address}]`;
+    mapping[ph] = match;
+    return ph;
+  });
+
+  return { cleaned, mapping };
+}
 
 const ALLOWED_ORIGINS = [
   "https://cockpit.vitbikes.de",
@@ -166,12 +238,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // Max letzte 6 Nachrichten
       const recent = history.slice(-6);
       for (const msg of recent) {
-        messages.push({ role: msg.role === "user" ? "user" : "assistant", content: msg.content });
+        messages.push({ role: msg.role === "user" ? "user" : "assistant", content: stripPii(msg.content || "").cleaned });
       }
     }
     messages.push({
       role: "user",
-      content: message + artikelKontext + cannedKontext,
+      content: stripPii(message + artikelKontext + cannedKontext).cleaned,
     });
 
     const t0 = Date.now();
