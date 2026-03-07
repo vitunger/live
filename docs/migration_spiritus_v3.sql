@@ -1,83 +1,112 @@
 -- ============================================================
--- Spiritus v3.0 – DB Migration
+-- Spiritus v3.0 – Komplette DB Migration (from scratch)
 -- Datum: 2026-03-07
--- Voraussetzung: spiritus_migration.sql wurde bereits ausgefuehrt
---   (spiritus_calls, spiritus_extractions, spiritus_kb existieren)
+-- Keine Vorgaenger-Tabellen noetig
 -- ============================================================
 
--- ── 0. Basistabelle umbenennen: spiritus_calls → spiritus_transcripts ──
-ALTER TABLE IF EXISTS spiritus_calls RENAME TO spiritus_transcripts;
+-- ── 1. spiritus_transcripts (Haupttabelle) ──
+CREATE TABLE IF NOT EXISTS spiritus_transcripts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  standort_id uuid REFERENCES standorte(id) ON DELETE SET NULL,
+  standort_name text,
+  call_date date NOT NULL DEFAULT CURRENT_DATE,
+  call_type text DEFAULT 'beratung' CHECK (call_type IN ('beratung','review','onboarding','support','strategie')),
+  contact text,
+  transcript_text text,
+  summary text,
+  status text DEFAULT 'draft' CHECK (status IN ('draft','analyzing','done','error','verarbeitet','abgelehnt')),
+  duration_min int,
+  sentiment_level text,
+  created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now(),
 
--- Indizes umbenennen (optional, funktional egal)
-ALTER INDEX IF EXISTS idx_spiritus_calls_standort RENAME TO idx_spiritus_transcripts_standort;
-ALTER INDEX IF EXISTS idx_spiritus_calls_date RENAME TO idx_spiritus_transcripts_date;
+  -- v3: Kontext
+  gespraechs_kontext text NOT NULL DEFAULT 'partner',
+  lieferant_name text,
+  akquise_kontakt_name text,
+  akquise_kontakt_firma text,
+  akquise_kontakt_ort text,
+  akquise_kontakt_telefon text,
+  akquise_kontakt_email text,
 
--- spiritus_extractions: call_id → transcript_id
-ALTER TABLE spiritus_extractions RENAME COLUMN call_id TO transcript_id;
+  -- v3: CRM-Anbindung
+  crm_kontakt_id uuid,
+  crm_deal_id uuid,
+  anruf_richtung text,
 
--- spiritus_extractions: type → kategorie (Code erwartet 'kategorie')
-ALTER TABLE spiritus_extractions RENAME COLUMN type TO kategorie;
+  -- v3: Thema
+  thema text,
 
--- spiritus_kb: source_call_id → source_transcript_id
-ALTER TABLE spiritus_kb RENAME COLUMN source_call_id TO source_transcript_id;
+  -- v3: 8-Felder-Protokoll (extern 1-6)
+  protokoll_anlass text,
+  protokoll_situation jsonb DEFAULT '[]'::jsonb,
+  protokoll_fokus jsonb DEFAULT '[]'::jsonb,
+  protokoll_massnahmen jsonb DEFAULT '[]'::jsonb,
+  protokoll_ziel text,
+  protokoll_review text,
 
--- ── 0b. Fehlende Basisspalten auf spiritus_transcripts ──
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS standort_name text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS duration_min int;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS sentiment_level text;
+  -- v3: 8-Felder-Protokoll (intern 7-8)
+  protokoll_einschaetzung text,
+  protokoll_beobachtung text,
 
--- ── 1. Neuer Enum: gespraechs_kontext ──
-DO $$ BEGIN
-  CREATE TYPE gespraechs_kontext AS ENUM ('partner', 'lieferant', 'akquise');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
+  -- v3: Kategorie-Tags + Notizen
+  kategorien text[] DEFAULT '{}',
+  eigene_notizen text
+);
 
--- ── 2. spiritus_transcripts erweitern ──
-
--- Kontext-Typ (Default: partner fuer Abwaertskompatibilitaet)
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS gespraechs_kontext text NOT NULL DEFAULT 'partner';
-
--- standort_id nullable machen (Lieferant/Akquise haben keinen Standort)
-ALTER TABLE spiritus_transcripts ALTER COLUMN standort_id DROP NOT NULL;
-
--- Neue Felder fuer nicht-Partner-Kontexte
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS lieferant_name text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS akquise_kontakt_name text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS akquise_kontakt_firma text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS akquise_kontakt_ort text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS akquise_kontakt_telefon text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS akquise_kontakt_email text;
-
--- CRM-Anbindung (optional, fuer spaetere Integration)
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS crm_kontakt_id uuid;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS crm_deal_id uuid;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS anruf_richtung text;
-
--- Thema-Feld
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS thema text;
-
--- 8-Felder-Protokoll (extern)
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_anlass text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_situation jsonb DEFAULT '[]'::jsonb;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_fokus jsonb DEFAULT '[]'::jsonb;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_massnahmen jsonb DEFAULT '[]'::jsonb;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_ziel text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_review text;
-
--- 8-Felder-Protokoll (intern)
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_einschaetzung text;
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS protokoll_beobachtung text;
-
--- Kategorie-Tags fuer systemweite Analyse
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS kategorien text[] DEFAULT '{}';
-
--- Eigene Notizen (Freitext, nicht KI)
-ALTER TABLE spiritus_transcripts ADD COLUMN IF NOT EXISTS eigene_notizen text;
-
--- ── 3. Indizes ──
+CREATE INDEX IF NOT EXISTS idx_spiritus_transcripts_standort ON spiritus_transcripts(standort_id);
+CREATE INDEX IF NOT EXISTS idx_spiritus_transcripts_date ON spiritus_transcripts(call_date DESC);
 CREATE INDEX IF NOT EXISTS idx_spiritus_transcripts_kontext ON spiritus_transcripts(gespraechs_kontext);
 
--- ── 4. KI-Lernfaktor: Feedback-Tabelle ──
+ALTER TABLE spiritus_transcripts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "HQ kann alle Transcripts lesen" ON spiritus_transcripts
+  FOR SELECT USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true));
+CREATE POLICY "HQ kann Transcripts einfuegen" ON spiritus_transcripts
+  FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true));
+CREATE POLICY "HQ kann Transcripts updaten" ON spiritus_transcripts
+  FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true));
+CREATE POLICY "service_role_full_transcripts" ON spiritus_transcripts
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── 2. spiritus_extractions (KI-Extraktionen) ──
+CREATE TABLE IF NOT EXISTS spiritus_extractions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  transcript_id uuid REFERENCES spiritus_transcripts(id) ON DELETE CASCADE,
+  kategorie text NOT NULL CHECK (kategorie IN ('problem','massnahme','sentiment')),
+  content text NOT NULL,
+  confidence numeric(4,3) DEFAULT 0.7,
+  data jsonb DEFAULT '{}',
+  approved boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_spiritus_extractions_transcript ON spiritus_extractions(transcript_id);
+
+ALTER TABLE spiritus_extractions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "HQ kann Extraktionen lesen" ON spiritus_extractions
+  FOR ALL USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true));
+CREATE POLICY "service_role_full_extractions" ON spiritus_extractions
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ── 3. spiritus_kb (Knowledge Base) ──
+CREATE TABLE IF NOT EXISTS spiritus_kb (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_transcript_id uuid REFERENCES spiritus_transcripts(id) ON DELETE SET NULL,
+  standort_id uuid REFERENCES standorte(id) ON DELETE SET NULL,
+  content text NOT NULL,
+  category text DEFAULT 'massnahme',
+  auto_approved boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_spiritus_kb_approved ON spiritus_kb(auto_approved);
+
+ALTER TABLE spiritus_kb ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "HQ kann KB lesen" ON spiritus_kb
+  FOR ALL USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND is_hq = true));
+
+-- ── 4. spiritus_ki_feedback (KI-Lernfaktor) ──
 CREATE TABLE IF NOT EXISTS spiritus_ki_feedback (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   transcript_id uuid NOT NULL REFERENCES spiritus_transcripts(id) ON DELETE CASCADE,
@@ -102,7 +131,7 @@ CREATE INDEX IF NOT EXISTS idx_spiritus_ki_feedback_transcript ON spiritus_ki_fe
 ALTER TABLE todos ADD COLUMN IF NOT EXISTS spiritus_transcript_id uuid REFERENCES spiritus_transcripts(id);
 CREATE INDEX IF NOT EXISTS idx_todos_spiritus ON todos(spiritus_transcript_id) WHERE spiritus_transcript_id IS NOT NULL;
 
--- ── 6. 3CX/Teams Tabellen (Platzhalter fuer spaetere Integration) ──
+-- ── 6. 3CX/Teams Tabellen (Platzhalter) ──
 CREATE TABLE IF NOT EXISTS spiritus_3cx_mapping (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   standort_id uuid REFERENCES standorte(id),
