@@ -254,6 +254,7 @@ security: RLS/JWT/Auth-Verbesserung
 | 13 | **WaWi Email-Ingestion** | Resend Inbound → Edge Function → `wawi_belege` (designed, nicht gebaut) | geplant |
 | 14 | **GetMyInvoices** | v3 REST API für automatische Rechnungserfassung | geplant |
 | 15 | **TypeScript-Migration** | Modul für Modul, Feature-Flag pro Modul, Build-System Vite 6 + TS 5 | geplant |
+| 16 | **KI-Voice Agent (Vapi.ai)** | Inbound + Outbound Calls via Vapi.ai: KI nimmt Kundenanrufe an, qualifiziert Leads, bucht Termine (eTermin), ruft Leads proaktiv zurück. Ergebnisse (Transkript, Zusammenfassung) per Webhook → Portal. Button "KI-Anruf starten" im Lead-Detail. Deutsche Nummer (~$2/Mo), ~$0.05–0.10/Min. AssemblyAI für Transkription, Claude als Brain, ElevenLabs für Stimme. | geplant |
 
 ---
 
