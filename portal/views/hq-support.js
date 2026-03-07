@@ -59,14 +59,7 @@ async function loadHqData() {
 
         var ticketQuery = _sb().from('support_tickets')
             .select('*, users:erstellt_von(name, vorname, nachname, standort_id), assignee:assignee_id(name, vorname, nachname), standorte:standort_id(name)')
-            .eq('zoho_fallback', false)
             .order('created_at', {ascending: false});
-
-        // Abteilungs-Filter: nur eigene Abteilung(en) wenn nicht Admin
-        if (!isAdmin && hqRollen.length > 0) {
-            var abteilungen = hqRollen.filter(function(r) { return r.startsWith('hq_'); }).map(function(r) { return r.replace('hq_', ''); });
-            if (abteilungen.length > 0) ticketQuery = ticketQuery.in('abteilung', abteilungen);
-        }
 
         var [tResp, uResp, cResp, wResp] = await Promise.all([
             ticketQuery,
