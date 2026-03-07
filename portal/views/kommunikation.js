@@ -79,12 +79,13 @@ function kommTimeShort(dateStr) {
 
 function kommIsHQ() {
     var p = _sbProfile();
-    return p && (p.is_hq || p.rolle === 'hq' || p.rolle === 'hq_zahlen');
+    var rollen = window.sbRollen || [];
+    return (p && p.is_hq) || rollen.indexOf('hq') >= 0 || rollen.indexOf('hq_zahlen') >= 0 || rollen.indexOf('owner') >= 0 || rollen.indexOf('hq_gf') >= 0;
 }
 
 function kommIsGF() {
-    var p = _sbProfile();
-    return kommIsHQ() || (p && p.rolle === 'inhaber');
+    var rollen = window.sbRollen || [];
+    return kommIsHQ() || rollen.indexOf('inhaber') >= 0;
 }
 
 // ========== Daten laden ==========
