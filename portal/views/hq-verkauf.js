@@ -570,7 +570,7 @@ function _hookShowView() {
     if(v==='hqDokumente'){_showView('hqKommando');showKommandoTab('dokumente');return;}
     if(v==='hqKalender'){_showView('hqKommando');showKommandoTab('kalender');return;}
     if(v==='hqAufgaben'){_showView('hqKommando');showKommandoTab('aufgaben');return;}
-    if(v==='hqAuswertung') renderHqAuswertung();
+    if(v==='hqAuswertung' && typeof renderHqAuswertung === 'function') renderHqAuswertung();
     if(v==='hqWissen') renderHqWissen();
     if(v==='hqSupport') renderHqSupport();
     if(v==='hqShop') renderHqShop();
