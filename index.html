@@ -134,6 +134,7 @@
             position: relative;
         }
         .sidebar.collapsed { width: 64px !important; min-width: 64px; }
+        .sidebar.collapsed #sidebarExpandBtn { display: block !important; }
         .sidebar.collapsed .sidebar-label,
         .sidebar.collapsed .sidebar-badge,
         .sidebar.collapsed hr { display: none !important; }
@@ -165,7 +166,7 @@
         }
         .sidebar-collapse-btn:hover { background: #EF7D00; color: #fff; border-color: #EF7D00; }
         .sidebar:hover .sidebar-collapse-btn { display: flex; }
-        .sidebar.collapsed .sidebar-collapse-btn { display: flex; right: -14px; }
+        .sidebar.collapsed .sidebar-collapse-btn { display: flex; right: -14px; top: 12px; bottom: auto; width: 32px; height: 32px; }
         .sidebar.collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
         
         .sidebar-item {
@@ -698,6 +699,9 @@
             <div id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
             <!-- Sidebar -->
             <aside id="sidebarNav" class="sidebar w-64 text-white overflow-y-auto flex-shrink-0 relative">
+                <div id="sidebarExpandBtn" onclick="toggleSidebarCollapse()" class="hidden cursor-pointer p-3 mb-1 text-center hover:bg-gray-700 rounded-lg mx-1 mt-1" title="Sidebar aufklappen">
+                    <svg class="w-6 h-6 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </div>
                 <!-- Collapse toggle -->
                 <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Sidebar einklappen">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
